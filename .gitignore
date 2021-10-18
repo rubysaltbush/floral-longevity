@@ -38,3 +38,6 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# macOS file
+.DS_Store
