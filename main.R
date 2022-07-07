@@ -75,6 +75,12 @@ rm(species_individual)
 longevity <- longevity %>%
   dplyr::left_join(species_sym, by = "individual")
 
+# calculate mean per species
+
+mean_longevity <- longevity %>%
+  dplyr::group_by(species) %>%
+  dplyr::summarise(mean_long = mean(longevity_days))
+
 # boxplot of longevity by symmetry
 ggplot(data = longevity, aes(x = longevity_days, y = symmetry_all, fill = symmetry_all)) +
   geom_boxplot() +
