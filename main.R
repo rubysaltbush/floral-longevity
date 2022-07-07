@@ -89,7 +89,7 @@ ggplot(data = longevity, aes(x = longevity_days, y = symmetry_all, fill = symmet
   ggpubr::theme_pubr(legend = "none") +
   xlab("Floral longevity (days)") +
   ylab("")
-ggsave("figures/symmetry_longevity_boxplot.png", width = 9, height = 5)
+ggsave("figures/symmetry_longevity_boxplot.pdf", width = 9, height = 5)
 
 # t-test of longevity by symmetry
 ttest <- t.test(longevity$longevity_days[longevity$symmetry == "zygomorphic"], 
