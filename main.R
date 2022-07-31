@@ -75,6 +75,9 @@ rm(species_individual)
 longevity <- longevity %>%
   dplyr::left_join(species_sym, by = "individual")
 
+# save this data as csv to check later
+readr::write_csv(longevity, "data_output/floral_longevity_output.csv")
+
 # calculate mean per species
 
 mean_longevity <- longevity %>%
