@@ -17,7 +17,8 @@ data$Timestamp
 
 colnames(data) <- c("timestamp", "site", "species", "individual", "observer", 
                     "buds", "flowers", "finished", "notes", "pop_flowering", 
-                    "plant_flowering", "keep", "births", "deaths", "notes2")
+                    "plant_flowering", "no_birth", "no_death",
+                    "keep", "births", "deaths", "notes2")
 
 # remove unwanted rows from monitoring data
 data <- data %>%
@@ -59,8 +60,8 @@ longevity <- longevity %>%
   dplyr::select(individual:longevity_days, infloheight_m:tube)
 
 # symmetry not recorded in trait_data for all individuals, get it by species
-species_sym <- read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQ8l1sSP14c_ofDymqna9mTqeE6KK1scNGt6YBTCMGhvqeh884eyW1JwNQVvdL-znAuXGxjcOh-sA-t/pub?gid=1824852273&single=true&output=csv")
-species_sym <- species_sym %>%
+
+species_sym <- trait_data %>%
   dplyr::select(4,15) %>%
   dplyr::distinct()
 colnames(species_sym) <- c("species", "symmetry_all")
@@ -82,7 +83,7 @@ readr::write_csv(longevity, "data_output/floral_longevity_output.csv")
 
 mean_longevity <- longevity %>%
   dplyr::group_by(species) %>%
-  dplyr::summarise(mean_long = mean(longevity_days))
+  dplyr::summarise(mean_long = mean(longevity_days, na.rm = TRUE))
 
 # boxplot of longevity by symmetry
 ggplot(data = longevity, aes(x = longevity_days, y = symmetry_all, fill = symmetry_all)) +
