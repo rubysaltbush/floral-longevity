@@ -80,10 +80,19 @@ longevity <- longevity %>%
 readr::write_csv(longevity, "data_output/floral_longevity_output.csv")
 
 # calculate mean per species
-
 mean_longevity <- longevity %>%
   dplyr::group_by(species) %>%
   dplyr::summarise(mean_long = mean(longevity_days, na.rm = TRUE))
+
+# calculate standard deviation per species
+sd <- longevity %>%
+  dplyr::group_by(species) %>%
+  dplyr::summarise(sd_long = sd(longevity_days, na.rm = TRUE))
+
+mean_longevity <- mean_longevity %>%
+  dplyr::left_join(sd, by = "species")
+rm(sd)
+
 
 # boxplot of longevity by symmetry
 ggplot(data = longevity, aes(x = longevity_days, y = symmetry_all, fill = symmetry_all)) +
@@ -100,3 +109,77 @@ ttest <- t.test(longevity$longevity_days[longevity$symmetry == "zygomorphic"],
                 longevity$longevity_days[longevity$symmetry != "zygomorphic"])
 ttest
 
+# WHAT IF I ONLY CHECKED SASSAFRAS GULLY FLOWERS EVERY 2 DAYS???
+# does it make significant difference to longevity estimates??
+# read in data to check this idea
+
+data2 <- readr::read_csv("data_input/sassafras_longevity_if2days.csv")
+ 
+# convert timestamp column to R date/time object
+data2$timestamp <- strptime(data2$timestamp, "%d/%m/%Y %H:%M")
+
+# remove unwanted rows from monitoring data
+data2 <- data2 %>%
+  dplyr::filter(keep2 == 1)
+
+# calculate weighted mean date of "births" i.e. bud -> flower
+# weight is number of flowers per inflorescence monitored
+longevity2 <- data2 %>%
+  dplyr::group_by(individual) %>%
+  dplyr::summarise(weighted.mean(timestamp, births2))
+
+# calculate weighted mean date of "deaths" i.e. flower -> finished flower
+deathtime <- data2 %>%
+  dplyr::group_by(individual) %>%
+  dplyr::summarise(weighted.mean(timestamp, deaths2))
+
+# calculate number of flowers monitored per plant
+no_flowers <- data2 %>%
+  dplyr::group_by(individual) %>%
+  dplyr::summarise(sum(deaths2))
+
+longevity2 <- longevity2 %>%
+  dplyr::left_join(deathtime, by = "individual") %>%
+  dplyr::left_join(no_flowers, by = "individual")
+colnames(longevity2) <- c("individual", "birthtime2", "deathtime2", "no_flowers2")
+rm(deathtime, no_flowers)
+
+longevity2$longevity_days2 <- difftime(longevity2$deathtime2, longevity2$birthtime2, units = "days")
+
+# join symmetry to longevity
+longevity2 <- longevity2 %>%
+  dplyr::left_join(species_sym, by = "individual")
+
+# calculate mean per species
+mean_longevity2 <- longevity2 %>%
+  dplyr::group_by(species) %>%
+  dplyr::summarise(mean_long2 = mean(longevity_days2, na.rm = TRUE))
+
+# calculate standard deviation per species
+sd2 <- longevity2 %>%
+  dplyr::group_by(species) %>%
+  dplyr::summarise(sd_long2 = sd(longevity_days2, na.rm = TRUE))
+
+mean_longevity2 <- mean_longevity2 %>%
+  dplyr::left_join(sd2, by = "species")
+rm(sd2)
+
+longevity_comp_mean <- mean_longevity2 %>%
+  dplyr::left_join(mean_longevity, by = "species")
+
+# looks like it makes SOME difference, but not huge?
+
+longevity_comp_ind <- longevity %>%
+  dplyr::select(1:5) %>%
+  dplyr::right_join(longevity2, by = "individual")
+
+# calculate differences in longevity
+
+longevity_comp_mean$diff_mean <- longevity_comp_mean$mean_long - longevity_comp_mean$mean_long2
+longevity_comp_mean$diff_sd <- longevity_comp_mean$sd_long - longevity_comp_mean$sd_long2  
+longevity_comp_ind$diff_long <- longevity_comp_ind$longevity_days - longevity_comp_ind$longevity_days2
+
+#write output to discuss with H and R
+
+write_csv(longevity_comp_mean, "data_output/compare_longevity_1or2daymonitoring_means.csv")
+write_csv(longevity_comp_ind, "data_output/compare_longevity_1or2daymonitoring.csv")
