@@ -110,8 +110,8 @@ ggplot(data = longevity, aes(x = longevity_days, y = symmetry_all, fill = symmet
 ggsave("figures/symmetry_longevity_boxplot.pdf", width = 9, height = 5)
 
 # t-test of longevity by symmetry
-ttest <- t.test(longevity$longevity_days[longevity$symmetry == "zygomorphic"], 
-                longevity$longevity_days[longevity$symmetry != "zygomorphic"])
+ttest <- t.test(longevity$longevity_days[longevity$symmetry_all == "zygomorphic"], 
+                longevity$longevity_days[longevity$symmetry_all != "zygomorphic"])
 ttest
 
 # BUT above are on individuals, not species means, maybe inflating power?
@@ -135,8 +135,15 @@ ggplot(data = mean_longevity, aes(x = mean_long, y = symmetry_all, fill = symmet
 ggsave("figures/symmetry_longevity_boxplot_speciesmean.pdf", width = 9, height = 5)
 
 # t-test of species mean longevity by symmetry
-ttest_species <- t.test(mean_longevity$mean_long[longevity$symmetry_all == "zygomorphic"], 
-                        mean_longevity$mean_long[longevity$symmetry_all != "zygomorphic"])
+ttest_species <- t.test(mean_longevity$mean_long[mean_longevity$symmetry_all == "zygomorphic"], 
+                        mean_longevity$mean_long[mean_longevity$symmetry_all != "zygomorphic"])
 ttest_species
 
 # yup I was inflating my power by including all individuals rather than species :(
+
+# out of curiosity are SD different?
+ttest_speciesSD <- t.test(mean_longevity$sd_long[mean_longevity$symmetry_all == "zygomorphic"], 
+                          mean_longevity$sd_long[mean_longevity$symmetry_all != "zygomorphic"])
+ttest_speciesSD
+# nope! they're not, ach well
+
