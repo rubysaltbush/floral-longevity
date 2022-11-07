@@ -24,6 +24,11 @@ colnames(data) <- c("timestamp", "site", "species", "individual", "observer",
 data <- data %>%
   dplyr::filter(keep == 1)
 
+# error checking - births=deaths?
+check <- data %>%
+  dplyr::group_by(individual) %>%
+  dplyr::summarise(sum(births) == sum(deaths))
+
 # calculate weighted mean date of "births" i.e. bud -> flower
 # weight is number of flowers per inflorescence monitored
 longevity <- data %>%
@@ -109,3 +114,29 @@ ttest <- t.test(longevity$longevity_days[longevity$symmetry == "zygomorphic"],
                 longevity$longevity_days[longevity$symmetry != "zygomorphic"])
 ttest
 
+# BUT above are on individuals, not species means, maybe inflating power?
+# test on species means
+species_sym2 <- species_sym %>%
+  dplyr::select(species, symmetry_all) %>%
+  dplyr::distinct()
+
+mean_longevity <- mean_longevity %>%
+  dplyr::left_join(species_sym2, by = "species")
+rm(species_sym2)
+
+# boxplot of longevity by symmetry
+ggplot(data = mean_longevity, aes(x = mean_long, y = symmetry_all, fill = symmetry_all)) +
+  geom_boxplot() +
+  scale_fill_viridis_d(alpha = 0.6) +
+  geom_jitter(color="black", size=0.4, alpha=0.9) +
+  ggpubr::theme_pubr(legend = "none") +
+  xlab("Species mean floral longevity (days)") +
+  ylab("")
+ggsave("figures/symmetry_longevity_boxplot_speciesmean.pdf", width = 9, height = 5)
+
+# t-test of species mean longevity by symmetry
+ttest_species <- t.test(mean_longevity$mean_long[longevity$symmetry_all == "zygomorphic"], 
+                        mean_longevity$mean_long[longevity$symmetry_all != "zygomorphic"])
+ttest_species
+
+# yup I was inflating my power by including all individuals rather than species :(
