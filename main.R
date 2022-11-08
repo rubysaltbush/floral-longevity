@@ -98,8 +98,17 @@ mean_longevity <- mean_longevity %>%
   dplyr::left_join(sd, by = "species")
 rm(sd)
 
+# add species symmetry to means
+species_sym <- species_sym %>%
+  dplyr::select(species, symmetry_all) %>%
+  dplyr::distinct()
 
-# boxplot of longevity by symmetry
+mean_longevity <- mean_longevity %>%
+  dplyr::left_join(species_sym, by = "species")
+rm(species_sym)
+
+
+# boxplot of longevity by symmetry INDIVIDUALS
 ggplot(data = longevity, aes(x = longevity_days, y = symmetry_all, fill = symmetry_all)) +
   geom_boxplot() +
   scale_fill_viridis_d(alpha = 0.6) +
@@ -114,15 +123,6 @@ ttest <- t.test(longevity$longevity_days[longevity$symmetry_all == "zygomorphic"
                 longevity$longevity_days[longevity$symmetry_all != "zygomorphic"])
 ttest
 
-# BUT above are on individuals, not species means, maybe inflating power?
-# test on species means
-species_sym2 <- species_sym %>%
-  dplyr::select(species, symmetry_all) %>%
-  dplyr::distinct()
-
-mean_longevity <- mean_longevity %>%
-  dplyr::left_join(species_sym2, by = "species")
-rm(species_sym2)
 
 # boxplot of longevity by symmetry
 ggplot(data = mean_longevity, aes(x = mean_long, y = symmetry_all, fill = symmetry_all)) +
@@ -147,3 +147,25 @@ ttest_speciesSD <- t.test(mean_longevity$sd_long[mean_longevity$symmetry_all == 
 ttest_speciesSD
 # nope! they're not, ach well
 
+# 3 zygomorphic outliers, one actinomorphic outlier, what if I removed these?
+
+mean_longevity_nooutliers <- mean_longevity %>%
+  dplyr::filter(!(species %in% c("Hakea sericea", "Grevillea buxifolia", "Hybanthus vernonii", "Acacia oxycedrus")))
+
+# boxplot of longevity by symmetry
+ggplot(data = mean_longevity_nooutliers, aes(x = mean_long, y = symmetry_all, fill = symmetry_all)) +
+  geom_boxplot() +
+  scale_fill_viridis_d(alpha = 0.6) +
+  geom_jitter(color="black", size=0.4, alpha=0.9) +
+  ggpubr::theme_pubr(legend = "none") +
+  xlab("Species mean floral longevity (days)") +
+  ylab("")
+ggsave("figures/symmetry_longevity_boxplot_speciesmean_nooutliers.pdf", width = 9, height = 5)
+
+# t-test of species mean longevity by symmetry
+ttest_species <- t.test(mean_longevity_nooutliers$mean_long[mean_longevity_nooutliers$symmetry_all == "zygomorphic"], 
+                        mean_longevity_nooutliers$mean_long[mean_longevity_nooutliers$symmetry_all != "zygomorphic"])
+ttest_species
+
+# aha yes so it is the outliers, how justified is removing them though?
+# for Hybanthus I would think that cleistogamy might be playing a role?? very low insect visitation
