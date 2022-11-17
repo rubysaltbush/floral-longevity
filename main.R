@@ -171,3 +171,34 @@ ttest_species
 # aha yes so it is the outliers, how justified is removing them though?
 # WITH DIANELLA ADDED IN SIGNIFICANCE VERY MARGINAL
 # for Hybanthus I would think that cleistogamy might be playing a role?? very low insect visitation
+
+# seems like symmetry not the go here, possible that zygomorphic flowers EITHER
+# flower for a short time bc good quality visitation OR flower for a long time
+# because low frequency of visitation, and you'd need visitation data to know
+# this for sure. If longevity is an evolved trait though, what determines it?
+
+# Could I publish a paper that concludes longevity ≠ symmetry? Is this worth
+# pursuing?
+
+# Song et al (2022) suggest that longevity is more influenced by components of 
+# male than female fitness - so, flowers putting more effort into pollen export
+# will last longer than flowers more focussed on pollen receipt. How could you test
+# this idea?
+
+# quick test between longevity and plant height out of curiosity, not that
+# I've sampled a large range of plant heights
+
+plot(height_m ~ longevity_days, data = longevity)
+plot(infloheight_m ~ longevity_days, data = longevity)
+
+# and out of curiosity, longevity and number flowers per plant (proxy for plant attractiveness??)
+plot(flowersperplant ~ longevity_days, data = longevity)
+plot(budsperplant ~ longevity_days, data = longevity)
+longevity$display <- longevity$flowersperplant + longevity$budsperplant
+plot(display ~ longevity_days, data = longevity)
+# not much there really
+plot(florallength_cm ~ longevity_days, data = longevity)
+plot(floraldiam_cm ~ longevity_days, data = longevity)
+longevity$flordimen_cm <- as.numeric(longevity$floraldiam_cm)*as.numeric(longevity$florallength_cm)
+plot(flordimen_cm ~ longevity_days, data = longevity)
+# looks like some signal here for flower size? might be spurious tho
