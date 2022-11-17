@@ -202,3 +202,7 @@ plot(floraldiam_cm ~ longevity_days, data = longevity)
 longevity$flordimen_cm <- as.numeric(longevity$floraldiam_cm)*as.numeric(longevity$florallength_cm)
 plot(flordimen_cm ~ longevity_days, data = longevity)
 # looks like some signal here for flower size? might be spurious tho
+
+# other q's - does floral longevity = leaf longevity?
+# really need to think about this all more at a later date
+
