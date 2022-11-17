@@ -113,6 +113,7 @@ ggsave("figures/symmetry_longevity_boxplot.pdf", width = 9, height = 5)
 ttest <- t.test(longevity$longevity_days[longevity$symmetry_all == "zygomorphic"], 
                 longevity$longevity_days[longevity$symmetry_all != "zygomorphic"])
 ttest
+# NO LONGER SIGNIFICANT WITH DIANELLA ADDED IN
 
 # BUT above are on individuals, not species means, maybe inflating power?
 # test on species means
