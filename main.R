@@ -50,6 +50,9 @@ longevity <- longevity %>%
   dplyr::left_join(no_flowers, by = "individual")
 colnames(longevity) <- c("individual", "birthtime", "deathtime", "no_flowers")
 rm(deathtime, no_flowers)
+# 4 individuals with only 1 flower monitored, 9 with 2 flowers
+# average 11 flowers per plant
+mean(longevity$no_flowers)
 
 longevity$longevity_days <- difftime(longevity$deathtime, longevity$birthtime, units = "days")
 
@@ -125,7 +128,7 @@ ttest
 # NO LONGER SIGNIFICANT WITH DIANELLA ADDED IN
 
 
-# boxplot of longevity by symmetry
+# boxplot of longevity by symmetry SPECIES
 ggplot(data = mean_longevity, aes(x = mean_long, y = symmetry_all, fill = symmetry_all)) +
   geom_boxplot() +
   scale_fill_viridis_d(alpha = 0.6) +
@@ -169,7 +172,7 @@ ttest_species <- t.test(mean_longevity_nooutliers$mean_long[mean_longevity_noout
 ttest_species
 
 # aha yes so it is the outliers, how justified is removing them though?
-# WITH DIANELLA ADDED IN SIGNIFICANCE VERY MARGINAL
+# WITH DIANELLA ADDED IN NOT SIGNIFICANT
 # for Hybanthus I would think that cleistogamy might be playing a role?? very low insect visitation
 
 # seems like symmetry not the go here, possible that zygomorphic flowers EITHER
@@ -205,4 +208,5 @@ plot(flordimen_cm ~ longevity_days, data = longevity)
 
 # other q's - does floral longevity = leaf longevity?
 # really need to think about this all more at a later date
+# how to get number of carpels per species??
 
