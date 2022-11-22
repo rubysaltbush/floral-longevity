@@ -28,6 +28,12 @@ data <- data %>%
 check <- data %>%
   dplyr::group_by(individual) %>%
   dplyr::summarise(sum(births) == sum(deaths))
+if (FALSE %in% check$`sum(births) == sum(deaths)` == FALSE){
+  print("number of births match number of deaths, all okay!")
+} else {
+  print("no. births doesn't match no. deaths, check data!")
+}
+rm(check)
 
 # calculate weighted mean date of "births" i.e. bud -> flower
 # weight is number of flowers per inflorescence monitored
@@ -61,7 +67,8 @@ trait_data <- read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQ8l1sSP
 colnames(trait_data) <- c("timestamp", "site", "observer", "species", "individual", 
                           "infloheight_m", "habit", "height_m", "inflosize_cm", 
                           "flowersperplant", "budsperplant", "florallength_cm", 
-                          "floraldiam_cm", "colour", "symmetry", "tube", "notes")
+                          "floraldiam_cm", "colour", "symmetry", "tube", "notes",
+                          "no_carpels", "no_ovules", "no_stamens")
 
 longevity <- longevity %>%
   dplyr::left_join(trait_data, by = "individual") %>%
@@ -110,6 +117,14 @@ mean_longevity <- mean_longevity %>%
   dplyr::left_join(species_sym, by = "species")
 rm(species_sym)
 
+# add species no carpels, ovules and stamens to species means
+carpels <- trait_data %>%
+  dplyr::select(species, no_carpels, no_ovules, no_stamens) %>%
+  dplyr::distinct()
+
+mean_longevity <- mean_longevity %>%
+  dplyr::left_join(carpels, by = "species")
+rm(carpels)
 
 # boxplot of longevity by symmetry INDIVIDUALS
 ggplot(data = longevity, aes(x = longevity_days, y = symmetry_all, fill = symmetry_all)) +
@@ -210,3 +225,8 @@ plot(flordimen_cm ~ longevity_days, data = longevity)
 # really need to think about this all more at a later date
 # how to get number of carpels per species??
 
+plot(no_carpels ~ mean_long, data = mean_longevity)
+plot(no_ovules ~ mean_long, data = mean_longevity)
+plot(no_stamens ~ mean_long, data = mean_longevity)
+
+# certainly doesn't look like it's worht pursuing this further, ach well
