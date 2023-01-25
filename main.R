@@ -1,5 +1,6 @@
 library(tidyverse)
 library(ggpubr)
+library(austraits)
 
 # read in longevity monitoring data straight from google sheet
 data <- read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQlJKKlDeLMZYH32YtGRqpnL9kJFLfiUOokQZ51kvvRTgvvx4WwpemWiwCnz6hlMarYmRViWOQxVbHn/pub?gid=1585669731&single=true&output=csv")
@@ -209,4 +210,6 @@ plot(flordimen_cm ~ longevity_days, data = longevity)
 # other q's - does floral longevity = leaf longevity?
 # really need to think about this all more at a later date
 # how to get number of carpels per species??
+
+
 
