@@ -3,3 +3,5 @@ sassafras_longevity_if2days.csv - Ruby Stephens - added 2022-10-31 - manually ch
 Joly&Schoen_SupplementaryDataset.csv - Simon Joly and Daniel Schoen - added 2023-06-06 - supplementary data on floral symmetry assembled from multiple sources and provided with the paper Joly, S., & Schoen, D. J. (2021). Repeated evolution of a reproductive polyphenism in plants is strongly associated with bilateral flower symmetry. Current Biology. https://doi.org/10.1016/j.cub.2021.01.009
 
 Yoder_et_al._(2020)_plant_degree-sharing.csv - Jeremy Yoder, Giancarlo Gomez and Colin Carlson - added 2023-06-06 - supplementary data on floral symmetry assembled from various sources and available with the paper Yoder, J. B., Gomez, G., & Carlson, C. J. (2020). Zygomorphic flowers have fewer potential pollinator species. Biology Letters, 16(9), 20200307. https://doi.org/10.1098/rsbl.2020.0307
+
+aus_symmetry_20210423.csv - Ruby Stephens - added 2023-06-06 - floral (perianth) symmetry scored between 2020-2021 for Australian native and introduced species recorded within plots in the TERN AusPlots network. Symmetry not scored for species without a perianth or suspected of being wind pollinated.

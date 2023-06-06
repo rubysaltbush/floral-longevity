@@ -44,7 +44,18 @@ disagreements <- sym_data %>%
 # will ultimately have to resolve these manually with checking of original sources
 rm(disagreements, jolyschoen, yoderetal)
 
-# TO DO - PROTEUS data? My Australian symmetry data?
+# add in data for Australian taxa that I scored myself
+aus_sym <- readr::read_csv("data_input/aus_symmetry_20210423.csv")
+aus_sym <- aus_sym %>%
+  dplyr::select(auspc_name = `Taxon name`, symmetry_full = Symmetry) %>%
+  dplyr::distinct()
+table(aus_sym$symmetry_full)
+# categorising disymmetric as zygomorphic as per Joly & Schoen in below
+aus_sym$symmetry <- ifelse(str_detect(aus_sym$symmetry_full, ".actinomorphic."), "actinomorphic", "zygomorphic")
+
+# TO DO - PROTEUS data? Have checked and not much extra in Schonenberger et al. (2020) data
+# have submitted request for TRY data, will probably be a lot of duplicates and
+# conflicts in all this but maybe easiest to resolve these?
 
 ### MATCH TAXONOMY ####
 
