@@ -54,8 +54,7 @@ table(aus_sym$symmetry_full)
 aus_sym$symmetry <- ifelse(str_detect(aus_sym$symmetry_full, ".actinomorphic."), "actinomorphic", "zygomorphic")
 
 # TO DO - PROTEUS data? Have checked and not much extra in Schonenberger et al. (2020) data
-# have submitted request for TRY data, will probably be a lot of duplicates and
-# conflicts in all this but maybe easiest to resolve these?
+# add in and check out TRY data (could get via R package??)
 
 ### MATCH TAXONOMY ####
 
