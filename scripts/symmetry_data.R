@@ -87,14 +87,42 @@ table(try_sym$Dataset)
 # all TRY symmetry data are for African plant species, from two studies - Renske Onstein's Cape Region and Marcos Schmidt's Trait data for African Plants
 table(try_sym$OrigValueStr)
 # need to convert "yes" and "no" to corresponding symmetry values
-test <- try_sym %>%
+try_sym <- try_sym %>%
   dplyr::mutate(symmetry = ifelse(OrigValueStr == "yes", OriglName, OrigValueStr)) %>%
   dplyr::filter(symmetry != "no") %>%
   dplyr::select(try_name = AccSpeciesName, symmetry) %>%
   dplyr::mutate(og_species = try_name) %>%
   dplyr::distinct()
-table(test$symmetry)
+table(try_sym$symmetry)
+try_sym$symmetry <- gsub("bilateral", "zygomorphic", try_sym$symmetry)
+try_sym$symmetry <- gsub("radial", "actinomorphic", try_sym$symmetry)
+try_sym$symmetry <- gsub("Zygomorphic", "zygomorphic", try_sym$symmetry)
+try_sym$symmetry <- gsub("Actinomorphic", "actinomorphic", try_sym$symmetry)
+table(try_sym$symmetry)
+# how many species overlap from this and other data?
+paste(sum(try_sym$og_species %in% sym_data$og_species), "of", nrow(try_sym), "names from TRY symmetry data in Joly and Schoen, Yoder et al and my Aus scored data" )
 
+# try appending them, see if these 340 agree on symmetry - will be 13660 records if so
+sym_data <- sym_data %>%
+  dplyr::full_join(try_sym, by = c("og_species", "symmetry"))
+# 42 species disagree on symmetry, check these
+disagreements <- sym_data %>%
+  dplyr::group_by(og_species) %>%
+  dplyr::filter(n() > 1)
+# will ultimately have to resolve these manually by checking original sources
+# and strict definition of what I mean by symmetry
+rm(disagreements, try_sym)
+
+# 741 records in sym_data now have multiple records, paste these together 
+# so I can easily filter and check them
+sym_data_taxa <- sym_data %>%
+  dplyr::select(og_species, js_name, yea_name, auspc_name, try_name) %>%
+  dplyr::distinct()
+sym_data <- sym_data %>%
+  dplyr::group_by(og_species) %>%
+  dplyr::summarise(sym_all = stringr::str_flatten(symmetry, collapse = " "))
+
+# not sure why these have different nrow , keep going next week!
 
 # Standardization of species names (AccSpeciesName) in TRY version 6: The Plant List 
 # has been static since 2013 and is assumed to be outdated. We therefore used the 
