@@ -30,8 +30,12 @@ jolyschoen$symmetry <- gsub("Zygo", "zygomorphic", jolyschoen$symmetry)
 paste(sum(jolyschoen$js_name %in% yoderetal$yea_name), "of", nrow(jolyschoen), "names from Joly and Schoen in Yoder et al data" )
 paste(sum(yoderetal$yea_name %in% jolyschoen$js_name), "of", nrow(yoderetal), "names from Yoder et al in Joly and Schoen data" )
 
-jolyschoen$og_species <- jolyschoen$js_name
-yoderetal$og_species <- yoderetal$yea_name
+jolyschoen <- jolyschoen %>%
+  dplyr::mutate(source = "jolyandschoen2021") %>%
+  dplyr::select(og_species = js_name, symmetry, source)
+yoderetal <- yoderetal %>%
+  dplyr::mutate(source = "yoderetal2020") %>%
+  dplyr::select(og_species = yea_name, symmetry, source)
 
 # try appending them, see if these 299 agree on symmetry
 sym_data <- jolyschoen %>%
@@ -60,9 +64,11 @@ aus_sym <- aus_sym %>%
 aus_sym$symmetry <- gsub("zygomorphic actinomorphic", "actinomorphic zygomorphic", aus_sym$symmetry)
 table(aus_sym$symmetry)
 # then prep to join onto other symmetry data
-aus_sym$og_species <- aus_sym$auspc_name
+aus_sym <- aus_sym %>%
+  dplyr::mutate(source = "stephens2021") %>%
+  dplyr::select(og_species = auspc_name, symmetry, source)
 # how many species overlap from this and other data?
-paste(sum(aus_sym$auspc_name %in% sym_data$og_species), "of", nrow(aus_sym), "names from my symmetry scoring in Joly and Schoen and Yoder et al data" )
+paste(sum(aus_sym$og_species %in% sym_data$og_species), "of", nrow(aus_sym), "names from my symmetry scoring in Joly and Schoen and Yoder et al data" )
 
 # try appending them, see if these 100 agree on symmetry - will be 8010 records if so
 sym_data <- sym_data %>%
@@ -90,8 +96,8 @@ table(try_sym$OrigValueStr)
 try_sym <- try_sym %>%
   dplyr::mutate(symmetry = ifelse(OrigValueStr == "yes", OriglName, OrigValueStr)) %>%
   dplyr::filter(symmetry != "no") %>%
-  dplyr::select(try_name = AccSpeciesName, symmetry) %>%
-  dplyr::mutate(og_species = try_name) %>%
+  dplyr::select(og_species = AccSpeciesName, symmetry) %>%
+  dplyr::mutate(source = "TRY2023") %>%
   dplyr::distinct()
 table(try_sym$symmetry)
 try_sym$symmetry <- gsub("bilateral", "zygomorphic", try_sym$symmetry)
@@ -108,16 +114,17 @@ sym_data <- sym_data %>%
 # 42 species disagree on symmetry, check these
 disagreements <- sym_data %>%
   dplyr::group_by(og_species) %>%
-  dplyr::filter(n() > 1)
+  dplyr::filter(n() > 1) # 741 woah!!
 # will ultimately have to resolve these manually by checking original sources
 # and strict definition of what I mean by symmetry
 rm(disagreements, try_sym)
 
 # 741 records in sym_data now have multiple records, paste these together 
 # so I can easily filter and check them
-sym_data_taxa <- sym_data %>%
-  dplyr::select(og_species, js_name, yea_name, auspc_name, try_name) %>%
-  dplyr::distinct()
+# UP TO HERE DOESN"T QUITE WORK BECUASE MULTIPLE SOURCE COLUMNS OOPS
+sym_data_sources <- sym_data %>%
+  dplyr::group_by(og_species) %>%
+  dplyr::summarise(sources = stringr::str_flatten(source, collapse = " "))
 sym_data <- sym_data %>%
   dplyr::group_by(og_species) %>%
   dplyr::summarise(sym_all = stringr::str_flatten(symmetry, collapse = " "))
