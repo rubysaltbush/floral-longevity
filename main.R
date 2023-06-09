@@ -1,6 +1,8 @@
-library(tidyverse)
-library(ggpubr)
-library(rtry)
+library(tidyverse) #install.packages("tidyverse")
+library(ggpubr) #install.packages("ggpubr")
+library(rtry) #install.packages("rtry")
+library(devtools) #install.packages("devtools")
+library(kewr) #devtools::install_github("barnabywalker/kewr") # package for accessing Kew API to match plant names to World Checklist of Vascular Plants
 
 # My rough plan: 
 # -pull together symmetry data from a few published sources as well as the 

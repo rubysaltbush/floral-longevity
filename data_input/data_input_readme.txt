@@ -5,3 +5,5 @@ Joly&Schoen_SupplementaryDataset.csv - Simon Joly and Daniel Schoen - added 2023
 Yoder_et_al._(2020)_plant_degree-sharing.csv - Jeremy Yoder, Giancarlo Gomez and Colin Carlson - added 2023-06-06 - supplementary data on floral symmetry assembled from various sources and available with the paper Yoder, J. B., Gomez, G., & Carlson, C. J. (2020). Zygomorphic flowers have fewer potential pollinator species. Biology Letters, 16(9), 20200307. https://doi.org/10.1098/rsbl.2020.0307
 
 aus_symmetry_20210423.csv - Ruby Stephens - added 2023-06-06 - floral (perianth) symmetry scored between 2020-2021 for Australian native and introduced species recorded within plots in the TERN AusPlots network. Symmetry not scored for species without a perianth or suspected of being wind pollinated.
+
+27350_06062023071220_TRY20230606.txt - TRY - added 2023-06-09 - floral symmetry data available from TRY database
