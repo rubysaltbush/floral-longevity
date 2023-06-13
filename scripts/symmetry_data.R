@@ -82,8 +82,6 @@ disagreements <- sym_data %>%
 # and strict definition of what I mean by symmetry
 rm(disagreements, aus_sym)
 
-# TO DO - PROTEUS data? Have checked and not much extra in Schonenberger et al. (2020) data
-
 # add in and check out TRY data
 try_sym <- rtry::rtry_import("data_input/27350_06062023071220_TRY20230606.txt")
 # filter out lat/long etc associated data
@@ -96,8 +94,8 @@ table(try_sym$OrigValueStr)
 try_sym <- try_sym %>%
   dplyr::mutate(symmetry = ifelse(OrigValueStr == "yes", OriglName, OrigValueStr)) %>%
   dplyr::filter(symmetry != "no") %>%
-  dplyr::select(og_species = AccSpeciesName, symmetry) %>%
-  dplyr::mutate(source = "TRY2023") %>%
+  dplyr::select(og_species = AccSpeciesName, symmetry, source = DatasetID) %>%
+  dplyr::mutate(source = paste("2023TRY", source, sep = "_")) %>%
   dplyr::distinct()
 table(try_sym$symmetry)
 try_sym$symmetry <- gsub("bilateral", "zygomorphic", try_sym$symmetry)
@@ -111,25 +109,43 @@ paste(sum(try_sym$og_species %in% sym_data$og_species), "of", nrow(try_sym), "na
 # try appending them, see if these 340 agree on symmetry - will be 13660 records if so
 sym_data <- sym_data %>%
   dplyr::full_join(try_sym, by = c("og_species", "symmetry"))
-# 42 species disagree on symmetry, check these
+# check species that disagree on symmetry
 disagreements <- sym_data %>%
   dplyr::group_by(og_species) %>%
-  dplyr::filter(n() > 1) # 741 woah!!
+  dplyr::filter(n() > 1) # 741 rows woah!!
 # will ultimately have to resolve these manually by checking original sources
 # and strict definition of what I mean by symmetry
 rm(disagreements, try_sym)
 
 # 741 records in sym_data now have multiple records, paste these together 
 # so I can easily filter and check them
-# UP TO HERE DOESN"T QUITE WORK BECUASE MULTIPLE SOURCE COLUMNS OOPS
+# first consolidate source columns
+sym_data <- sym_data %>%
+  dplyr::mutate(source = paste(source.x, source.y, source.x.x, source.y.y)) %>%
+  dplyr::select(og_species, symmetry, source)
+sym_data$source <- gsub(" NA", "", test$source) # get rid of pasted NA values
+sym_data$source <- gsub("NA ", "", test$source) # get rid of pasted NA values
+
+# now summarise down to combine symmetry types so one row per taxon
 sym_data_sources <- sym_data %>%
   dplyr::group_by(og_species) %>%
   dplyr::summarise(sources = stringr::str_flatten(source, collapse = " "))
+sym_data_sources$sources <- gsub("2023TRY_319 2023TRY_319", "2023TRY_319", sym_data_sources$sources)
+sym_data_sources$sources <- gsub("2023TRY_350 2023TRY_350", "2023TRY_350", sym_data_sources$sources)
+table(sym_data_sources$sources)
 sym_data <- sym_data %>%
   dplyr::group_by(og_species) %>%
   dplyr::summarise(sym_all = stringr::str_flatten(symmetry, collapse = " "))
+sym_data$sym_all <- gsub("actinomorphic actinomorphic", "actinomorphic", sym_data$sym_all)
+sym_data$sym_all <- gsub("zygomorphic zygomorphic", "zygomorphic", sym_data$sym_all)
+sym_data$sym_all <- gsub("zygomorphic actinomorphic", "actinomorphic zygomorphic", sym_data$sym_all)
+sym_data$sym_all <- gsub("actinomorphic actinomorphic", "actinomorphic", sym_data$sym_all)
+table(sym_data$sym_all)
+sym_data <- sym_data %>%
+  dplyr::left_join(sym_data_sources, by = "og_species")
+rm(sym_data_sources)
 
-# not sure why these have different nrow , keep going next week!
+# TO DO - PROTEUS data? Have checked and not much extra in Schonenberger et al. (2020) data
 
 # Standardization of species names (AccSpeciesName) in TRY version 6: The Plant List 
 # has been static since 2013 and is assumed to be outdated. We therefore used the 
