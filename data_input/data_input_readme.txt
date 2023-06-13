@@ -7,3 +7,5 @@ Yoder_et_al._(2020)_plant_degree-sharing.csv - Jeremy Yoder, Giancarlo Gomez and
 aus_symmetry_20210423.csv - Ruby Stephens - added 2023-06-06 - floral (perianth) symmetry scored between 2020-2021 for Australian native and introduced species recorded within plots in the TERN AusPlots network. Symmetry not scored for species without a perianth or suspected of being wind pollinated.
 
 27350_06062023071220_TRY20230606.txt - TRY - added 2023-06-09 - floral symmetry data available from TRY database
+
+Floral_longevity_community_data.csv - Marcos Méndez - added 2023-06-13 - floral longevity data from community studies sent by Marcos Méndez by email on 2023-02-14

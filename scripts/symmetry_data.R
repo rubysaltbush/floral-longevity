@@ -147,6 +147,13 @@ rm(sym_data_sources)
 
 # TO DO - PROTEUS data? Have checked and not much extra in Schonenberger et al. (2020) data
 
+# NEXT - read in longevity data???
+
+longevitycomm <- readr::read_csv("data_input/Floral_longevity_community_data.csv")
+
+
+#      - taxonomic alignment of longevity and symmetry data
+
 # Standardization of species names (AccSpeciesName) in TRY version 6: The Plant List 
 # has been static since 2013 and is assumed to be outdated. We therefore used the 
 # following reference floras for the standardization of species names: World Flora 
