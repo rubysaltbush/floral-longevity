@@ -72,8 +72,12 @@ longevity <- longevity %>%
   dplyr::left_join(trait_data, by = "individual") %>%
   dplyr::select(individual:longevity_days, infloheight_m:tube)
 
-# symmetry not recorded in trait_data for all individuals, get it by species
 
+# HERE INSERT SITE LAT/LONG AND HABITAT TYPE INTO MTS SPREADSHEET AND INCLUDE IN
+# FINAL LONGEVITY DATA OUTPUT BELOW
+
+
+# symmetry not recorded in trait_data for all individuals, get it by species
 species_sym <- trait_data %>%
   dplyr::select(4,15) %>%
   dplyr::distinct()

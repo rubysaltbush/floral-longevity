@@ -2,6 +2,9 @@
 # World Checklist of Vascular Plants (WCVP)
 
 ### GET DATA ####
+
+#*symmetry data ----
+
 # read in data from different sources
 yoderetal <- readr::read_csv("data_input/Yoder_et_al._(2020)_plant_degree-sharing.csv")
 jolyschoen <- readr::read_csv("data_input/Joly&Schoen_SupplementaryDataset.csv")
@@ -147,10 +150,43 @@ rm(sym_data_sources)
 
 # TO DO - PROTEUS data? Have checked and not much extra in Schonenberger et al. (2020) data
 
-# NEXT - read in longevity data???
+#* longevity data ----
 
+# my field data
+fieldlong <- readr::read_csv("data_output/mean_longevity_Sydney_fieldwork.csv")
+
+# summarise down to species, mean and SE longevity (days), symmetry, lat and long of field site
+# haven't got lat longs encoded, have to put into field_data.R later
+# for now just guesstimate
+fieldlong <- fieldlong %>%
+  dplyr::mutate(SE_long = sd_long/sqrt(n)) %>%
+  dplyr::mutate(sym_all = str_replace(symmetry_all, "actinomorphic.*", "actinomorphic")) %>%
+  dplyr::select(og_species = species, mean_long_days, SE_long, sym_all) %>%
+  dplyr::mutate(Site = "Sydney")
+
+# read in longevity data from Marcos' community studies
 longevitycomm <- readr::read_csv("data_input/Floral_longevity_community_data.csv")
 
+longevitycomm <- longevitycomm %>%
+  dplyr::filter(is.na(Pseudanthium) | Pseudanthium != 1) %>% # exclude longevity measured at Pseudanthium level for now, though may be taking functional approach to pseudanthium symmetry so may revisit this...
+  dplyr::select(og_species = Species, mean_long_days = `Floral.longevity (days)`, SE_long = `SE...8`, Site, Lat, Lon)
+
+# now need to process longevity into numeric column
+longevitycomm <- longevitycomm %>%
+  dplyr::mutate(mean_long_days = ifelse()) # need to convert:
+# 1 (12 h) -> 0.5? or 1?
+# 1 or 2, 1 to 2 -> 1.5
+# can probs average all e.g. 7 to 10 = 8.5
+# what to do with 1+?????? or 2 or more? or 3 to many?? or 4 or more?
+
+
+table(longevitycomm$mean_long_days)
+#overwhelming amount of detail in this data, for now I just want 
+#longevity (as days), mean and SE
+#species
+#community ref, lat long
+# will include all quality levels (0-3)
+# will FILTER OUT pseudanthia but leave in exotics et al
 
 #      - taxonomic alignment of longevity and symmetry data
 
