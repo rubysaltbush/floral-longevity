@@ -63,16 +63,16 @@ Isopyrum.biternatum(=Enemion.biternatum),Ranunculaceae,"Brownfield Woods, Illino
 Sanguinaria.canadensis,Papaveraceae,"Brownfield Woods, Illinois (USA)",,,Temperate forest,2,,0,,,,,,,,,,,,,,,,,Schemske et al. (1978). Ecology 59: 351-366.,"p. 355, Fig. 1",SC Aut,,Mar-Apr.
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 Achillea.ambrosiaca,Asteraceae,Mt. Olympos (Greece)-1993,,1,Alpine scree,8.1,0.7,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",Jun.,,
-Achillea.ambrosiaca,Asteraceae,Mt. Olympos (Greece)-1994,,,,8.4,0.4,3,,,,,,,,,,,,,,,,,,,Jun.,,
+Achillea.ambrosiaca,Asteraceae,Mt. Olympos (Greece)-1994,,,,8.4,0.4,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",Jun.,,
 Anthyllis.vulneraria,Fabaceae,Mt. Olympos (Greece)-1994,,,Alpine meadow and scree,4.5,0.3,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jun.
 Arenaria.cretica,Caryophyllaceae,Mt. Olympos (Greece)-1993,,,Alpine meadow/scree,2.7,0.2,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jul.
-Arenaria.cretica,Caryophyllaceae,Mt. Olympos (Greece)-1994,,,,3.8,0.3,3,,,,,,,,,,,,,,,,,,,,,Jul.
+Arenaria.cretica,Caryophyllaceae,Mt. Olympos (Greece)-1994,,,,3.8,0.3,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jul.
 Armeria.canescens,Plumbaginaceae,Mt. Olympos (Greece)-1994,,,Alpine meadow/scree,7,0.9,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jul.
 Astragalus.depressus,Fabaceae,Mt. Olympos (Greece)-1994,,,Alpine meadow/scree,2.6,0.2,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,Table 2,,,
 Cerastium.theophrasti,Caryophyllaceae,Mt. Olympos (Greece)-1993,,,Alpine scree,2,0.1,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jun-Jul.
-Cerastium.theophrasti,Caryophyllaceae,Mt. Olympos (Greece)-1994,,,,4,0.4,3,,,,,,,,,,,,,,,,,,,,,Jun-Jul.
+Cerastium.theophrasti,Caryophyllaceae,Mt. Olympos (Greece)-1994,,,,4,0.4,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jun-Jul.
 Daphne.oleoides,Thymelaeaceae,Mt. Olympos (Greece)-1993,,,Alpine meadow/scree,3.3,0.4,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jun.
-Daphne.oleoides,Thymelaeaceae,Mt. Olympos (Greece)-1994,,,,4.7,0.3,3,,,,,,,,,,,,,,,,,,,,,Jun-Jul.
+Daphne.oleoides,Thymelaeaceae,Mt. Olympos (Greece)-1994,,,,4.7,0.3,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jun-Jul.
 Dianthus.integer,Caryophyllaceae,Mt. Olympos (Greece)-1994,,,Alpine scree,5.5,0.5,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jun-Jul.
 Doronicum.columnae,Asteraceae,Mt. Olympos (Greece)-1994,,1,Alpine meadow/scree,7.7,0.6,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jun-Jul.
 Edraianthus.graminifolius,Campanulaceeae,Mt. Olympos (Greece)-1994,,,Alpine meadow and scree,4,0.1,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jun-Jul.
@@ -83,23 +83,23 @@ Lactuca.intricata,Asteraceae,Mt. Olympos (Greece)-1993,,1,Alpine meadow/scree,1.
 Linaria.alpina,Scrophulariaceae,Mt. Olympos (Greece)-1993,,,Alpine scree,6.8,0.4,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jun-Jul.
 Linaria.peloponesica,Scrophulariaceae,Mt. Olympos (Greece)-1993,,,Alpine meadow/scree,6.4,0.6,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jul.
 Linum.hirsutum,Linaceae,Mt. Olympos (Greece)-1993,,,Alpine scree,4.6,0.4,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jun.
-Linum.hirsutum,Linaceae,Mt. Olympos (Greece)-1994,,,,2.8,0.4,3,,,,,,,,,,,,,,,,,,,,,Jun.
+Linum.hirsutum,Linaceae,Mt. Olympos (Greece)-1994,,,,2.8,0.4,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jun.
 Lotus.corniculatus,Fabaceae,Mt. Olympos (Greece)-1993,,,Alpine meadow,4.2,0.4,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jun.
 Minuartia.verna,Caryophyllaceae,Mt. Olympos (Greece)-1994,,,Alpine meadow and scree,4,0.4,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jun-Jul.
 Myosotis.alpestris,Boraginaceae,Mt. Olympos (Greece)-1993,,,Alpine meadow and scree,3.8,0.2,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jun.
-Myosotis.alpestris,Boraginaceae,Mt. Olympos (Greece)-1994,,,,3.8,0.3,3,,,,,,,,,,,,,,,,,,,,,Jun.
+Myosotis.alpestris,Boraginaceae,Mt. Olympos (Greece)-1994,,,,3.8,0.3,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jun.
 Potentilla.deorum,Rosaceae,Mt. Olympos (Greece)-1994,,,Alpine scree,7.1,0.7,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jun.
 Ranunculus.brevifolius,Ranunculaceae,Mt. Olympos (Greece)-1994,,,Alpine scree,5.1,0.2,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jun.
 Ranunculus.sartorianus,Ranunculaceae,Mt. Olympos (Greece)-1994,,,Alpine meadow,6.2,0.3,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jun.
 Saxifraga.exarata,Saxifragaceae,Mt. Olympos (Greece)-1993,,,Alpine meadow/scree,13.4,0.7,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jun-Jul.
-Saxifraga.exarata,Saxifragaceae,Mt. Olympos (Greece)-1994,,,,7,0.7,3,,,,,,,,,,,,,,,,,,,,,Jun.
+Saxifraga.exarata,Saxifragaceae,Mt. Olympos (Greece)-1994,,,,7,0.7,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jun.
 Saxifraga.glabella,Saxifragaceae,Mt. Olympos (Greece)-1994,,,Alpine meadow/scree,7.3,0.3,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jun.
 Scutellaria.alpina,Lamiaceae,Mt. Olympos (Greece)-1994,,,Alpine meadow/scree,4.5,0.4,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,Table 2,,,
 Sedum.magellense,Crassulaceae,Mt. Olympos (Greece)-1993,,,Alpine meadow/scree,2.5,0.1,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jun-Jul.
 Silene.saxifraga,Caryophyllaceae,Mt. Olympos (Greece)-1993,,,Alpine scree,5.2,0.2,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jun-Jul.
-Silene.saxifraga,Caryophyllaceae,Mt. Olympos (Greece)-1994,,,,3,0.4,3,,,,,,,,,,,,,,,,,,,,,Jul.
+Silene.saxifraga,Caryophyllaceae,Mt. Olympos (Greece)-1994,,,,3,0.4,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jul.
 Silene.vulgaris,Caryophyllaceae,Mt. Olympos (Greece)-1993,,,Alpine scree,4.7,0.8,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jul-Aug.
-Silene.vulgaris,Caryophyllaceae,Mt. Olympos (Greece)-1994,,,,3.7,0.3,3,,,,,,,,,,,,,,,,,,,,,Jul.
+Silene.vulgaris,Caryophyllaceae,Mt. Olympos (Greece)-1994,,,,3.7,0.3,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jul.
 Taraxacum.deorum,Asteraceae,Mt. Olympos (Greece)-1994,,1,Alpine meadow and scree,3,0,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jul-Aug.
 Thymus.boissieri,Lamiaceae,Mt. Olympos (Greece)-1994,,,Alpine meadow and scree,11.2,1.1,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jun.
 Viola.graeca,Violaceae,Mt. Olympos (Greece)-1994,,,Alpine meadow and scree,5.8,0.5,3,,,,,,,,40,4,,40.067,22,27,,22.45,2600 to 2750,Makrodimos et al. (2008). Flora 203: 449-468.,"Table 2, Fig. 2",,,Jun.
@@ -316,7 +316,7 @@ Qualea.grandiflora,Vochysiaceae,"Brasilia Botanical Garden, Federal Capital (Bra
 Qualea.multiflora,Vochysiaceae,"Brasilia Botanical Garden, Federal Capital (Brazil)",,,Cerrado,1,,0,,,,,,,,-15,-52,,-15.867,-47,-51,,-47.85,1025 to 1150,Oliveira & Gibbs (2000). Flora 195: 311-329.,Table 2,SI,1,
 Qualea.parviflora,Vochysiaceae,"Brasilia Botanical Garden, Federal Capital (Brazil)",,,Cerrado,1,,0,,,,,,,,-15,-52,,-15.867,-47,-51,,-47.85,1025 to 1150,Oliveira & Gibbs (2000). Flora 195: 311-329.,Table 2,SI,1,
 Rapanea.guianensis(=Myrsine.guianensis),Myrsinaceae,"Brasilia Botanical Garden, Federal Capital (Brazil)",,,Cerrado,1,,0,,,,,,,,-15,-52,,-15.867,-47,-51,,-47.85,1025 to 1150,Oliveira & Gibbs (2000). Flora 195: 311-329.,Table 2,,1,D species. Data for m flowers.
-,,,,,,3,,0,,,,,,,,,,,,,,,,,,,,1,D species. Data for f flowers.
+Rapanea.guianensis(=Myrsine.guianensis),Myrsinaceae,"Brasilia Botanical Garden, Federal Capital (Brazil)",,,Cerrado,3,,0,,,,,,,,-15,-52,,-15.867,-47,-51,,-47.85,1025 to 1150,Oliveira & Gibbs (2000). Flora 195: 311-329.,Table 2,,1,D species. Data for f flowers.
 Roupala.montana,Proteaceae,"Brasilia Botanical Garden, Federal Capital (Brazil)",,,Cerrado,4 or more,,0,,,,,,,,-15,-52,,-15.867,-47,-51,,-47.85,1025 to 1150,Oliveira & Gibbs (2000). Flora 195: 311-329.,Table 2,SI,1,
 Salacia.crassifolia(=S.multiflora),Celastraceae,"Brasilia Botanical Garden, Federal Capital (Brazil)",,,Cerrado,2,,0,,,,,,,,-15,-52,,-15.867,-47,-51,,-47.85,1025 to 1150,Oliveira & Gibbs (2000). Flora 195: 311-329.,Table 2,,1,
 Sclerolobium.paniculatum,Fabaceae,"Brasilia Botanical Garden, Federal Capital (Brazil)",,,Cerrado,2,,0,,,,,,,,-15,-52,,-15.867,-47,-51,,-47.85,1025 to 1150,Oliveira & Gibbs (2000). Flora 195: 311-329.,Table 2,SI,1,
@@ -340,7 +340,7 @@ Anagallis.arvensis(=Lysimachia.arvensis),Primulaceae,Daphni (Greece),,,Phrygana 
 Anchusa.undulata,Boraginaceae,Daphni (Greece),,,Phrygana (Mediterranean scrubland),1,,0,,,,,,,,38,0,,38,23,38,,23.633,135 to 215,Petanidou et al. (1995). Amer. J. Bot. 82: 607-620.,Appendix 1,,,
 Anchusa.variegata,Boraginaceae,Daphni (Greece),,,Phrygana (Mediterranean scrubland),2.5,,1,,,,,,,,38,0,,38,23,38,,23.633,135 to 215,Petanidou et al. (1995). Amer. J. Bot. 82: 607-620.,Appendix 1,,,
 Anemone.coronaria,Ranunculaceae,Daphni (Greece) - purple morph,,,Phrygana (Mediterranean scrubland),14,,1,,,,,,,,38,0,,38,23,38,,23.633,135 to 215,Petanidou et al. (1995). Amer. J. Bot. 82: 607-620.,Appendix 1,,,
-Anemone.coronaria,Ranunculaceae,Daphni (Greece) - red morph,,,,8.5,,1,,,,,,,,,,,,,,,,,,,,,
+Anemone.coronaria,Ranunculaceae,Daphni (Greece) - red morph,,,Phrygana (Mediterranean scrubland),8.5,,1,,,,,,,,38,0,,38,23,38,,23.633,135 to 215,Petanidou et al. (1995). Amer. J. Bot. 82: 607-620.,Appendix 1,,,
 Anemone.pavonina(=A.hortensis),Ranunculaceae,Daphni (Greece),,,Phrygana (Mediterranean scrubland),14.1,,1,,,,,,,,38,0,,38,23,38,,23.633,135 to 215,Petanidou et al. (1995). Amer. J. Bot. 82: 607-620.,Appendix 1,,,
 Anthyllis.hermanniae,Fabaceae,Daphni (Greece),,,Phrygana (Mediterranean scrubland),3.8,,1,,,,,,,,38,0,,38,23,38,,23.633,135 to 215,Petanidou et al. (1995). Amer. J. Bot. 82: 607-620.,Appendix 1,,,
 Arisarum.vulgare,Araceae,Daphni (Greece),,1,Phrygana (Mediterranean scrubland),22.7,,1,,,,,,,,38,0,,38,23,38,,23.633,135 to 215,Petanidou et al. (1995). Amer. J. Bot. 82: 607-620.,Appendix 1,,,
