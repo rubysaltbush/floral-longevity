@@ -205,7 +205,15 @@ longevitycomm$mean_long_days <- mean_long_days
 rm(n, meanl, minmax, longdat, mean_long_days)
 table(longevitycomm$mean_long_days)
 
-
+# very few records have SE for longevity, might jettison this data for now
+# take mean longevity per taxon
+longevitymean <- longevitycomm %>%
+  dplyr::group_by(og_species) %>%
+  dplyr::summarise(mean_long_days = mean(as.numeric(mean_long_days)))
+longevitycomm <- longevitycomm %>%
+  dplyr::select(og_species, Site, Lat, Lon) %>%
+  dplyr::distinct() %>%
+  dplyr::left_join(longevitymean, by = "og_species")
 
 #      - taxonomic alignment of longevity and symmetry data
 
