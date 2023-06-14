@@ -4,6 +4,8 @@
 ### GET DATA ####
 
 #*symmetry data ----
+sym_data <- cache_RDS("data_output/sym_data.csv", read_function = readr::read_csv,
+                                save_function = write_csv, function() {
 
 # read in data from different sources
 yoderetal <- readr::read_csv("data_input/Yoder_et_al._(2020)_plant_degree-sharing.csv")
@@ -126,8 +128,8 @@ rm(disagreements, try_sym)
 sym_data <- sym_data %>%
   dplyr::mutate(source = paste(source.x, source.y, source.x.x, source.y.y)) %>%
   dplyr::select(og_species, symmetry, source)
-sym_data$source <- gsub(" NA", "", test$source) # get rid of pasted NA values
-sym_data$source <- gsub("NA ", "", test$source) # get rid of pasted NA values
+sym_data$source <- gsub(" NA", "", sym_data$source) # get rid of pasted NA values
+sym_data$source <- gsub("NA ", "", sym_data$source) # get rid of pasted NA values
 
 # now summarise down to combine symmetry types so one row per taxon
 sym_data_sources <- sym_data %>%
@@ -148,6 +150,10 @@ sym_data <- sym_data %>%
   dplyr::left_join(sym_data_sources, by = "og_species")
 rm(sym_data_sources)
 
+# export csv of assembled symmetry data for now
+readr::write_csv(sym_data, "data_output/sym_data.csv")
+})
+
 # TO DO - PROTEUS data? Have checked and not much extra in Schonenberger et al. (2020) data
 
 #* longevity data ----
@@ -167,17 +173,36 @@ fieldlong <- fieldlong %>%
 # read in longevity data from Marcos' community studies
 longevitycomm <- readr::read_csv("data_input/Floral_longevity_community_data.csv")
 
+problems <- longevitycomm[is.na(longevitycomm$Species),]
+# some are just blank rows, some are where a species has been surveyed twice
+# and has two different measurements. Might have to fix manually
+
 longevitycomm <- longevitycomm %>%
   dplyr::filter(is.na(Pseudanthium) | Pseudanthium != 1) %>% # exclude longevity measured at Pseudanthium level for now, though may be taking functional approach to pseudanthium symmetry so may revisit this...
-  dplyr::select(og_species = Species, mean_long_days = `Floral.longevity (days)`, SE_long = `SE...8`, Site, Lat, Lon)
+  dplyr::select(og_species = Species, og_longevity = `Floral.longevity (days)`, SE_long = `SE...8`, Site, Lat, Lon) %>%
+  dplyr::filter(!is.na(og_longevity)) %>%
+  dplyr::distinct()
+# PROBLEM - many species showing up as NA?????
 
 # now need to process longevity into numeric column
-longevitycomm <- longevitycomm %>%
-  dplyr::mutate(mean_long_days = ifelse()) # need to convert:
-# 1 (12 h) -> 0.5? or 1?
-# 1 or 2, 1 to 2 -> 1.5
-# can probs average all e.g. 7 to 10 = 8.5
+# need to convert:
+# 1 or 2, 1 to 2 -> 1.5; take average of min and max e.g. 7 to 10 = 8.5
+mean_long_days <- c()
+for(n in 1:nrow(longevitycomm)){
+  longdat <- longevitycomm[[n, "og_longevity"]]
+  if (str_detect(longdat, "(\\d*)[ tor]*(\\d*)") == TRUE){
+    minmax <- as.data.frame(str_match(longdat, "(?<min>\\d*)[ tor]*(?<max>\\d*)"))
+    meanl <- mean(c(as.numeric(minmax$min), as.numeric(minmax$max)))
+  } else {
+    meanl <- longdat
+  }
+  mean_long_days <- c(mean_long_days, meanl)
+}
+# 1 (12 h) -> 0.5? or 1? 1 for now
+longevitycomm$mean_long_days <- gsub(" \\(12 h\\)", ".0", longevitycomm$mean_long_days)
 # what to do with 1+?????? or 2 or more? or 3 to many?? or 4 or more?
+longevitycomm$mean_long_days <- gsub(" \\(12 h\\)", ".0", longevitycomm$mean_long_days)
+
 
 
 table(longevitycomm$mean_long_days)

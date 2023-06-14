@@ -4,6 +4,9 @@ library(rtry) #install.packages("rtry")
 library(devtools) #install.packages("devtools")
 library(kewr) #devtools::install_github("barnabywalker/kewr") # package for accessing Kew API to match plant names to World Checklist of Vascular Plants
 
+# function to cache pre-prepared R data. If RDS already in cache will read data
+source("scripts/functions/cache_RDS.R")
+
 # My rough plan: 
 # -pull together symmetry data from a few published sources as well as the 
 #  PROTEUS database and some previous work of mine 
@@ -20,4 +23,4 @@ library(kewr) #devtools::install_github("barnabywalker/kewr") # package for acce
 #  compare to the global relationship
 
 # read in data from different sources
-source("scripts/data_prep/final_data.R")
+source("scripts/prepdata/final_data.R")
