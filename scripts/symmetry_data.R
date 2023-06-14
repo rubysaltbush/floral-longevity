@@ -172,46 +172,40 @@ fieldlong <- fieldlong %>%
 
 # read in longevity data from Marcos' community studies
 longevitycomm <- readr::read_csv("data_input/Floral_longevity_community_data.csv")
+# have manually fixed several blank rows in the above csv, filling their values in
+# from the row above
 
-problems <- longevitycomm[is.na(longevitycomm$Species),]
-# some are just blank rows, some are where a species has been surveyed twice
-# and has two different measurements. Might have to fix manually
-
+# for now will include all quality levels (0-3)
+# will FILTER OUT pseudanthia but leave in exotics et al
 longevitycomm <- longevitycomm %>%
   dplyr::filter(is.na(Pseudanthium) | Pseudanthium != 1) %>% # exclude longevity measured at Pseudanthium level for now, though may be taking functional approach to pseudanthium symmetry so may revisit this...
   dplyr::select(og_species = Species, og_longevity = `Floral.longevity (days)`, SE_long = `SE...8`, Site, Lat, Lon) %>%
   dplyr::filter(!is.na(og_longevity)) %>%
   dplyr::distinct()
-# PROBLEM - many species showing up as NA?????
 
 # now need to process longevity into numeric column
 # need to convert:
+# 1 (12 h) -> 0.5? or 1? 1 for now
+longevitycomm$mean_long_days <- gsub(" \\(12 h\\)", ".0", longevitycomm$og_longevity)
 # 1 or 2, 1 to 2 -> 1.5; take average of min and max e.g. 7 to 10 = 8.5
 mean_long_days <- c()
 for(n in 1:nrow(longevitycomm)){
-  longdat <- longevitycomm[[n, "og_longevity"]]
-  if (str_detect(longdat, "(\\d*)[ tor]*(\\d*)") == TRUE){
-    minmax <- as.data.frame(str_match(longdat, "(?<min>\\d*)[ tor]*(?<max>\\d*)"))
-    meanl <- mean(c(as.numeric(minmax$min), as.numeric(minmax$max)))
+  longdat <- longevitycomm[[n, "mean_long_days"]]
+  if (str_detect(longdat, "^\\d* to \\d*$|^\\d* or \\d*$")){ # if the longevity is in the form "2 to 3" or "1 or 2"
+    minmax <- as.data.frame(str_match(longdat, "(?<min>\\d*)[ tor]*(?<max>\\d*)")) # then extract the min and max number
+    meanl <- mean(c(as.numeric(minmax$min), as.numeric(minmax$max))) # and return their mean
+  } else if (str_detect(longdat, "^\\d*[+]|^\\d* or more|^\\d* to many")){
+    meanl <- str_match(longdat, "^\\d*") # with 1+, 2 or more, or 3 to many, return the min number as don't know max
   } else {
     meanl <- longdat
   }
   mean_long_days <- c(mean_long_days, meanl)
 }
-# 1 (12 h) -> 0.5? or 1? 1 for now
-longevitycomm$mean_long_days <- gsub(" \\(12 h\\)", ".0", longevitycomm$mean_long_days)
-# what to do with 1+?????? or 2 or more? or 3 to many?? or 4 or more?
-longevitycomm$mean_long_days <- gsub(" \\(12 h\\)", ".0", longevitycomm$mean_long_days)
-
-
-
+longevitycomm$mean_long_days <- mean_long_days
+rm(n, meanl, minmax, longdat, mean_long_days)
 table(longevitycomm$mean_long_days)
-#overwhelming amount of detail in this data, for now I just want 
-#longevity (as days), mean and SE
-#species
-#community ref, lat long
-# will include all quality levels (0-3)
-# will FILTER OUT pseudanthia but leave in exotics et al
+
+
 
 #      - taxonomic alignment of longevity and symmetry data
 
