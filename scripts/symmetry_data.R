@@ -214,8 +214,14 @@ longevitycomm <- longevitycomm %>%
   dplyr::select(og_species, Site, Lat, Lon) %>%
   dplyr::distinct() %>%
   dplyr::left_join(longevitymean, by = "og_species")
+rm(longevitymean)
 
-#      - taxonomic alignment of longevity and symmetry data
+# patch species names in longevity data
+longevitycomm$og_species_patch <- gsub("^.*\\(=|\\)", "", longevitycomm$og_species) # remove alternative names manually matched by Marcos
+longevitycomm$og_species_patch <- gsub("\\.", " ", longevitycomm$og_species_patch) # replace full stops with spaces
+
+# can defs see some simple orthographic errors in species names, time to try
+# matching taxonomy!!! using kewr::match_knms
 
 # Standardization of species names (AccSpeciesName) in TRY version 6: The Plant List 
 # has been static since 2013 and is assumed to be outdated. We therefore used the 
