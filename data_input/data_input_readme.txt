@@ -9,3 +9,5 @@ aus_symmetry_20210423.csv - Ruby Stephens - added 2023-06-06 - floral (perianth)
 27350_06062023071220_TRY20230606.txt - TRY - added 2023-06-09 - floral symmetry data available from TRY database
 
 Floral_longevity_community_data.csv - Marcos Méndez - added 2023-06-13 - floral longevity data from community studies sent by Marcos Méndez by email on 2023-02-14
+
+Floral_longevity_20230623.xls - Marcos Méndez - added 2023-06-26 - data assembled by Marcos Méndez from numerous studies of floral longevity, sent by email on 2023-06-23: "I attach the data base with floral longevity. I have not been able to complete some data on latitude, longitude and flower size, but at least you have the floral longevities for analysis. As you will see, I "isolated" in a different sheet some data of lower quality, as well as the data of the 6-7 community studies of floral longevity. You can pool them in the main data set if you wish."
