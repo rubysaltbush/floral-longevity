@@ -158,7 +158,7 @@ readr::write_csv(sym_data, "data_output/sym_data.csv")
 
 #* longevity data ----
 
-# my field data
+#** my field data ----
 fieldlong <- readr::read_csv("data_output/mean_longevity_Sydney_fieldwork.csv")
 
 # summarise down to species, mean and SE longevity (days), symmetry, lat and long of field site
@@ -166,10 +166,11 @@ fieldlong <- readr::read_csv("data_output/mean_longevity_Sydney_fieldwork.csv")
 # for now just guesstimate
 fieldlong <- fieldlong %>%
   dplyr::mutate(SE_long = sd_long/sqrt(n)) %>%
-  dplyr::mutate(sym_all = str_replace(symmetry_all, "actinomorphic.*", "actinomorphic")) %>%
-  dplyr::select(og_species = species, mean_long_days, SE_long, sym_all) %>%
-  dplyr::mutate(Site = "Sydney")
+  dplyr::mutate(sym_all = str_replace(symmetry, "actinomorphic.*", "actinomorphic")) %>%
+  dplyr::select(og_species = species, mean_long_days, SE_long, sym_all, 
+                Site = site, Lat = latitude, Long = longitude)
 
+#** community studies ----
 # read in longevity data from Marcos' community studies
 longevitycomm <- readr::read_csv("data_input/Floral_longevity_community_data.csv")
 # have manually fixed several blank rows in the above csv, filling their values in
@@ -205,20 +206,26 @@ longevitycomm$mean_long_days <- mean_long_days
 rm(n, meanl, minmax, longdat, mean_long_days)
 table(longevitycomm$mean_long_days)
 
-# very few records have SE for longevity, might jettison this data for now
-# take mean longevity per taxon
+# very few records have SE for longevity but will keep for now
+# take mean longevity per taxon PER SITE (only reduces 1 taxon)
 longevitymean <- longevitycomm %>%
-  dplyr::group_by(og_species) %>%
+  dplyr::group_by(og_species, Site) %>%
   dplyr::summarise(mean_long_days = mean(as.numeric(mean_long_days)))
 longevitycomm <- longevitycomm %>%
-  dplyr::select(og_species, Site, Lat, Lon) %>%
+  dplyr::select(og_species, Site, Lat, Lon, SE_long) %>%
   dplyr::distinct() %>%
-  dplyr::left_join(longevitymean, by = "og_species")
+  dplyr::left_join(longevitymean, by = c("og_species", "Site"))
 rm(longevitymean)
 
 # patch species names in longevity data
 longevitycomm$og_species_patch <- gsub("^.*\\(=|\\)", "", longevitycomm$og_species) # remove alternative names manually matched by Marcos
 longevitycomm$og_species_patch <- gsub("\\.", " ", longevitycomm$og_species_patch) # replace full stops with spaces
+
+#** Marcos' longevity database, higher quality data ----
+
+# read in .xls sheet with Marcos' highest quality data
+longevhighq <- readxl::read_xls("data_input/Floral_longevity_20230623.xls", sheet = 1)
+
 
 # can defs see some simple orthographic errors in species names, time to try
 # matching taxonomy!!! using kewr::match_knms
