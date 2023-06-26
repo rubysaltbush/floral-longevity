@@ -63,35 +63,32 @@ longevity$longevity_days <- difftime(longevity$deathtime, longevity$birthtime, u
 
 # get trait data measured for each individual
 trait_data <- read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQ8l1sSP14c_ofDymqna9mTqeE6KK1scNGt6YBTCMGhvqeh884eyW1JwNQVvdL-znAuXGxjcOh-sA-t/pub?gid=1824852273&single=true&output=csv")
-colnames(trait_data) <- c("timestamp", "site", "observer", "species", "individual", 
+colnames(trait_data) <- c("timestamp", "site", "latitude", "longitude", 
+                          "observer", "species", "individual", 
                           "infloheight_m", "habit", "height_m", "inflosize_cm", 
                           "flowersperplant", "budsperplant", "florallength_cm", 
-                          "floraldiam_cm", "colour", "symmetry", "tube", "notes")
+                          "floraldiam_cm", "colour", "symmetry", "tube", "notes",
+                          "no_carpels",	"no_ovules",	"no_stamens")
 
 longevity <- longevity %>%
   dplyr::left_join(trait_data, by = "individual") %>%
-  dplyr::select(individual:longevity_days, infloheight_m:tube)
-
-
-# HERE INSERT SITE LAT/LONG AND HABITAT TYPE INTO MTS SPREADSHEET AND INCLUDE IN
-# FINAL LONGEVITY DATA OUTPUT BELOW
-
+  dplyr::select(individual:longevity_days, infloheight_m:colour, tube, 
+                no_carpels:no_stamens)
 
 # symmetry not recorded in trait_data for all individuals, get it by species
-species_sym <- trait_data %>%
-  dplyr::select(4,15) %>%
+species_sym_and_site <- trait_data %>%
+  dplyr::select(species, site, latitude, longitude, symmetry) %>%
   dplyr::distinct()
-colnames(species_sym) <- c("species", "symmetry_all")
 species_individual <- data %>%
   dplyr::select(species, individual) %>%
   dplyr::distinct()
-species_sym <- species_individual %>%
-  dplyr::left_join(species_sym, by = "species")
+species_sym_and_site <- species_individual %>%
+  dplyr::left_join(species_sym_and_site, by = "species")
 rm(species_individual)
 
 # join symmetry to longevity
 longevity <- longevity %>%
-  dplyr::left_join(species_sym, by = "individual")
+  dplyr::left_join(species_sym_and_site, by = "individual")
 
 # save this data as csv to check later
 readr::write_csv(longevity, "data_output/floral_longevity_output.csv")
@@ -117,19 +114,19 @@ mean_longevity <- mean_longevity %>%
 rm(sd, n)
 
 # add species symmetry to means
-species_sym <- species_sym %>%
-  dplyr::select(species, symmetry_all) %>%
+species_sym_and_site <- species_sym_and_site %>%
+  dplyr::select(species, site, latitude, longitude, symmetry) %>%
   dplyr::distinct()
 
 mean_longevity <- mean_longevity %>%
-  dplyr::left_join(species_sym, by = "species")
-rm(species_sym)
+  dplyr::left_join(species_sym_and_site, by = "species")
+rm(species_sym_and_site)
 
 # output species means with symmetry
 readr::write_csv(mean_longevity, "data_output/mean_longevity_Sydney_fieldwork.csv")
 
 # boxplot of longevity by symmetry INDIVIDUALS
-ggplot(data = longevity, aes(x = longevity_days, y = symmetry_all, fill = symmetry_all)) +
+ggplot(data = longevity, aes(x = longevity_days, y = symmetry, fill = symmetry)) +
   geom_boxplot() +
   scale_fill_viridis_d(alpha = 0.6) +
   geom_jitter(color="black", size=0.4, alpha=0.9) +
@@ -139,14 +136,13 @@ ggplot(data = longevity, aes(x = longevity_days, y = symmetry_all, fill = symmet
 ggsave("figures/symmetry_longevity_boxplot.pdf", width = 9, height = 5)
 
 # t-test of longevity by symmetry
-ttest <- t.test(longevity$longevity_days[longevity$symmetry_all == "zygomorphic"], 
-                longevity$longevity_days[longevity$symmetry_all != "zygomorphic"])
+ttest <- t.test(longevity$longevity_days[longevity$symmetry == "zygomorphic"], 
+                longevity$longevity_days[longevity$symmetry != "zygomorphic"])
 ttest
 # NO LONGER SIGNIFICANT WITH DIANELLA ADDED IN
 
-
 # boxplot of longevity by symmetry SPECIES
-ggplot(data = mean_longevity, aes(x = mean_long, y = symmetry_all, fill = symmetry_all)) +
+ggplot(data = mean_longevity, aes(x = mean_long_days, y = symmetry, fill = symmetry)) +
   geom_boxplot() +
   scale_fill_viridis_d(alpha = 0.6) +
   geom_jitter(color="black", size=0.4, alpha=0.9) +
@@ -156,15 +152,15 @@ ggplot(data = mean_longevity, aes(x = mean_long, y = symmetry_all, fill = symmet
 ggsave("figures/symmetry_longevity_boxplot_speciesmean.pdf", width = 9, height = 5)
 
 # t-test of species mean longevity by symmetry
-ttest_species <- t.test(mean_longevity$mean_long[mean_longevity$symmetry_all == "zygomorphic"], 
-                        mean_longevity$mean_long[mean_longevity$symmetry_all != "zygomorphic"])
+ttest_species <- t.test(mean_longevity$mean_long_days[mean_longevity$symmetry == "zygomorphic"], 
+                        mean_longevity$mean_long_days[mean_longevity$symmetry != "zygomorphic"])
 ttest_species
 
 # yup I was inflating my power by including all individuals rather than species :(
 
 # out of curiosity are SD different?
-ttest_speciesSD <- t.test(mean_longevity$sd_long[mean_longevity$symmetry_all == "zygomorphic"], 
-                          mean_longevity$sd_long[mean_longevity$symmetry_all != "zygomorphic"])
+ttest_speciesSD <- t.test(mean_longevity$sd_long[mean_longevity$symmetry == "zygomorphic"], 
+                          mean_longevity$sd_long[mean_longevity$symmetry != "zygomorphic"])
 ttest_speciesSD
 # nope! they're not, ach well
 
@@ -174,7 +170,7 @@ mean_longevity_nooutliers <- mean_longevity %>%
   dplyr::filter(!(species %in% c("Hakea sericea", "Grevillea buxifolia", "Hybanthus vernonii", "Acacia oxycedrus")))
 
 # boxplot of longevity by symmetry
-ggplot(data = mean_longevity_nooutliers, aes(x = mean_long, y = symmetry_all, fill = symmetry_all)) +
+ggplot(data = mean_longevity_nooutliers, aes(x = mean_long_days, y = symmetry, fill = symmetry)) +
   geom_boxplot() +
   scale_fill_viridis_d(alpha = 0.6) +
   geom_jitter(color="black", size=0.4, alpha=0.9) +
@@ -184,8 +180,8 @@ ggplot(data = mean_longevity_nooutliers, aes(x = mean_long, y = symmetry_all, fi
 ggsave("figures/symmetry_longevity_boxplot_speciesmean_nooutliers.pdf", width = 9, height = 5)
 
 # t-test of species mean longevity by symmetry
-ttest_species <- t.test(mean_longevity_nooutliers$mean_long[mean_longevity_nooutliers$symmetry_all == "zygomorphic"], 
-                        mean_longevity_nooutliers$mean_long[mean_longevity_nooutliers$symmetry_all != "zygomorphic"])
+ttest_species <- t.test(mean_longevity_nooutliers$mean_long_days[mean_longevity_nooutliers$symmetry == "zygomorphic"], 
+                        mean_longevity_nooutliers$mean_long_days[mean_longevity_nooutliers$symmetry != "zygomorphic"])
 ttest_species
 
 # aha yes so it is the outliers, how justified is removing them though?
