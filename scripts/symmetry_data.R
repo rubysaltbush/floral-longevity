@@ -183,40 +183,41 @@ longevitycomm <- readxl::read_xls("data_input/Floral_longevity_20230623.xls", sh
 longevitycomm$sources <- "marcoscommunity"
 longevitycomm$Exotic <- as.character(longevitycomm$Exotic)
 
-# bind all Marcos' data into one df, select relevant columns, fill blank rows
-# from row above, filter out values for pseudanthia
-# SHOULD I FILTER OUT ALL GREENHOUSE/BAGGED VALUES??? LEAVING IN FOR NOW
+# bind all Marcos' data into one df
+# for now will include all quality levels (0-3) and exotics
+# SHOULD I FILTER OUT ALL GREENHOUSE HABITAT VALUES??? LEAVING IN FOR NOW
 marcoslong <- longevhighq %>%
   dplyr::bind_rows(longevlowq) %>%
   dplyr::bind_rows(longevitycomm) %>%
   dplyr::select(og_species = Species, og_family = Family, 
                 og_longevity = `Floral.longevity (days)`, 
-                SE_long = `SE...8`, Site, Lat, Lon, alt_m = `Altitude (m)`,
-                Pseudanthium, Quality, reference = Source, sources) %>%
-  tidyr::fill(og_species, og_family, Lat, Lon, alt_m, reference)
-
-# read in longevity data from Marcos' community studies
-#longevitycomm <- readr::read_csv("data_input/Floral_longevity_community_data.csv")
-# have manually fixed several blank rows in the above csv, filling their values in
-# from the row above
-# BUT IS THERE A WAY TO FIX THIS FOR OTHER SHEETS NON-MANUALLY???
-
-# for now will include all quality levels (0-3)
-# will FILTER OUT pseudanthia but leave in exotics et al
-longevitycomm <- longevitycomm %>%
-  dplyr::filter(is.na(Pseudanthium) | Pseudanthium != 1) %>% # exclude longevity measured at Pseudanthium level for now, though may be taking functional approach to pseudanthium symmetry so may revisit this...
-  dplyr::select(og_species = Species, og_longevity = `Floral.longevity (days)`, SE_long = `SE...8`, Site, Lat, Lon) %>%
-  dplyr::filter(!is.na(og_longevity)) %>%
+                SE_long = `SE...8`, Pseudanthium, Quality,
+                Site, Lat, Lon, alt_m = `Altitude (m)`, Habitat, 
+                reference = Source, sources) %>%
+  tidyr::fill(og_species, og_family) %>% #fill blank values from row above 
+  # Site, Lat, Lon, reference often also blank but hard to autofill as many genuine NAs in these columns
+  # will have to fix this manually if important
+  dplyr::filter(is.na(Pseudanthium) | Pseudanthium != 1) %>% # exclude Pseudanthium longevity
+  dplyr::filter(!is.na(og_longevity)) %>% # exclude taxa missing longevity data
+  dplyr::select(-Pseudanthium) %>% # column now blank, don't need
   dplyr::distinct()
+
+table(marcoslong$og_longevity)  
 
 # now need to process longevity into numeric column
 # need to convert:
-# 1 (12 h) -> 0.5? or 1? 1 for now
-longevitycomm$mean_long_days <- gsub(" \\(12 h\\)", ".0", longevitycomm$og_longevity)
+# <12 h -> 0.5
+marcoslong$mean_long_days <- gsub("< 12 h", "0.5", marcoslong$og_longevity)
+# <24 h -> 1
+marcoslong$mean_long_days <- gsub("< 24 h", "1", marcoslong$mean_long_days)
+# 1 (12 h) -> 0.5? or 1? 0.5 for now
+marcoslong$mean_long_days <- gsub("1 \\(12 h\\)", "0.5", marcoslong$mean_long_days)
+# dawn to early evening should be roughly 0.5 by current definition
+marcoslong$mean_long_days <- gsub("Dawn to early evening", "0.5", marcoslong$mean_long_days)
 # 1 or 2, 1 to 2 -> 1.5; take average of min and max e.g. 7 to 10 = 8.5
 mean_long_days <- c()
-for(n in 1:nrow(longevitycomm)){
-  longdat <- longevitycomm[[n, "mean_long_days"]]
+for(n in 1:nrow(marcoslong)){
+  longdat <- marcoslong[[n, "mean_long_days"]]
   if (str_detect(longdat, "^\\d* to \\d*$|^\\d* or \\d*$")){ # if the longevity is in the form "2 to 3" or "1 or 2"
     minmax <- as.data.frame(str_match(longdat, "(?<min>\\d*)[ tor]*(?<max>\\d*)")) # then extract the min and max number
     meanl <- mean(c(as.numeric(minmax$min), as.numeric(minmax$max))) # and return their mean
@@ -227,9 +228,9 @@ for(n in 1:nrow(longevitycomm)){
   }
   mean_long_days <- c(mean_long_days, meanl)
 }
-longevitycomm$mean_long_days <- mean_long_days
+marcoslong$mean_long_days <- mean_long_days
 rm(n, meanl, minmax, longdat, mean_long_days)
-table(longevitycomm$mean_long_days)
+table(marcoslong$mean_long_days)
 
 # very few records have SE for longevity but will keep for now
 # take mean longevity per taxon PER SITE (only reduces 1 taxon)
