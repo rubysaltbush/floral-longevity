@@ -161,20 +161,45 @@ readr::write_csv(sym_data, "data_output/sym_data.csv")
 #** my field data ----
 fieldlong <- readr::read_csv("data_output/mean_longevity_Sydney_fieldwork.csv")
 
-# summarise down to species, mean and SE longevity (days), symmetry, lat and long of field site
-# haven't got lat longs encoded, have to put into field_data.R later
-# for now just guesstimate
+# summarise down to species, mean and SE longevity (days), symmetry, lat + longs
 fieldlong <- fieldlong %>%
   dplyr::mutate(SE_long = sd_long/sqrt(n)) %>%
   dplyr::mutate(sym_all = str_replace(symmetry, "actinomorphic.*", "actinomorphic")) %>%
   dplyr::select(og_species = species, mean_long_days, SE_long, sym_all, 
                 Site = site, Lat = latitude, Long = longitude)
 
-#** community studies ----
+#** Marcos Méndez's data ----
+
+# read in .xls sheet with Marcos' highest quality data
+longevhighq <- readxl::read_xls("data_input/Floral_longevity_20230623.xls", sheet = 1)
+longevhighq$sources <- "marcoshighquality"
+# and .xls sheet with lower quality data as well
+longevlowq <- readxl::read_xls("data_input/Floral_longevity_20230623.xls", sheet = 2)
+longevlowq$sources <- "marcoslowquality"
+longevlowq$Exotic <- as.character(longevlowq$Exotic)
+longevlowq$`Altitude (m)` <- as.character(longevlowq$`Altitude (m)`)
+# and .xls sheet with community based data
+longevitycomm <- readxl::read_xls("data_input/Floral_longevity_20230623.xls", sheet = 3)
+longevitycomm$sources <- "marcoscommunity"
+longevitycomm$Exotic <- as.character(longevitycomm$Exotic)
+
+# bind all Marcos' data into one df, select relevant columns, fill blank rows
+# from row above, filter out values for pseudanthia
+# SHOULD I FILTER OUT ALL GREENHOUSE/BAGGED VALUES??? LEAVING IN FOR NOW
+marcoslong <- longevhighq %>%
+  dplyr::bind_rows(longevlowq) %>%
+  dplyr::bind_rows(longevitycomm) %>%
+  dplyr::select(og_species = Species, og_family = Family, 
+                og_longevity = `Floral.longevity (days)`, 
+                SE_long = `SE...8`, Site, Lat, Lon, alt_m = `Altitude (m)`,
+                Pseudanthium, Quality, reference = Source, sources) %>%
+  tidyr::fill(og_species, og_family, Lat, Lon, alt_m, reference)
+
 # read in longevity data from Marcos' community studies
-longevitycomm <- readr::read_csv("data_input/Floral_longevity_community_data.csv")
+#longevitycomm <- readr::read_csv("data_input/Floral_longevity_community_data.csv")
 # have manually fixed several blank rows in the above csv, filling their values in
 # from the row above
+# BUT IS THERE A WAY TO FIX THIS FOR OTHER SHEETS NON-MANUALLY???
 
 # for now will include all quality levels (0-3)
 # will FILTER OUT pseudanthia but leave in exotics et al
@@ -223,10 +248,6 @@ longevitycomm$og_species_patch <- gsub("\\.", " ", longevitycomm$og_species_patc
 
 #** Marcos' longevity database, higher quality data ----
 
-# read in .xls sheet with Marcos' highest quality data
-longevhighq <- readxl::read_xls("data_input/Floral_longevity_20230623.xls", sheet = 1)
-# and .xls sheet with lower quality data as well??
-longevlowq <- readxl::read_xls("data_input/Floral_longevity_20230623.xls", sheet = 2)
 
 # curiously quality=0 in both sheets, what makes low quality sheet lower quality?
 # for now going to just chuck ALL data together, match names and symmetry and
