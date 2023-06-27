@@ -225,6 +225,16 @@ longevitycomm$og_species_patch <- gsub("\\.", " ", longevitycomm$og_species_patc
 
 # read in .xls sheet with Marcos' highest quality data
 longevhighq <- readxl::read_xls("data_input/Floral_longevity_20230623.xls", sheet = 1)
+# and .xls sheet with lower quality data as well??
+longevlowq <- readxl::read_xls("data_input/Floral_longevity_20230623.xls", sheet = 2)
+
+# curiously quality=0 in both sheets, what makes low quality sheet lower quality?
+# for now going to just chuck ALL data together, match names and symmetry and
+# then see, even the lowest quality longevity data can hopefully give some
+# clues r.e. floral symmetry
+
+# ultimately patch these three together with some note about where they came from
+# (source column), then clean as one
 
 
 # can defs see some simple orthographic errors in species names, time to try
