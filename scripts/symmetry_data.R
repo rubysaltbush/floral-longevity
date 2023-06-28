@@ -251,13 +251,22 @@ marcoslong$mean_long_days <- as.numeric(marcoslong$mean_long_days)
 hist(marcoslong$mean_long_days)
 # woot finally!!!
 
+# next: what to do about multiple values per species? average per site?
+# then: patch species names (have been matched to World Flora Online I think)
+# then: match taxonomy between longevity and symmetry to see how many 
+#       taxa I need to score symmetry for
+
 
 # very few records have SE for longevity but will keep for now
-# take mean longevity per taxon PER SITE (only reduces 1 taxon)
-longevitymean <- longevitycomm %>%
-  dplyr::group_by(og_species, Site) %>%
-  dplyr::summarise(mean_long_days = mean(as.numeric(mean_long_days)))
-longevitycomm <- longevitycomm %>%
+# take mean longevity per taxon PER location
+longevitymean <- marcoslong %>%
+  dplyr::group_by(og_species, Lat, Lon) %>%
+  dplyr::summarise(mean_long_days = mean(mean_long_days), mean_SE_long = mean(SE_long, na.rm = TRUE))
+# lose ~600 rows, that's a lot! really that many duplicated in original??
+dupes <- marcoslong[duplicated(marcoslong$og_species),]
+# >683 duplicates!!!
+
+marcoslong <- marcoslong %>%
   dplyr::select(og_species, Site, Lat, Lon, SE_long) %>%
   dplyr::distinct() %>%
   dplyr::left_join(longevitymean, by = c("og_species", "Site"))
@@ -267,16 +276,7 @@ rm(longevitymean)
 longevitycomm$og_species_patch <- gsub("^.*\\(=|\\)", "", longevitycomm$og_species) # remove alternative names manually matched by Marcos
 longevitycomm$og_species_patch <- gsub("\\.", " ", longevitycomm$og_species_patch) # replace full stops with spaces
 
-#** Marcos' longevity database, higher quality data ----
 
-
-# curiously quality=0 in both sheets, what makes low quality sheet lower quality?
-# for now going to just chuck ALL data together, match names and symmetry and
-# then see, even the lowest quality longevity data can hopefully give some
-# clues r.e. floral symmetry
-
-# ultimately patch these three together with some note about where they came from
-# (source column), then clean as one
 
 
 # can defs see some simple orthographic errors in species names, time to try
