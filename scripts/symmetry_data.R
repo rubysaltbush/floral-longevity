@@ -201,6 +201,7 @@ marcoslong <- longevhighq %>%
   dplyr::filter(!is.na(og_longevity)) %>% # exclude taxa missing longevity data
   dplyr::select(-Pseudanthium) %>% # column now blank, don't need
   dplyr::distinct()
+rm(longevhighq, longevlowq, longevitycomm)
 
 table(marcoslong$og_longevity)  
 
@@ -210,16 +211,31 @@ table(marcoslong$og_longevity)
 marcoslong$mean_long_days <- gsub("< 12 h", "0.5", marcoslong$og_longevity)
 # <24 h -> 1
 marcoslong$mean_long_days <- gsub("< 24 h", "1", marcoslong$mean_long_days)
-# 1 (12 h) -> 0.5? or 1? 0.5 for now
+# 1 (12 h) -> 0.5? or 1? 0.5 for now, though for many studies 1 would be the minimum possible value
 marcoslong$mean_long_days <- gsub("1 \\(12 h\\)", "0.5", marcoslong$mean_long_days)
 # dawn to early evening should be roughly 0.5 by current definition
-marcoslong$mean_long_days <- gsub("Dawn to early evening", "0.5", marcoslong$mean_long_days)
-# 1 or 2, 1 to 2 -> 1.5; take average of min and max e.g. 7 to 10 = 8.5
+# all values starting "dawn" roughly half a day, this will do for now
+marcoslong$mean_long_days <- gsub("[D|d]awn to.*", "0.5", marcoslong$mean_long_days)
+# get rid of notes in longevity column
+marcoslong$mean_long_days <- gsub("Outcrossed.*?: ", "", marcoslong$mean_long_days)
+# and this weird one, take average of midpoints
+marcoslong$mean_long_days <- gsub("\\(9\\)-15-16-\\(>19\\)", "15.5", marcoslong$mean_long_days)
+# finally up to 3 days can be just 3 as no minimum given
+marcoslong$mean_long_days <- gsub("up to 3 d", "3", marcoslong$mean_long_days)
+# and 5 to 6 (10) can be 5.5
+marcoslong$mean_long_days <- gsub("5 to 6 \\(10\\)", "5.5", marcoslong$mean_long_days)
+
+# loop through remaining to fix
+# if 1 or 2, 1 to 2 -> 1.5; take average of min and max e.g. 7 to 10 = 8.5
+# same for hours but /24 to get longevity measure in days
 mean_long_days <- c()
 for(n in 1:nrow(marcoslong)){
   longdat <- marcoslong[[n, "mean_long_days"]]
-  if (str_detect(longdat, "^\\d* to \\d*$|^\\d* or \\d*$")){ # if the longevity is in the form "2 to 3" or "1 or 2"
-    minmax <- as.data.frame(str_match(longdat, "(?<min>\\d*)[ tor]*(?<max>\\d*)")) # then extract the min and max number
+  if (str_detect(longdat, "^[\\d.]* to [\\d.]* h|^[\\d.]* or [\\d.]* h|^[\\d.]*-[\\d.]* hours")){ # if the longevity is in the form "2 to 3 h" or "1 or 2 h" or "8-9 hours"
+    minmax <- as.data.frame(str_match(longdat, "(?<min>[\\d.]*)[ tor-]*(?<max>[\\d.]*)")) # then extract the min and max number
+    meanl <- mean(c(as.numeric(minmax$min), as.numeric(minmax$max)))/24 # and return their mean /24 to give longevity in days
+  } else if (str_detect(longdat, "^[\\d.]* to [\\d. days]*$|^[\\d.]* or [\\d.]*$|^[\\d.]*-[\\d. d]*$")){ # if the longevity is in the form "2 to 3", "1 or 2" or "1-2" with or without d or days on the end 
+    minmax <- as.data.frame(str_match(longdat, "(?<min>[\\d.]*)[ tor-]*(?<max>[\\d.]*)")) # then extract the min and max number
     meanl <- mean(c(as.numeric(minmax$min), as.numeric(minmax$max))) # and return their mean
   } else if (str_detect(longdat, "^\\d*[+]|^\\d* or more|^\\d* to many")){
     meanl <- str_match(longdat, "^\\d*") # with 1+, 2 or more, or 3 to many, return the min number as don't know max
@@ -230,7 +246,11 @@ for(n in 1:nrow(marcoslong)){
 }
 marcoslong$mean_long_days <- mean_long_days
 rm(n, meanl, minmax, longdat, mean_long_days)
-table(marcoslong$mean_long_days)
+
+marcoslong$mean_long_days <- as.numeric(marcoslong$mean_long_days)
+hist(marcoslong$mean_long_days)
+# woot finally!!!
+
 
 # very few records have SE for longevity but will keep for now
 # take mean longevity per taxon PER SITE (only reduces 1 taxon)
