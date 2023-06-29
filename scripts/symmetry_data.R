@@ -265,6 +265,7 @@ longevitymean <- marcoslong %>%
 # lose ~600 rows, that's a lot! really that many duplicated in original??
 dupes <- marcoslong[duplicated(marcoslong$og_species),]
 # >683 duplicates!!!
+dupes2 <- longevitymean[duplicated(longevitymean$og_species),]
 
 marcoslong <- marcoslong %>%
   dplyr::select(og_species, Site, Lat, Lon, SE_long) %>%
