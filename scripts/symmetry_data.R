@@ -191,17 +191,32 @@ marcoslong <- longevhighq %>%
   dplyr::bind_rows(longevitycomm) %>%
   dplyr::select(og_species = Species, og_family = Family, 
                 og_longevity = `Floral.longevity (days)`, 
-                SE_long = `SE...8`, Pseudanthium, Quality,
-                Site, Lat, Lon, alt_m = `Altitude (m)`, Habitat, 
-                reference = Source, sources) %>%
-  tidyr::fill(og_species, og_family) %>% #fill blank values from row above 
-  # Site, Lat, Lon, reference often also blank but hard to autofill as many genuine NAs in these columns
+                SE_long = `SE...8`, Quality, Site, Lat, Lon, 
+                alt_m = `Altitude (m)`, Habitat, reference = Source, 
+                Exotic, Pseudanthium, self_incom = SI, Nectar, notes = ...30,
+                longev_univisit = `Floral.longevity.un/visited (days)`, 
+                long_unv_SE = SE...11, Duration, sources) %>% # keeping everything except flower size for now
+  tidyr::fill(og_species, og_family, reference) %>% #fill blank values from row above 
+  # Site, Lat, Lon often also blank but hard to autofill as many genuine NAs in these columns
   # will have to fix this manually if important
   dplyr::filter(is.na(Pseudanthium) | Pseudanthium != 1) %>% # exclude Pseudanthium longevity
-  dplyr::filter(!is.na(og_longevity)) %>% # exclude taxa missing longevity data
+  dplyr::filter(!is.na(og_longevity)) %>% # exclude taxa missing longevity data (24)
   dplyr::select(-Pseudanthium) %>% # column now blank, don't need
   dplyr::distinct()
 rm(longevhighq, longevlowq, longevitycomm)
+
+# many rows are duplicates from community and other sheets - remove dupes!
+# first paste together og source for each row (high qual, low qual or comm data)
+temp <- marcoslong %>%
+  dplyr::group_by(og_species, reference) %>% # group by species and reference
+  dplyr::summarise(sources = paste(sources, collapse = " "))
+
+# replace source column with pasted together column to get rid of duplicate rows
+marcoslong <- marcoslong %>%
+  dplyr::select(-sources) %>%
+  dplyr::left_join(temp, by = c("og_species", "reference")) %>%
+  dplyr::distinct()
+rm(temp)
 
 table(marcoslong$og_longevity)  
 
@@ -251,37 +266,22 @@ marcoslong$mean_long_days <- as.numeric(marcoslong$mean_long_days)
 hist(marcoslong$mean_long_days)
 # woot finally!!!
 
-# next: what to do about multiple values per species? average per site?
-# then: patch species names (have been matched to World Flora Online I think)
+# now: leaving multiple values per species for now (atomise data)
+# next: patch species names
 # then: match taxonomy between longevity and symmetry to see how many 
 #       taxa I need to score symmetry for
 
-
-# very few records have SE for longevity but will keep for now
-# take mean longevity per taxon PER location
-longevitymean <- marcoslong %>%
-  dplyr::group_by(og_species, Lat, Lon) %>%
-  dplyr::summarise(mean_long_days = mean(mean_long_days), mean_SE_long = mean(SE_long, na.rm = TRUE))
-# lose ~600 rows, that's a lot! really that many duplicated in original??
-dupes <- marcoslong[duplicated(marcoslong$og_species),]
-# >683 duplicates!!!
-dupes2 <- longevitymean[duplicated(longevitymean$og_species),]
-
-marcoslong <- marcoslong %>%
-  dplyr::select(og_species, Site, Lat, Lon, SE_long) %>%
-  dplyr::distinct() %>%
-  dplyr::left_join(longevitymean, by = c("og_species", "Site"))
-rm(longevitymean)
-
 # patch species names in longevity data
-longevitycomm$og_species_patch <- gsub("^.*\\(=|\\)", "", longevitycomm$og_species) # remove alternative names manually matched by Marcos
-longevitycomm$og_species_patch <- gsub("\\.", " ", longevitycomm$og_species_patch) # replace full stops with spaces
+# original names (left) matched by Marcos to World Flora Online (in brackets)
+marcoslong$og_species_patch <- gsub("^.*\\(=|\\)", "", marcoslong$og_species) # remove og names, just keep names manually matched by Marcos
+marcoslong$og_species_patch <- gsub("\\.", " ", marcoslong$og_species_patch) # replace full stops with spaces
+
+# for species patching will need to manually fix a few values, export csv
+readr::write_csv(marcoslong, "data_output/marcoslong_topatchspecies.csv")
+# and read back in manually patched results
+marcoslong <- readr::read_csv("data_input/marcoslong_speciespatched.csv")
 
 
-
-
-# can defs see some simple orthographic errors in species names, time to try
-# matching taxonomy!!! using kewr::match_knms
 
 # Standardization of species names (AccSpeciesName) in TRY version 6: The Plant List 
 # has been static since 2013 and is assumed to be outdated. We therefore used the 
@@ -295,4 +295,23 @@ longevitycomm$og_species_patch <- gsub("\\.", " ", longevitycomm$og_species_patc
 # reference floras was used, if available.
 
 ### MATCH TAXONOMY ####
+
+# match taxonomy to World Flora Online using TNRS R package
+# first reduce to taxa
+longev_taxa <- marcoslong %>% 
+  dplyr::select(og_species_patch) %>%
+  dplyr::distinct()
+  
+sym_taxa <- sym_data %>%
+  dplyr::select(og_species) %>%
+  dplyr::distinct()
+
+# resolve to World Flora Online using TNRS
+longev_tnrs <- TNRS::TNRS(longev_taxa, sources = c("wcvp", "wfo"), 
+                          classification = "wfo", mode = "resolve", 
+                          matches = "best", accuracy = NULL)
+# Problem with the API: HTTP Status 400 :(
+
+# try again with csv method
+readr::write_csv(longev_taxa, "data_output/marcoslongtaxa.csv")
 

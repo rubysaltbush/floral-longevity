@@ -1,7 +1,7 @@
 library(tidyverse) #install.packages("tidyverse")
 library(ggpubr) #install.packages("ggpubr")
 library(rtry) #install.packages("rtry")
-library(kewr) #library(devtools) #install.packages("devtools") #devtools::install_github("barnabywalker/kewr") # package for accessing Kew API to match plant names to World Checklist of Vascular Plants
+library(TNRS) #install.packages("TNRS")
 
 # function to cache pre-prepared R data. If RDS already in cache will read data
 source("scripts/functions/cache_RDS.R")
