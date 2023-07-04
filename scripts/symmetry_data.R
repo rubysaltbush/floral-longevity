@@ -5,7 +5,7 @@
 
 #*symmetry data ----
 sym_data <- cache_RDS("data_output/sym_data.csv", read_function = readr::read_csv,
-                                save_function = write_csv, function() {
+                                save_function = readr::write_csv, function() {
 
 # read in data from different sources
 yoderetal <- readr::read_csv("data_input/Yoder_et_al._(2020)_plant_degree-sharing.csv")
@@ -166,9 +166,14 @@ fieldlong <- fieldlong %>%
   dplyr::mutate(SE_long = sd_long/sqrt(n)) %>%
   dplyr::mutate(sym_all = str_replace(symmetry, "actinomorphic.*", "actinomorphic")) %>%
   dplyr::select(og_species = species, mean_long_days, SE_long, sym_all, 
-                Site = site, Lat = latitude, Long = longitude)
+                Site = site, Lat = latitude, Lon = longitude) %>%
+  dplyr::mutate(sources = "Ruby fieldwork", og_species_patch = og_species)
 
 #** Marcos Méndez's data ----
+
+marcoslong <- cache_RDS("data_input/marcoslong_speciespatched.csv", 
+                        read_function = readr::read_csv, 
+                        save_function = readr::write_csv, function() {
 
 # read in .xls sheet with Marcos' highest quality data
 longevhighq <- readxl::read_xls("data_input/Floral_longevity_20230623.xls", sheet = 1)
@@ -280,7 +285,37 @@ marcoslong$og_species_patch <- gsub("\\.", " ", marcoslong$og_species_patch) # r
 readr::write_csv(marcoslong, "data_output/marcoslong_topatchspecies.csv")
 # and read back in manually patched results
 marcoslong <- readr::read_csv("data_input/marcoslong_speciespatched.csv")
+})
 
+#** Song et al (2022) data ----
+
+# read in data downloaded from Supp Mat of Song, B., Sun, L., Barrett, S. C. H., 
+# Moles, A. T., Luo, Y.-H., Armbruster, W. S., Gao, Y.-Q., Zhang, S., Zhang, Z.-Q., 
+# & Sun, H. (2022). Global analysis of floral longevity reveals latitudinal 
+# gradients and biotic and abiotic correlates. New Phytologist, 235. 
+# https://doi.org/10.1111/nph.18271
+
+songlong <- readxl::read_xlsx("data_input/Data_for_Dryad.xlsx")
+
+# simplify to columns that will match other longevity data
+songlong <- songlong %>%
+  dplyr::select(og_species = Species, og_family = Family, Lat = Latitude,
+                alt_m = Elevation, mean_long_days = Floral.longevity, 
+                self_incom = Self.compatibility, reference = referrence) %>%
+  dplyr::mutate(sources = "songetal20223", og_species_patch = og_species)
+
+# check how many Song et al taxa in Marcos' data
+sum(songlong$og_species_patch %in% marcoslong$og_species_patch)
+# 252 names directly match, will be good to compare longevity values for these
+
+#** all longev together ----
+longevity_all <- marcoslong %>%
+  dplyr::bind_rows(songlong) %>%
+  dplyr::bind_rows(fieldlong)
+rm(marcoslong, fieldlong, songlong)
+
+# export this! then match taxonomy
+readr::write_csv(longevity_all, "data_output/longevity_data_all.csv")
 
 
 # Standardization of species names (AccSpeciesName) in TRY version 6: The Plant List 
@@ -298,7 +333,7 @@ marcoslong <- readr::read_csv("data_input/marcoslong_speciespatched.csv")
 
 # match taxonomy to World Flora Online using TNRS R package
 # first reduce to taxa
-longev_taxa <- marcoslong %>% 
+longev_taxa <- longevity_all %>% 
   dplyr::select(og_species_patch) %>%
   dplyr::distinct()
   
@@ -307,11 +342,20 @@ sym_taxa <- sym_data %>%
   dplyr::distinct()
 
 # resolve to World Flora Online using TNRS
-longev_tnrs <- TNRS::TNRS(longev_taxa, sources = c("wcvp", "wfo"), 
-                          classification = "wfo", mode = "resolve", 
-                          matches = "best", accuracy = NULL)
+#longev_tnrs <- TNRS(longev_taxa)
+#sym_tnrs <- TNRS(sym_taxa)
 # Problem with the API: HTTP Status 400 :(
 
 # try again with csv method
-readr::write_csv(longev_taxa, "data_output/marcoslongtaxa.csv")
+readr::write_csv(longev_taxa, "data_output/longev_taxa.csv")
+readr::write_csv(sym_taxa, "data_output/sym_taxa.csv")
+# more than 5000 sym taxa, have to paste in 5k at a time
+
+# used online TNRS version 5.1, https://tnrs.biendata.org/ , downloaded best matches
+# read back in
+longev_tnrs <- readr::read_csv("data_input/longevityall_tnrs_result_best.csv")
+sym_tnrs <- readr::read_csv("data_input/symtaxa_tnrs_result1best.csv")
+
+# NEXXT - match both to accepted taxa, then match symmetry data 
+# to longevity data, then export for filling in 
 

@@ -16,3 +16,7 @@ Data_for_Dryad.xlsx - Song et al (2022) - added 2023-06-27 - data downloaded fro
 Contains floral longevity data at global scale, row name is species name, family name, country, latitude, elevation, flower size (0.5: <0.5 cm, 1: 0.5-1 cm, 2, 1-2 cm, 4: 2-4 cm; 5: > 4 cm), pollen number, floral longevity, growth form, self compatibility, pollination mode, pollination success index,  temperature of flowering season, solar radiation of flowering season, aridity index of flowering season, references. ** BUT WHY NO LONGITUDE?? **
 
 marcoslong_speciespatched.csv - Marcos Méndez and Ruby Stephens - added 2023-07-04 - Marcos' longevity data patched and filtered by Ruby with names in "og_species_pacth" column manually updated to remove odd characters and just keep Marcos' names matched to World Flora online
+
+symtaxa_tnrs_result1best.csv - Ruby Stephens - added 2023-07-04 - all symmetry data taxa matched to World Flora Online and/or POWO using TNRS online web tool (R package down) at https://tnrs.biendata.org/, best matches downloaded only
+
+longevityall_tnrs_result_best.csv - Ruby Stephens - added 2023-07-04 - all longevity data taxa matched to World Flora Online and/or POWO using TNRS online web tool (R package down) at https://tnrs.biendata.org/, best matches downloaded only
