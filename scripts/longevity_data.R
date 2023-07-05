@@ -12,8 +12,8 @@ fieldlong <- readr::read_csv("data_output/mean_longevity_Sydney_fieldwork.csv")
 # summarise down to species, mean and SE longevity (days), symmetry, lat + longs
 fieldlong <- fieldlong %>%
   dplyr::mutate(SE_long = sd_long/sqrt(n)) %>%
-  dplyr::mutate(sym_all = str_replace(symmetry, "actinomorphic.*", "actinomorphic")) %>%
-  dplyr::select(og_species = species, mean_long_days, SE_long, sym_all, 
+  dplyr::mutate(sym_RS_scored = str_replace(symmetry, "actinomorphic.*", "actinomorphic")) %>%
+  dplyr::select(og_species = species, mean_long_days, SE_long, sym_RS_scored, 
                 Site = site, Lat = latitude, Lon = longitude) %>%
   dplyr::mutate(sources = "Ruby fieldwork", og_species_patch = og_species)
 
