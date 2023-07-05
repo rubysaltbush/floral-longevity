@@ -19,4 +19,4 @@ marcoslong_speciespatched.csv - Marcos Méndez and Ruby Stephens - added 2023-07
 
 symtaxa_tnrs_result1best.csv - Ruby Stephens - added 2023-07-04 - all symmetry data taxa matched to World Flora Online and/or POWO using TNRS online web tool (R package down) at https://tnrs.biendata.org/, best matches downloaded only
 
-longevityall_tnrs_result_best.csv - Ruby Stephens - added 2023-07-04 - all longevity data taxa matched to World Flora Online and/or POWO using TNRS online web tool (R package down) at https://tnrs.biendata.org/, best matches downloaded only
+longevityall_tnrs_result_best.csv - Ruby Stephens - added 2023-07-04 - updated 2023-07-04 - all longevity data taxa matched to World Flora Online and/or POWO using TNRS online web tool (R package down) at https://tnrs.biendata.org/, best matches downloaded only. Names fixed for update
