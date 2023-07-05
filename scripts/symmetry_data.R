@@ -14,6 +14,7 @@ jolyschoen <- readr::read_csv("data_input/Joly&Schoen_SupplementaryDataset.csv")
 # Yoder et al. data just has symmetry and species
 yoderetal <- yoderetal %>%
   dplyr::select(yea_name = plant, symmetry) %>%
+  dplyr::filter(!is.na(symmetry)) %>%
   dplyr::distinct()
 table(yoderetal$symmetry)
 # 2736 separate species, 496 zygomorphic
@@ -21,6 +22,7 @@ table(yoderetal$symmetry)
 # Joly and Schoen data itself assembled from various sources and taxonomically matched
 jolyschoen <- jolyschoen %>%
   dplyr::select(js_name = Species, symmetry = Symmetry) %>%
+  dplyr::filter(!is.na(symmetry)) %>%
   dplyr::distinct()
 table(jolyschoen$symmetry)
 # 3081 species, 1019 zygomorphic
