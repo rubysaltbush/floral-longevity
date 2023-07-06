@@ -8,8 +8,8 @@ sym_long <- cache_RDS("data_output/longevity_symmetry_all.csv",
 #### GET DATA ####
 
 # source symmetry and longevity data from respective scripts
-source("scripts/symmetry_data.R")
-source("scripts/longevity_data.R")
+source("scripts/prepdata/symmetry_data.R")
+source("scripts/prepdata/longevity_data.R")
 
 ### MATCH TAXONOMY ####
 
