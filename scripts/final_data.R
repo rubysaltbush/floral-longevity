@@ -1,6 +1,10 @@
 # script to match taxonomy between symmetry and longevity data, and produce 
 # clean taxonomically matched data set
 
+sym_long <- cache_RDS("data_output/longevity_symmetry_all.csv", 
+                           read_function = readr::read_csv,
+                           save_function = readr::write_csv, function() {
+
 #### GET DATA ####
 
 # source symmetry and longevity data from respective scripts
@@ -33,8 +37,10 @@ sym_taxa <- sym_data %>%
 # used online TNRS version 5.1, https://tnrs.biendata.org/ , 
 # and downloaded csv of best matches
 # read these back in
-longev_taxa <- readr::read_csv("data_input/longevityall_tnrs_result_best.csv")
-sym_taxa <- readr::read_csv("data_input/symtaxa_tnrs_result1best.csv")
+longev_taxa <- readr::read_csv("data_input/longevityall_tnrs_result_best.csv",
+                               guess_max = 1530)
+sym_taxa <- readr::read_csv("data_input/symtaxa_tnrs_result1best.csv",
+                            guess_max = 3000)
 
 # okay looking through longevity taxa matching, many with 1 to 1 match
 # or slight orthographic variations, only a few that appear incorrectly matched
@@ -75,23 +81,56 @@ rm(longev_taxa, sym_taxa)
 
 # need to rename symmetry data columns to be unique from longevity data columns
 # and simplify symmetry so that single value per accepted taxon
-# FOR NOW JUST GET RID OF SOURCE COLUMN
+# for now will lose sources of symmetry data but can trace this back later
 sym_accepted <- sym_data %>%
   dplyr::group_by(Accepted_name, Accepted_name_rank, Accepted_genus, Accepted_family) %>%
-  dplyr::summarise(sym_all = stringr::str_flatten(sort(unique(sym_all)), collapse = " "))
+  dplyr::summarise(sym_all = stringr::str_flatten(sort(unique(sym_all)), collapse = " ")) %>%
+  dplyr::ungroup()
 sym_accepted$sym_all <- gsub("actinomorphic actinomorphic", "actinomorphic", sym_accepted$sym_all)
 sym_accepted$sym_all <- gsub("zygomorphic zygomorphic", "zygomorphic", sym_accepted$sym_all)
-
-# try just a straight join first
-sym_long <- longevity_all %>%
-  dplyr::left_join(sym_accepted, by = c("Accepted_name", "Accepted_name_rank",
-                                    "Accepted_family", "Accepted_genus"))
-# decent, would be good to match on genus as well
+table(sym_accepted$sym_all)
 
 # longevity data at different ranks, can do multiple matches
 table(longevity_all$Accepted_name_rank)
 
-
-# first separate symmetry data into species, genus and family level data
-sym_species <- sym_data %>%
+# first separate symmetry data into different taxonomic ranks
+# variety and subspecies
+sym_var_ssp <- sym_accepted %>%
+  dplyr::filter(Accepted_name_rank %in% c("variety", "subspecies")) %>%
+  dplyr::select(Accepted_name, sym_sspvar = sym_all)
+# species
+sym_species <- sym_accepted %>%
   dplyr::filter(Accepted_name_rank %in% c("species", "subspecies", "variety"))
+sym_species$Accepted_name <- gsub(" var\\..*| subsp\\..*", "", sym_species$Accepted_name)
+sym_species <- sym_species %>%
+  dplyr::group_by(Accepted_name, Accepted_genus, Accepted_family) %>%
+  dplyr::summarise(sym_species = stringr::str_flatten(sort(unique(sym_all)), collapse = " "))
+sym_species$sym_species <- gsub("actinomorphic actinomorphic", "actinomorphic", sym_species$sym_species)
+sym_species$sym_species <- gsub("zygomorphic zygomorphic", "zygomorphic", sym_species$sym_species)
+table(sym_species$sym_species)
+# genus
+sym_genus <- sym_species %>%
+  dplyr::group_by(Accepted_genus, Accepted_family) %>%
+  dplyr::summarise(sym_genus = stringr::str_flatten(sort(unique(sym_species)), collapse = " "))
+sym_genus$sym_genus <- gsub("actinomorphic actinomorphic", "actinomorphic", sym_genus$sym_genus)
+sym_genus$sym_genus <- gsub("zygomorphic zygomorphic", "zygomorphic", sym_genus$sym_genus)
+table(sym_genus$sym_genus)
+# family
+sym_family <- sym_genus %>%
+  dplyr::group_by(Accepted_family) %>%
+  dplyr::summarise(sym_family = stringr::str_flatten(sort(unique(sym_genus)), collapse = " "))
+sym_family$sym_family <- gsub("actinomorphic actinomorphic", "actinomorphic", sym_family$sym_family)
+sym_family$sym_family <- gsub("zygomorphic zygomorphic", "zygomorphic", sym_family$sym_family)
+table(sym_family$sym_family)
+
+# now join these various instances of symmetry data to longevity data
+sym_long <- longevity_all %>%
+  dplyr::left_join(sym_var_ssp, by = "Accepted_name") %>%
+  dplyr::left_join(sym_species, by = c("Accepted_name", "Accepted_genus", "Accepted_family")) %>%
+  dplyr::left_join(sym_genus, by = c("Accepted_genus", "Accepted_family")) %>%
+  dplyr::left_join(sym_family, by = c("Accepted_family"))
+rm(sym_family, sym_genus, sym_species, sym_var_ssp, sym_accepted, sym_data, longevity_all)
+
+# export to csv to score symmetry for remaining taxa!
+readr::write_csv(sym_long, "data_output/longevity_symmetry_all.csv")
+})
