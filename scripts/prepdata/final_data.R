@@ -131,6 +131,18 @@ sym_long <- longevity_all %>%
   dplyr::left_join(sym_family, by = c("Accepted_family"))
 rm(sym_family, sym_genus, sym_species, sym_var_ssp, sym_accepted, sym_data, longevity_all)
 
+# paste var and subsp symmetry into sym_species column to simplify
+sym_long$sym_species <- ifelse(is.na(sym_long$sym_species), 
+                               sym_long$sym_sspvar, 
+                               sym_long$sym_species)
+sym_long <- dplyr::select(sym_long, -sym_sspvar)
+# and paste RS scored symmetry into sym_species column also
+sym_long$sym_species <- ifelse(is.na(sym_long$sym_species), 
+                               sym_long$sym_RS_scored, 
+                               sym_long$sym_species)
+sum(!is.na(sym_long$sym_species))
+# symmetry available for 761 of 2061 observations, 1300 to score
+
 # export to csv to score symmetry for remaining taxa!
 readr::write_csv(sym_long, "data_output/longevity_symmetry_all.csv")
 })
