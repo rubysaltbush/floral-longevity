@@ -147,8 +147,10 @@ songlong <- readxl::read_xlsx("data_input/Data_for_Dryad.xlsx")
 
 # simplify to columns that will match other longevity data
 songlong <- songlong %>%
+  dplyr::filter(Pollination.mode != "abiotically") %>%
   dplyr::select(og_species = Species, og_family = Family, Lat = Latitude,
                 alt_m = Elevation, mean_long_days = Floral.longevity, 
+                pollination = Pollination.mode,
                 self_incom = Self.compatibility, reference = referrence) %>%
   dplyr::mutate(sources = "songetal20223", og_species_patch = og_species)
 
