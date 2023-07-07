@@ -28,9 +28,11 @@ sym_taxa <- sym_data %>%
 #sym_tnrs <- TNRS(sym_taxa)
 # NOT WORKING! Error message:
 # Problem with the API: HTTP Status 400 :(
+# have submitted GitHub issue. 
+#Could use taxize and match to TPL to match phylogeny?
 
 # export taxa to csv, paste into TNRS webtool, then read in results
-#readr::write_csv(longev_taxa, "data_output/longev_taxa.csv") # 1544 longevity taxa
+#readr::write_csv(longev_taxa, "data_output/longev_taxa.csv") # 1530 longevity taxa
 #readr::write_csv(sym_taxa, "data_output/sym_taxa.csv")
 # more than 5000 sym taxa, have to paste in 5k at a time
 
@@ -38,7 +40,7 @@ sym_taxa <- sym_data %>%
 # and downloaded csv of best matches
 # read these back in
 longev_taxa <- readr::read_csv("data_input/longevityall_tnrs_result_best.csv",
-                               guess_max = 1530)
+                               guess_max = 1516)
 sym_taxa <- readr::read_csv("data_input/symtaxa_tnrs_result1best.csv",
                             guess_max = 3000)
 
@@ -47,8 +49,8 @@ sym_taxa <- readr::read_csv("data_input/symtaxa_tnrs_result1best.csv",
 # for some reason. Many taxa with supspecies and variants have only
 # been matched at species level which should be fine, only mystery 
 # is why Solanum nudum doesn't match when it's accepted in POWO
-# also mysterious - why did it return only 1530 rows when I submitted
-# 1544 distinct names?
+# also mysterious - why did it return only 1516 rows when I submitted
+# 1530 distinct names?
 
 # reduce taxa matching to few columns of interest then match this to 
 # longevity & symmetry data
@@ -145,4 +147,6 @@ sum(!is.na(sym_long$sym_species))
 
 # export to csv to score symmetry for remaining taxa!
 readr::write_csv(sym_long, "data_output/longevity_symmetry_all.csv")
+
+# FAR OUT I FORGOT TO FILTER OUT ABIOTICALLY POLLINATED TAXA FROM LONGEVITY!!! DAMMIT!
 })
