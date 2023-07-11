@@ -3,7 +3,7 @@ library(ggpubr) #install.packages("ggpubr")
 library(rtry) #install.packages("rtry")
 library(TNRS) #install.packages("TNRS")
 library(ape) #install.packages("ape")
-library(V.PhyloMaker2) #library(devtools) devtools::install_github("jinyizju/V.PhyloMaker2")
+library(U.PhyloMaker) #library(devtools) devtools::install_github("jinyizju/U.PhyloMaker")
 library(phylolm) #install.packages("phylolm")
 library(phytools) #install.packages("phytools")
 

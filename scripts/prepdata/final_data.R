@@ -14,32 +14,44 @@ source("scripts/prepdata/longevity_data.R")
 ### MATCH TAXONOMY ####
 
 # match taxonomy to World Flora Online using TNRS R package
-# first reduce to taxa
-longev_taxa <- longevity_all %>% 
-  dplyr::select(og_species_patch) %>%
-  dplyr::distinct()
 
-sym_taxa <- sym_data %>%
-  dplyr::select(og_species) %>%
-  dplyr::distinct()
+# longevity first
+longev_tnrs <- cache_RDS("data_output/longev_taxa.csv", 
+                      read_function = readr::read_csv,
+                      save_function = readr::write_csv, function() {
+  # first reduce to taxa
+  longev_taxa <- longevity_all %>% 
+    dplyr::select(og_species_patch) %>%
+    dplyr::distinct()
+  # resolve to World Flora Online using TNRS
+  longev_tnrs <- TNRS::TNRS(longev_taxa$og_species_patch)
+  # export matches to csv to cache
+  readr::write_csv(longev_tnrs, "data_output/longev_taxa.csv")
+})
 
-# resolve to World Flora Online using TNRS
-#longev_tnrs <- TNRS(longev_taxa)
-#sym_tnrs <- TNRS(sym_taxa)
-# NOT WORKING! Error message:
-# Problem with the API: HTTP Status 400 :(
-# have submitted GitHub issue. 
-#Could use taxize and match to TPL to match phylogeny?
+# then symmetry (will take longer)
+sym_tnrs <- cache_RDS("data_output/sym_taxa.csv", 
+                         read_function = readr::read_csv,
+                         save_function = readr::write_csv, function() {
+ # first reduce to taxa
+ sym_taxa <- sym_data %>%
+   dplyr::select(og_species) %>%
+   dplyr::distinct()
+ # resolve to World Flora Online using TNRS
+ sym_tnrs <- TNRS::TNRS(sym_taxa$og_species)
+ # export matches to csv to cache
+ readr::write_csv(sym_tnrs, "data_output/sym_taxa.csv")
+})
 
-# export taxa to csv, paste into TNRS webtool, then read in results
-#readr::write_csv(longev_taxa, "data_output/longev_taxa.csv") # 1530 longevity taxa
-#readr::write_csv(sym_taxa, "data_output/sym_taxa.csv")
+
+
+
 # more than 5000 sym taxa, have to paste in 5k at a time
 
 # used online TNRS version 5.1, https://tnrs.biendata.org/ , 
 # and downloaded csv of best matches
 # read these back in
-longev_taxa <- readr::read_csv("data_input/longevityall_tnrs_result_best.csv",
+longev_tnrs2 <- readr::read_csv("data_input/longevityall_tnrs_result_best.csv",
                                guess_max = 1516)
 sym_taxa <- readr::read_csv("data_input/symtaxa_tnrs_result1best.csv",
                             guess_max = 3000)
