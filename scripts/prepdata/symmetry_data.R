@@ -2,8 +2,7 @@
 
 ### symmetry data ####
 
-sym_data <- cache_RDS("data_output/sym_data.csv", read_function = readr::read_csv,
-                                save_function = readr::write_csv, function() {
+sym_data <- cache_csv("data_output/sym_data.csv", function() {
 
 # read in data from different sources
 #* published symmetry studies ----

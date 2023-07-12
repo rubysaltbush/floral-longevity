@@ -1,9 +1,7 @@
 # script to match taxonomy between symmetry and longevity data, and produce 
 # clean taxonomically matched data set
 
-sym_long <- cache_RDS("data_output/longevity_symmetry_all.csv", 
-                           read_function = readr::read_csv,
-                           save_function = readr::write_csv, function() {
+sym_long <- cache_csv("data_output/longevity_symmetry_all.csv", function() {
 
 #### GET DATA ####
 
@@ -16,9 +14,7 @@ source("scripts/prepdata/longevity_data.R")
 # match taxonomy to World Flora Online using TNRS R package
 
 # longevity first
-longev_tnrs <- cache_RDS("data_output/longev_taxa.csv", 
-                      read_function = readr::read_csv,
-                      save_function = readr::write_csv, function() {
+longev_tnrs <- cache_csv("data_output/longev_taxa.csv", function() {
   # first reduce to taxa
   longev_taxa <- longevity_all %>% 
     dplyr::select(og_species_patch) %>%
@@ -30,9 +26,7 @@ longev_tnrs <- cache_RDS("data_output/longev_taxa.csv",
 })
 
 # then symmetry (will take longer)
-sym_tnrs <- cache_RDS("data_output/sym_taxa.csv", 
-                         read_function = readr::read_csv,
-                         save_function = readr::write_csv, function() {
+sym_tnrs <- cache_csv("data_output/sym_taxa.csv", function() {
  # first reduce to taxa
  sym_taxa <- sym_data %>%
    dplyr::select(og_species) %>%
@@ -42,11 +36,6 @@ sym_tnrs <- cache_RDS("data_output/sym_taxa.csv",
  # export matches to csv to cache
  readr::write_csv(sym_tnrs, "data_output/sym_taxa.csv")
 })
-
-
-
-
-# more than 5000 sym taxa, have to paste in 5k at a time
 
 # used online TNRS version 5.1, https://tnrs.biendata.org/ , 
 # and downloaded csv of best matches

@@ -2,9 +2,7 @@
 
 # assemble data on floral longevity from multiple sources
 
-longevity_all <- cache_RDS("data_output/longevity_data_all.csv", 
-                           read_function = readr::read_csv,
-                           save_function = readr::write_csv, function() {
+longevity_all <- cache_csv("data_output/longevity_data_all.csv", function() {
 
 #* my field data ----
 fieldlong <- readr::read_csv("data_output/mean_longevity_Sydney_fieldwork.csv")
@@ -19,9 +17,7 @@ fieldlong <- fieldlong %>%
 
 #* Marcos Méndez's data ----
 
-marcoslong <- cache_RDS("data_input/marcoslong_speciespatched.csv", 
-                        read_function = readr::read_csv, 
-                        save_function = readr::write_csv, function() {
+marcoslong <- cache_csv("data_input/marcoslong_speciespatched.csv", function() {
                           
   # read in .xls sheet with Marcos' highest quality data
   longevhighq <- readxl::read_xls("data_input/Floral_longevity_20230623.xls", sheet = 1)

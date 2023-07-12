@@ -8,7 +8,7 @@ library(phylolm) #install.packages("phylolm")
 library(phytools) #install.packages("phytools")
 
 # function to cache pre-prepared R data. If RDS already in cache will read data
-source("scripts/functions/cache_RDS.R")
+source("scripts/functions/cache_csv.R")
 
 # My rough plan: 
 #~~ -pull together symmetry data from a few published sources as well as the~~
