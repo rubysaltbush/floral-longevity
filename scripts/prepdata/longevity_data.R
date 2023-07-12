@@ -127,6 +127,8 @@ marcoslong <- cache_csv("data_input/marcoslong_speciespatched.csv", function() {
   
   # for species patching will need to manually fix a few values, export csv
   readr::write_csv(marcoslong, "data_output/marcoslong_topatchspecies.csv")
+  # mostly this manual patching involved converting genus initials to
+  # full genus names, plus removing a few notes in species name column
   # and read back in manually patched results
   marcoslong <- readr::read_csv("data_input/marcoslong_speciespatched.csv")
 })
@@ -143,7 +145,6 @@ songlong <- readxl::read_xlsx("data_input/Data_for_Dryad.xlsx")
 
 # simplify to columns that will match other longevity data
 songlong <- songlong %>%
-  dplyr::filter(Pollination.mode != "abiotically") %>%
   dplyr::select(og_species = Species, og_family = Family, Lat = Latitude,
                 alt_m = Elevation, mean_long_days = Floral.longevity, 
                 pollination = Pollination.mode,
@@ -177,6 +178,29 @@ rm(marcoslong, fieldlong, songlong)
 longevity_all$og_species_patch <- gsub("  ", " ", longevity_all$og_species_patch) # few double spaces, convert to single in case that helps at all
 longevity_all$og_species_patch[longevity_all$og_species_patch == "Typhonium angustifolium"] <- "Typhonium angustilobum" # checked against original paper, name typo
 longevity_all$og_species_patch[longevity_all$og_species_patch == "Walsura trifolia"] <- "Walsura trifoliolata" # checked against distribution, wrong name in og paper
+
+# perhaps here filter out Marcos' wind pollinated taxa??? He says:
+# YES, I included some abiotically (wind) pollinated plants. They are good to 
+# have as a reference of floral longevity when animals are not involved. You can 
+# remove then but remember we have that info in case we feel the need of comparing 
+# how long a flower can last when released from the burden of having to attract 
+# a pollinator. The families that should be removed from my date base are: 
+# Amaranthaceae (I believe), Casuarinaceae, Plantaginaceae (or whatever family 
+# they have been synonimized, but retain Veronica species), Poaceae.
+
+# first class Casuarinaceae, Poaceae as abiotically pollinated
+longevity_all$pollination[longevity_all$og_family == "Poaceae"] <- "abiotically"
+longevity_all$pollination[longevity_all$og_family == "Casuarinaceae"] <- "abiotically"
+longevity_all$pollination[longevity_all$og_family == "Cyperaceae"] <- "abiotically" # checked these myself, all wind pollinated
+# Sarcopoterium spinosum og paper says wind pollinated
+longevity_all$pollination[longevity_all$og_species_patch == "Sarcopoterium spinosum"] <- "abiotically"
+
+# have checked and many Plantaginaceae biotically pollinated, only Plantago lagopus may be ambophilous but will leave for now
+# have checked and all Amaranthaceae appear insect pollinated
+table(longevity_all$pollination)
+# filter out abiotically pollinated taxa (symmetry not relevant for these)
+longevity_all <- longevity_all %>%
+  dplyr::filter(is.na(pollination)|pollination %in% c("vertebrate", "invertebrate", "NA"))
 
 # export this! then match taxonomy
 readr::write_csv(longevity_all, "data_output/longevity_data_all.csv")

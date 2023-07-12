@@ -37,48 +37,39 @@ sym_tnrs <- cache_csv("data_output/sym_taxa.csv", function() {
  readr::write_csv(sym_tnrs, "data_output/sym_taxa.csv")
 })
 
-# used online TNRS version 5.1, https://tnrs.biendata.org/ , 
-# and downloaded csv of best matches
-# read these back in
-longev_tnrs2 <- readr::read_csv("data_input/longevityall_tnrs_result_best.csv",
-                               guess_max = 1516)
-sym_taxa <- readr::read_csv("data_input/symtaxa_tnrs_result1best.csv",
-                            guess_max = 3000)
-
-# okay looking through longevity taxa matching, many with 1 to 1 match
-# or slight orthographic variations, only a few that appear incorrectly matched
-# for some reason. Many taxa with supspecies and variants have only
-# been matched at species level which should be fine, only mystery 
-# is why Solanum nudum doesn't match when it's accepted in POWO
-# also mysterious - why did it return only 1516 rows when I submitted
-# 1530 distinct names?
+# have checked through all matches <1 in longevity data, agree with TNRS for these
+# for symmetry will filter out matches <0.5 as some of these iffy
+sym_tnrs <- sym_tnrs %>%
+  dplyr::filter(Overall_score >= 0.5)
 
 # reduce taxa matching to few columns of interest then match this to 
 # longevity & symmetry data
 
-longev_taxa <- longev_taxa %>%
-  dplyr::select(og_species_patch = Name_submitted, Overall_score, 
-                Taxonomic_status, Accepted_name, Accepted_name_rank,
-                Accepted_family) %>%
-  dplyr::distinct()
-longev_taxa$Accepted_genus <- gsub(" .*", "", longev_taxa$Accepted_name)
-
-sym_taxa <- sym_taxa %>%
+longev_tnrs <- longev_tnrs %>%
   dplyr::select(og_species_patch = Name_submitted, Accepted_name, 
                 Accepted_name_rank, Accepted_family) %>%
   dplyr::distinct()
-sym_taxa$Accepted_genus <- gsub(" .*", "", sym_taxa$Accepted_name)
+longev_tnrs$Accepted_genus <- gsub(" .*", "", longev_tnrs$Accepted_name)
 
-# join taxonomy info back onto data
+sym_tnrs <- sym_tnrs %>%
+  dplyr::select(og_species_patch = Name_submitted, Accepted_name, 
+                Accepted_name_rank, Accepted_family) %>%
+  dplyr::distinct()
+sym_tnrs$Accepted_genus <- gsub(" .*", "", sym_tnrs$Accepted_name)
+
+# join taxonomy info back onto longevity data
 longevity_all <- longevity_all %>%
-  dplyr::left_join(longev_taxa, by = "og_species_patch")
+  dplyr::left_join(longev_tnrs, by = "og_species_patch")
+# patch Solanum nudum which is accepted according to POWO, not sure why it didn't match
+longevity_all$Accepted_name[longevity_all$og_species_patch == "Solanum nudum"] <- "Solanum nudum"
+longevity_all$Accepted_name_rank[longevity_all$og_species_patch == "Solanum nudum"] <- "species"
 
+# join taxonomy info back onto symmetry data
 sym_data$og_species_patch <- sym_data$og_species
-
 sym_data <- sym_data %>%
-  dplyr::left_join(sym_taxa, by = "og_species_patch")
+  dplyr::left_join(sym_tnrs, by = "og_species_patch")
 
-rm(longev_taxa, sym_taxa)
+rm(longev_tnrs, sym_tnrs)
 
 #### MATCH SYM AND LONGEV ####
 
@@ -144,10 +135,8 @@ sym_long$sym_species <- ifelse(is.na(sym_long$sym_species),
                                sym_long$sym_RS_scored, 
                                sym_long$sym_species)
 sum(!is.na(sym_long$sym_species))
-# symmetry available for 761 of 2061 observations, 1300 to score
+# symmetry available for 761 of 2030 observations, 1269 to score
 
 # export to csv to score symmetry for remaining taxa!
 readr::write_csv(sym_long, "data_output/longevity_symmetry_all.csv")
-
-# FAR OUT I FORGOT TO FILTER OUT ABIOTICALLY POLLINATED TAXA FROM LONGEVITY!!! DAMMIT!
 })
