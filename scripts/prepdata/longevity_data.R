@@ -173,6 +173,11 @@ longevity_all <- marcoslong %>%
   dplyr::bind_rows(fieldlong)
 rm(marcoslong, fieldlong, songlong)
 
+# patching some erroneous names detected during taxonomic matching
+longevity_all$og_species_patch <- gsub("  ", " ", longevity_all$og_species_patch) # few double spaces, convert to single in case that helps at all
+longevity_all$og_species_patch[longevity_all$og_species_patch == "Typhonium angustifolium"] <- "Typhonium angustilobum" # checked against original paper, name typo
+longevity_all$og_species_patch[longevity_all$og_species_patch == "Walsura trifolia"] <- "Walsura trifoliolata" # checked against distribution, wrong name in og paper
+
 # export this! then match taxonomy
 readr::write_csv(longevity_all, "data_output/longevity_data_all.csv")
 })
