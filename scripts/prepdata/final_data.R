@@ -137,6 +137,22 @@ sym_long$sym_species <- ifelse(is.na(sym_long$sym_species),
 sum(!is.na(sym_long$sym_species))
 # symmetry available for 761 of 2030 observations, 1269 to score
 
-# export to csv to score symmetry for remaining taxa!
+# exported to csv to score symmetry for remaining taxa
+# read in scored symmetry data thus far, and join onto sym_long
+symscored <- readxl::read_xlsx("data_input/longevity_symmetry_all_dataentry.xlsx",
+                               sheet = 1, na = c("", "NA"), guess_max = 2000)
+symscored <- symscored %>%
+  dplyr::select(Accepted_name, sym_species) %>%
+  dplyr::filter(!is.na(Accepted_name)) %>%
+  dplyr::distinct()
+sum(is.na(symscored$sym_species))
+# 784 taxa left to score symmetry for
+
+sym_long <- sym_long %>%
+  dplyr::select(-sym_species) %>%
+  dplyr::left_join(symscored, by = "Accepted_name")
+rm(symscored)
+
+# export final version to csv 
 readr::write_csv(sym_long, "data_output/longevity_symmetry_all.csv")
 })

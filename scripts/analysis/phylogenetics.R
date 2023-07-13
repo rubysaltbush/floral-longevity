@@ -58,7 +58,7 @@ pgls <- sym_long %>%
 pgls$species <- gsub(" ", "_", pgls$species)
 
 # drop missing data tips from tree
-# lose 909 tips at this stage
+# lose 784 tips at this stage
 to_drop <- pgls %>%
   dplyr::filter(is.na(spmean_long_days)|!(sym_species %in% c("actinomorphic", "zygomorphic")))
 tree_nomissing <- ape::drop.tip(tree_TPL$scenario.3, to_drop$species)
@@ -67,7 +67,7 @@ rm(to_drop)
 # and remove missing data taxa from morphological data
 pgls <- pgls %>%
   dplyr::filter(is.na(spmean_long_days)|sym_species %in% c("actinomorphic", "zygomorphic"))
-# 559 species obs remain
+# 666 species obs remain
 
 # taxon_name to row names
 rownames(pgls) <- pgls[,1]
@@ -77,7 +77,7 @@ pgls[,1] <- NULL
 pgls$sym_species <- gsub("zygomorphic", "1", pgls$sym_species)
 pgls$sym_species <- gsub("actinomorphic", "0", pgls$sym_species)
 table(pgls$sym_species)
-# 382 actinomorphic taxa to 177 zygomorphic taxa
+# 443 actinomorphic taxa to 223 zygomorphic taxa
 
 # double check distribution of continuous variables
 plot(pgls$spmean_long_days) # some outlying high values
@@ -101,8 +101,10 @@ PGLS_symlong <- phylolm::phyloglm(sym_species ~ spmean_long_days,
                                   boot = 100)
 
 summary(PGLS_symlong)
-# actually kind of close! p = 0.09733, with preliminary messy data set
+# actually kind of close! p = 0.06076, with preliminary messy data set
 # ultimately probs want to run this as a phylogenetic t-test??
+
+rm(PGLS_symlong, pgls, for_phylo)
 
 #### PHYLOGENETIC ANOVA ####
 
@@ -118,7 +120,9 @@ print(anova)
 
 anova$Pf
 
-# hmm p = 0.676, much much higher than phylogenetic logistic regression, wonder why?
+# hmm Pf = 0.669, much much higher than phylogenetic logistic regression, wonder why?
+
+rm(anova, tree_nomissing, sym, long)
 
 #### model longevity evolution ####
 
@@ -128,25 +132,61 @@ longevspmean <- sym_long %>%
   dplyr::summarise(spmean_long_days = mean(mean_long_days)) %>%
   dplyr::ungroup() %>%
   dplyr::filter(!is.na(species))
+# join symmetry data back on
+sym <- sym_long %>%
+  dplyr::select(species = Accepted_name, sym_species) %>%
+  dplyr::filter(!is.na(species)) %>%
+  dplyr::distinct()
+longevspmean <- longevspmean %>%
+  dplyr::left_join(sym, by = "species")
+rm(sym)
+longevspmean$sym_species[is.na(longevspmean$sym_species)] <- "blank" # add dummy category for NA symmetry
 # add underscore to match tip labels
 longevspmean$species <- gsub(" ", "_", longevspmean$species)
-# change data into a named vector for phytools
-longevspmeanV <- longevspmean$spmean_long_days
+# change longevity data into a named vector for phytools
+longevspmeanV <- log(longevspmean$spmean_long_days)
 names(longevspmeanV) <- longevspmean$species
+# and prep symmetry data also
+symV <- as.factor(longevspmean$sym_species)
+names(symV) <- longevspmean$species
 
 # visualise longevity evolution across phylogeny
 contmap <- phytools::contMap(tree_TPL$scenario.3, longevspmeanV, plot = FALSE)
-
 # re-colour contmap with viridis scale
 contmap <- phytools::setMap(contmap, c("#440154FF", "#46337EFF", "#365C8DFF", "#277F8EFF", "#1FA187FF", "#4AC16DFF", "#9FDA3AFF", "#FDE725FF"))
-# and plot it! v tall with tip labels
-pdf(file = "figures/contmap_spmeanlongevity.pdf", width = 12, height = 70)
-plot(contmap, legend = 0.7*max(nodeHeights(tree_TPL$scenario.3)), sig = 2, 
-     fsize = c(0.5, 0.7), lwd = 2, outline = FALSE, leg.txt = "Floral longevity (mean # days)")
+
+# make sure discrete character is in the order of tree
+symV <- symV[contmap$tree$tip.label]
+# set factor colours
+cols <- setNames(RColorBrewer::brewer.pal(n = length(levels(symV)), "Dark2"),
+                 levels(symV))
+
+# dummy plot to get locations to draw tip labels coloured by symmetry
+plot(contmap, fsize = c(0.5, 0.7))
+lastPP <- get("last_plot.phylo", envir = .PlotPhyloEnv)
+
+# have to figure out type = "fan" later, doesn't draw tips in right direction
+# but can probs do tip points easily
+
+# and plot it! v tall plot with tip labels
+pdf(file = "figures/contmap_spmeanlongevity.pdf", width = 20, height = 80)
+plot(contmap, legend = 0.7*max(nodeHeights(tree_TPL$scenario.3)), sig = 1, 
+     lwd = 4, outline = FALSE, ftype = "off", #type = "fan",
+     xlim = lastPP$x.lim, #ylim = lastPP$y.lim,
+     leg.txt = "Floral longevity (log mean # days)")
+for(i in 1:length(symV)) {
+  text(lastPP$xx[i], lastPP$yy[i], contmap$tree$tip.label[i],
+       pos = 4, cex = 0.6, col = cols[symV[i]], font = 3)
+}
+# insert legend
+legend(x = "bottomright", legend = names(cols), bg = "white",
+       fill = cols, cex = 3, pt.lwd = 0.001, bty = "n",
+       title = "Floral symmetry")
 dev.off()
 
 # ultimately think contMap plot would look best in fan style, with points at tips 
 # to indicate if taxon is actinomorphic or zygomorphic and round clade labels
 # will build this LATER if decide it's worth it
+rm(symV, longevspmean, lastPP, contmap, longevspmeanV, i, cols)
 
-
+rm(tree_TPL)
