@@ -146,7 +146,7 @@ symscored <- symscored %>%
   dplyr::filter(!is.na(Accepted_name)) %>%
   dplyr::distinct()
 sum(is.na(symscored$sym_species))
-# 784 taxa left to score symmetry for
+# 750 taxa left to score symmetry for
 
 sym_long <- sym_long %>%
   dplyr::select(-sym_species) %>%
