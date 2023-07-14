@@ -4,7 +4,7 @@
 
 # TO INVESTIGATE
 # - randomly sample one species per genus. Same results?
-# - use shortwe Smith and Brown tree (GBOTB.tre with 79,881 tips)
+# - use shorter Smith and Brown tree (GBOTB.tre with 79,881 tips)
 # - use Smith and Brown without Qian and Jin?? (ALLOTB.tre with 353,185 tips)
 
 # first use V.PhyloMaker2 package to get phylogeny from Smith and Brown GBOTB.extended tree
@@ -45,6 +45,7 @@ tree_TPL <- V.PhyloMaker2::phylo.maker(for_phylo)
 
 plot(tree_TPL$scenario.3, type = "fan", show.tip.label = FALSE)
 # it's a tree! who knows if it's right! crazy.
+# Hervé unimpressed by number of polytomies
 
 table(tree_TPL$species.list$status)
 # not sure exactly what bind and prune mean? Maybe bind means it just bound this
@@ -63,7 +64,7 @@ pgls <- sym_long %>%
 pgls$species <- gsub(" ", "_", pgls$species)
 
 # drop missing data tips from tree
-# lose 693 tips at this stage
+# lose 678 tips at this stage
 to_drop <- pgls %>%
   dplyr::filter(is.na(spmean_long_days)|!(sym_species %in% c("actinomorphic", "zygomorphic")))
 tree_nomissing <- ape::drop.tip(tree_TPL$scenario.3, to_drop$species)
@@ -72,7 +73,11 @@ rm(to_drop)
 # and remove missing data taxa from morphological data
 pgls <- pgls %>%
   dplyr::filter(is.na(spmean_long_days)|sym_species %in% c("actinomorphic", "zygomorphic"))
-# 757 species obs remain
+# 772 species obs remain
+# reorder data so species order matches order of tips in tree
+pgls <- as.data.frame(tree_nomissing$tip.label) %>%
+  dplyr::left_join(pgls, by = c("tree_nomissing$tip.label" = "species"))
+pgls$sym_species <- forcats::as_factor(pgls$sym_species)
 
 # taxon_name to row names
 rownames(pgls) <- pgls[,1]
@@ -82,7 +87,7 @@ pgls[,1] <- NULL
 pgls$sym_species <- gsub("zygomorphic", "1", pgls$sym_species)
 pgls$sym_species <- gsub("actinomorphic", "0", pgls$sym_species)
 table(pgls$sym_species)
-# 499 actinomorphic taxa to 258 zygomorphic taxa
+# 514 actinomorphic taxa to 258 zygomorphic taxa
 
 # double check distribution of continuous variables
 plot(pgls$spmean_long_days) # some outlying high values
@@ -91,20 +96,34 @@ hist(pgls$spmean_long_days) # few outlying high values
 
 # quick boxplot of this data subset to compare means between symmetry
 boxplot(spmean_long_days ~ sym_species, data = pgls)
-# marginally longer longevity for zygomorphy but minimal really, doubt I'll see anythign in analysis
+# marginally longer longevity for zygomorphy but minimal really, doubt I'll see anything in analysis
+
+#### run PGLS ####
+
+PGLS_symlong <- nlme::gls(spmean_long_days ~ sym_species, 
+                          correlation = ape::corBrownian(phy = tree_nomissing),
+                          data = pgls, method = "ML")
+anova(PGLS_symlong)
+
+coef(PGLS_symlong)
+# Warning message:
+#   In Initialize.corPhyl(X[[i]], ...) :
+#   No covariate specified, species will be taken as ordered in the data frame. 
+#   To avoid this message, specify a covariate containing the species names with the 'form' argument.
+# will have to work out how to interpret this, with Luke Harmon's book maybe??
 
 #### run model ####
 # below adapted from Joly and Schoen (2021)
 # works without polymorphic or missing data
 # Model fit with Ives and Garlan optimisation
 
-PGLS_symlong <- phylolm::phyloglm(sym_species ~ spmean_long_days, 
+PGLogS_symlong <- phylolm::phyloglm(sym_species ~ spmean_long_days, 
                                   data = pgls, 
                                   phy = tree_nomissing,
                                   method = "logistic_IG10", 
                                   boot = 100)
 
-summary(PGLS_symlong)
+summary(PGLogS_symlong)
 # actually kind of close! p = 0.004, with preliminary messy data set
 # ultimately probs want to run this as a phylogenetic t-test??
 

@@ -6,6 +6,7 @@ library(ape) #install.packages("ape")
 library(V.PhyloMaker2) #library(devtools) MAYBE ULTIMATELY USE U.PHYLOMAKER??? devtools::install_github("jinyizju/U.PhyloMaker")
 library(phylolm) #install.packages("phylolm")
 library(phytools) #install.packages("phytools")
+library(nlme) #install.packages("nlme")
 
 # function to cache pre-prepared R data. If RDS already in cache will read data
 source("scripts/functions/cache_csv.R")
