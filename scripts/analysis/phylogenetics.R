@@ -2,6 +2,11 @@
 # and run some basic phylogenetic analyses to see if floral longevity and
 # floral symmetry are co-evolving traits
 
+# TO INVESTIGATE
+# - randomly sample one species per genus. Same results?
+# - use shortwe Smith and Brown tree (GBOTB.tre with 79,881 tips)
+# - use Smith and Brown without Qian and Jin?? (ALLOTB.tre with 353,185 tips)
+
 # first use V.PhyloMaker2 package to get phylogeny from Smith and Brown GBOTB.extended tree
 # prep data
 for_phylo <- sym_long %>%

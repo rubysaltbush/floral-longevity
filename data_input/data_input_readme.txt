@@ -20,3 +20,10 @@ marcoslong_speciespatched.csv - Marcos Méndez and Ruby Stephens - added 2023-07
 symtaxa_tnrs_result1best.csv - Ruby Stephens - added 2023-07-04 - all symmetry data taxa matched to World Flora Online and/or POWO using TNRS online web tool (R package down) at https://tnrs.biendata.org/, best matches downloaded only
 
 longevityall_tnrs_result_best.csv - Ruby Stephens - added 2023-07-04 - updated 2023-07-07 - all longevity data taxa matched to World Flora Online and/or POWO using TNRS online web tool (R package down) at https://tnrs.biendata.org/, best matches downloaded only. Names fixed for update 1, update 2 removed abiotically pollinated taxa from Song et al and manually fixed Solanum nudum
+
+longevity_symmetry_all_dataentry.xlsx - Ruby Stephens - added 2023-07-?? - updated 2023-07-14 - data entry for symmetry data to match relevant taxa for which we have longevity data. Symmetry is being scored according to a broad functional definition, such that taxa with mostly actinomorphic flowers within pseudanthia that contain some zygomorphic flowers (e.g. Asteraceae) are classified simply as actinomorphic. Symmetry scored at family level where all sources agree that family contains only one form of symmetry, but in many cases scored at species level by reference to verified images of the species flowers or species descriptions.
+
+GBOTB.tre - Smith and Brown - added 2023-07-14 - the shorter, 79k tip tree from Smith, S. A., & Brown, J. W. (2018). Constructing a broadly inclusive seed plant phylogeny. American Journal of Botany, 105(3), 302–314. https://doi.org/10.1002/ajb2.1019
+
+ALLOTB.tre - Smith and Brown - added 2023-07-14 - the longer, 350k tip tree from Smith, S. A., & Brown, J. W. (2018). Constructing a broadly inclusive seed plant phylogeny. American Journal of Botany, 105(3), 302–314. https://doi.org/10.1002/ajb2.1019
+
