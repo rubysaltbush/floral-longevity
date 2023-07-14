@@ -13,8 +13,7 @@ source("scripts/functions/cache_csv.R")
 # My rough plan: 
 #~~ -pull together symmetry data from a few published sources as well as the~~
 #~~  PROTEUS database and some previous work of mine~~
-#~~ -align the taxonomy of symmetry data and Marcos' longevity data to the World~~
-#~~  Checklist of Vascular Plants~~
+#~~ -align the taxonomy of symmetry data and Marcos' longevity data to WCVP ~~
 # -score symmetry data for any missing species
 #~~ -match longevity/symmetry data to the Smith and Brown (2018) angiosperm phylogeny
 # -check for any sampling bias of floral longevity

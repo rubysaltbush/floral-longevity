@@ -121,7 +121,7 @@ anova$Pf
 
 # hmm Pf = 0.393, much much higher than phylogenetic logistic regression, wonder why?
 
-rm(anova, tree_nomissing, sym, long)
+rm(anova, tree_nomissing, sym, long, pgls)
 
 #### model longevity evolution ####
 
