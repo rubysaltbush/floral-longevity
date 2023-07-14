@@ -18,7 +18,7 @@ tree_TPL <- V.PhyloMaker2::phylo.maker(for_phylo)
 # 726 Viburnum       Viburnaceae      Adoxaceae
 # [1] NA
 
-tree_LCVP <- V.PhyloMaker2::phylo.maker(for_phylo, tree = GBOTB.extended.LCVP)
+#tree_LCVP <- V.PhyloMaker2::phylo.maker(for_phylo, tree = GBOTB.extended.LCVP)
 # [1] "Taxonomic classification not consistent between sp.list and tree."
 # genus family_in_sp.list family_in_tree
 # 249  Emmotum       Icacinaceae Metteniusaceae
@@ -28,7 +28,7 @@ tree_LCVP <- V.PhyloMaker2::phylo.maker(for_phylo, tree = GBOTB.extended.LCVP)
 # Error in 1:n : argument of length 0
 # doesn't work! presumably because of above mysterious error
 
-tree_WP <- V.PhyloMaker2::phylo.maker(for_phylo, tree = GBOTB.extended.WP)
+#tree_WP <- V.PhyloMaker2::phylo.maker(for_phylo, tree = GBOTB.extended.WP)
 # [1] "Taxonomic classification not consistent between sp.list and tree."
 # genus family_in_sp.list family_in_tree
 # 248  Emmotum       Icacinaceae Metteniusaceae
@@ -58,7 +58,7 @@ pgls <- sym_long %>%
 pgls$species <- gsub(" ", "_", pgls$species)
 
 # drop missing data tips from tree
-# lose 784 tips at this stage
+# lose 693 tips at this stage
 to_drop <- pgls %>%
   dplyr::filter(is.na(spmean_long_days)|!(sym_species %in% c("actinomorphic", "zygomorphic")))
 tree_nomissing <- ape::drop.tip(tree_TPL$scenario.3, to_drop$species)
@@ -67,7 +67,7 @@ rm(to_drop)
 # and remove missing data taxa from morphological data
 pgls <- pgls %>%
   dplyr::filter(is.na(spmean_long_days)|sym_species %in% c("actinomorphic", "zygomorphic"))
-# 666 species obs remain
+# 757 species obs remain
 
 # taxon_name to row names
 rownames(pgls) <- pgls[,1]
@@ -77,11 +77,10 @@ pgls[,1] <- NULL
 pgls$sym_species <- gsub("zygomorphic", "1", pgls$sym_species)
 pgls$sym_species <- gsub("actinomorphic", "0", pgls$sym_species)
 table(pgls$sym_species)
-# 443 actinomorphic taxa to 223 zygomorphic taxa
+# 499 actinomorphic taxa to 258 zygomorphic taxa
 
 # double check distribution of continuous variables
 plot(pgls$spmean_long_days) # some outlying high values
-
 hist(pgls$spmean_long_days) # few outlying high values
 # generally left-biased distribution, think okay for now?
 
@@ -101,10 +100,10 @@ PGLS_symlong <- phylolm::phyloglm(sym_species ~ spmean_long_days,
                                   boot = 100)
 
 summary(PGLS_symlong)
-# actually kind of close! p = 0.06076, with preliminary messy data set
+# actually kind of close! p = 0.004, with preliminary messy data set
 # ultimately probs want to run this as a phylogenetic t-test??
 
-rm(PGLS_symlong, pgls, for_phylo)
+rm(PGLS_symlong, for_phylo)
 
 #### PHYLOGENETIC ANOVA ####
 
@@ -120,7 +119,7 @@ print(anova)
 
 anova$Pf
 
-# hmm Pf = 0.669, much much higher than phylogenetic logistic regression, wonder why?
+# hmm Pf = 0.393, much much higher than phylogenetic logistic regression, wonder why?
 
 rm(anova, tree_nomissing, sym, long)
 
