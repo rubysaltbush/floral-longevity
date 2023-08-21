@@ -19,4 +19,6 @@ ttest <- t.test(sym_long$mean_long_days[sym_long$sym_species == "zygomorphic"],
 ttest
 # p = 0.06, with actinomorphic mean 3.72 and zygomorphic 4.3
 # shall see how this changes as I add in taxa, and consider phylogeny
+
+# now p = 0.007, actinomorphic mean 3.84, zygomorphic 4.48
 rm(ttest)
