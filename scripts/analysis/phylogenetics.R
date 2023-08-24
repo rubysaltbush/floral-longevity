@@ -64,7 +64,7 @@ pgls <- sym_long %>%
 pgls$species <- gsub(" ", "_", pgls$species)
 
 # drop missing data tips from tree
-# lose 231 tips at this stage
+# lose 26 tips at this stage
 to_drop <- pgls %>%
   dplyr::filter(is.na(spmean_long_days)|!(sym_species %in% c("actinomorphic", "zygomorphic")))
 tree_nomissing <- ape::drop.tip(tree_TPL$scenario.3, to_drop$species)
@@ -73,7 +73,7 @@ rm(to_drop)
 # and remove missing data taxa from morphological data
 pgls <- pgls %>%
   dplyr::filter(is.na(spmean_long_days)|sym_species %in% c("actinomorphic", "zygomorphic"))
-# 1219 species obs remain
+# 1424 species obs remain
 # reorder data so species order matches order of tips in tree
 pgls <- as.data.frame(tree_nomissing$tip.label) %>%
   dplyr::left_join(pgls, by = c("tree_nomissing$tip.label" = "species"))
@@ -87,7 +87,7 @@ pgls[,1] <- NULL
 pgls$sym_species <- gsub("zygomorphic", "1", pgls$sym_species)
 pgls$sym_species <- gsub("actinomorphic", "0", pgls$sym_species)
 table(pgls$sym_species)
-# 821 actinomorphic taxa to 398 zygomorphic taxa
+# 966 actinomorphic taxa to 458 zygomorphic taxa
 
 # double check distribution of continuous variables
 plot(pgls$spmean_long_days) # some outlying high values
@@ -122,10 +122,11 @@ PGLogS_symlong <- phylolm::phyloglm(sym_species ~ spmean_long_days,
                                   phy = tree_nomissing,
                                   method = "logistic_IG10", 
                                   boot = 100)
+# phyloglm failed to converge, probs need more bootstraps
 
 summary(PGLogS_symlong)
-# actually kind of close! p = 0.002
-# ultimately probs want to run this as a phylogenetic t-test??
+
+# p = 0.0001 !
 
 rm(PGLS_symlong, for_phylo)
 
@@ -143,7 +144,7 @@ print(anova)
 
 anova$Pf
 
-# hmm Pf = 0.502, much much higher than phylogenetic logistic regression, wonder why?
+# hmm Pf = 0.381, much much higher than phylogenetic logistic regression, wonder why?
 
 rm(anova, tree_nomissing, sym, long, pgls)
 
