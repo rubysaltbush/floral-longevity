@@ -21,4 +21,7 @@ ttest
 # shall see how this changes as I add in taxa, and consider phylogeny
 
 # now p = 0.007, actinomorphic mean 3.84, zygomorphic 4.48
+
+# now p < 0.001, actinomorphic mean 4.72, zygomorphic 3.87
+# BUT shall have to see if this difference remains when phylogeny considered
 rm(ttest)
