@@ -63,8 +63,8 @@ pgls <- sym_long %>%
 # add underscore to match tip labels
 pgls$species <- gsub(" ", "_", pgls$species)
 
-# drop missing data tips from tree
-# lose 26 tips at this stage
+# drop missing data tips from tree NO MISSING DATA AS ALREADY FILTERED
+# lose 0 tips at this stage
 to_drop <- pgls %>%
   dplyr::filter(is.na(spmean_long_days)|!(sym_species %in% c("actinomorphic", "zygomorphic")))
 tree_nomissing <- ape::drop.tip(tree_TPL$scenario.3, to_drop$species)
@@ -73,7 +73,7 @@ rm(to_drop)
 # and remove missing data taxa from morphological data
 pgls <- pgls %>%
   dplyr::filter(is.na(spmean_long_days)|sym_species %in% c("actinomorphic", "zygomorphic"))
-# 1424 species obs remain
+# 1452 species obs remain
 # reorder data so species order matches order of tips in tree
 pgls <- as.data.frame(tree_nomissing$tip.label) %>%
   dplyr::left_join(pgls, by = c("tree_nomissing$tip.label" = "species"))
@@ -87,7 +87,7 @@ pgls[,1] <- NULL
 pgls$sym_species <- gsub("zygomorphic", "1", pgls$sym_species)
 pgls$sym_species <- gsub("actinomorphic", "0", pgls$sym_species)
 table(pgls$sym_species)
-# 966 actinomorphic taxa to 458 zygomorphic taxa
+# 985 actinomorphic taxa to 467 zygomorphic taxa
 
 # double check distribution of continuous variables
 plot(pgls$spmean_long_days) # some outlying high values
@@ -121,12 +121,15 @@ PGLogS_symlong <- phylolm::phyloglm(sym_species ~ spmean_long_days,
                                   data = pgls, 
                                   phy = tree_nomissing,
                                   method = "logistic_IG10", 
-                                  boot = 100)
-# phyloglm failed to converge, probs need more bootstraps
+                                  boot = 500) # wow takes a long time with more bootstraps
+# Warning message:
+# In phylolm::phyloglm(sym_species ~ spmean_long_days, data = pgls,  :
+                       #phyloglm failed to converge.
+# even with 500 bootstraps! yikes.
 
 summary(PGLogS_symlong)
 
-# p = 0.0001 !
+# p = 0.0003 !
 
 rm(PGLS_symlong, for_phylo)
 
@@ -144,7 +147,7 @@ print(anova)
 
 anova$Pf
 
-# hmm Pf = 0.381, much much higher than phylogenetic logistic regression, wonder why?
+# hmm Pf = 0.375, much much higher than phylogenetic logistic regression, wonder why?
 
 rm(anova, tree_nomissing, sym, long, pgls)
 
@@ -182,8 +185,7 @@ contmap <- phytools::setMap(contmap, c("#440154FF", "#46337EFF", "#365C8DFF", "#
 # make sure discrete character is in the order of tree
 symV <- symV[contmap$tree$tip.label]
 # set factor colours
-cols <- setNames(RColorBrewer::brewer.pal(n = length(levels(symV)), "Dark2"),
-                 levels(symV))
+cols <- setNames(c("#7570B3", "#D95F02"), levels(symV))
 
 # dummy plot to get locations to draw tip labels coloured by symmetry
 plot(contmap, fsize = c(0.5, 0.7))
