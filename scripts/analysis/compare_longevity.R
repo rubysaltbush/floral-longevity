@@ -15,13 +15,10 @@ ggsave("figures/symmetry_longevity_boxplot.pdf", width = 9, height = 5)
 
 # t-test of longevity by symmetry
 ttest <- t.test(sym_long$mean_long_days[sym_long$sym_species == "zygomorphic"], 
-                sym_long$mean_long_days[sym_long$sym_species != "zygomorphic"])
+                sym_long$mean_long_days[sym_long$sym_species == "actinomorphic"])
 ttest
-# p = 0.06, with actinomorphic mean 3.72 and zygomorphic 4.3
-# shall see how this changes as I add in taxa, and consider phylogeny
-
-# now p = 0.007, actinomorphic mean 3.84, zygomorphic 4.48
-
-# now p < 0.001, actinomorphic mean 4.72, zygomorphic 3.87
+# p = 0.0001, actinomorphic mean 3.85, zygomorphic 4.67
+# zygomorphic flowers longer lived which makes sense if fewer visitors
 # BUT shall have to see if this difference remains when phylogeny considered
+# and genera subsampled to reduce taxonomic bias
 rm(ttest)

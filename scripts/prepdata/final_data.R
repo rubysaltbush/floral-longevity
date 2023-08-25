@@ -12,6 +12,7 @@ source("scripts/prepdata/longevity_data.R")
 ### MATCH TAXONOMY ####
 
 # match taxonomy to World Flora Online using TNRS R package
+# takes a long time if not cached
 
 # longevity first
 longev_tnrs <- cache_csv("data_output/longev_taxa.csv", function() {
@@ -138,20 +139,31 @@ sum(!is.na(sym_long$sym_species))
 # symmetry available for 761 of 2030 observations, 1269 to score
 
 # exported to csv to score symmetry for remaining taxa
-# read in scored symmetry data thus far, and join onto sym_long
+# read in scored symmetry data and join back onto sym_long
 symscored <- readxl::read_xlsx("data_input/longevity_symmetry_all_dataentry.xlsx",
                                sheet = 1, na = c("", "NA"), guess_max = 2000)
+
+# as well as symmetry manually updated Accepted_name for some taxa
+# so will match back using original name (patched)
 symscored <- symscored %>%
-  dplyr::select(Accepted_name, sym_species) %>%
-  dplyr::filter(!is.na(Accepted_name)) %>%
+  dplyr::select(og_species_patch, # keep original names to match back to longevity data
+                Accepted_name, Accepted_name_rank, Accepted_family, Accepted_genus, # keep updated accepted name info
+                sym_species, sym_genus, sym_family, #updated symmetry data
+                rank_sym_scored_at, sym_data_source, sym_data_reference) %>% # keep data about scoring to check how this distributed
   dplyr::distinct()
 sum(is.na(symscored$sym_species))
-# 25 taxa left to score symmetry for, all difficult remainders
+# 3 taxa with no symmetry data, one wind-pollinated (exclude), two unresolved taxonomy
 
+# drop updated columns from sym_long before matching back onto symscored
 sym_long <- sym_long %>%
-  dplyr::select(-sym_species) %>%
-  dplyr::left_join(symscored, by = "Accepted_name")
+  dplyr::select(-Accepted_name, -Accepted_name_rank, -Accepted_family, 
+                -Accepted_genus, -sym_species, -sym_genus, -sym_family) %>%
+  dplyr::left_join(symscored, by = c("og_species_patch")) %>%
+  dplyr::filter(!is.na(sym_species)) %>% # filter out unclassifiable symmetry (3 taxa, 6 rows)
+  dplyr::filter(sym_species != "actinomorphic zygomorphic") # filter out ambiguous symmetry (1 taxon, 2 rows)
 rm(symscored)
+
+# HERE should probs consider where/how to match taxonomy of data to Smith and Brown phylogeny - but no automated way?
 
 # export final version to csv 
 readr::write_csv(sym_long, "data_output/longevity_symmetry_all.csv")
