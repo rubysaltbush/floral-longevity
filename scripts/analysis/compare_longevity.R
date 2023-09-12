@@ -11,8 +11,6 @@ ggplot(data = sym_long, aes(x = mean_long_days, y = sym_species, fill = sym_spec
   ylab("")
 ggsave("figures/symmetry_longevity_boxplot.pdf", width = 9, height = 5)
 
-# hmm okay, definitely quite a range! shall see how this changes as I score symmetry
-
 # t-test of longevity by symmetry
 ttest <- t.test(sym_long$mean_long_days[sym_long$sym_species == "zygomorphic"], 
                 sym_long$mean_long_days[sym_long$sym_species == "actinomorphic"])

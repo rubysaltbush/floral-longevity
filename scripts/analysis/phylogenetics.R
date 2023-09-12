@@ -7,42 +7,85 @@
 # - use shorter Smith and Brown tree (GBOTB.tre with 79,881 tips)
 # - use Smith and Brown without Qian and Jin?? (ALLOTB.tre with 353,185 tips)
 
-# first use V.PhyloMaker2 package to get phylogeny from Smith and Brown GBOTB.extended tree
-# prep data
+# read in short Smith and Brown tree (GBOTB.tre with 79,881 tips)
+gbotb <- ape::read.tree("data_input/GBOTB.tre")
+# read in long Smith and Brown tree (ALLOTB.tre with 353,185 tips)
+allotb <- ape::read.tree("data_input/ALLOTB.tre")
+
+# check how many species names have direct match in tree
+# first filter data down to species names
 for_phylo <- sym_long %>%
-  dplyr::select(species = Accepted_name, genus = Accepted_genus, family = Accepted_family) %>%
+  dplyr::select(species = Accepted_name, og_species_patch, 
+                genus = Accepted_genus, family = Accepted_family) %>%
   dplyr::distinct() %>%
   dplyr::filter(!is.na(species))
+for_phylo$species <- gsub(" ", "_", for_phylo$species)
+for_phylo$og_species_patch <- gsub(" ", "_", for_phylo$og_species_patch)
 
-# compare 3 dif name references, leave scenario as default for now (ask Hervé later)
-# ultimately best might be scenario 2 which randomizes, with high randomisation?
-tree_TPL <- V.PhyloMaker2::phylo.maker(for_phylo)
-# [1] "Taxonomic classification not consistent between sp.list and tree."
-# genus family_in_sp.list family_in_tree
-# 250  Emmotum       Icacinaceae Metteniusaceae
-# 726 Viburnum       Viburnaceae      Adoxaceae
-# [1] NA
+# check how many accepted species directly match
+sum(unique(for_phylo$species) %in% gbotb$tip.label)
+# 808 species with direct matches! 
+sum(unique(for_phylo$species) %in% allotb$tip.label)
+# 1212 species with direct matches!
 
-#tree_LCVP <- V.PhyloMaker2::phylo.maker(for_phylo, tree = GBOTB.extended.LCVP)
-# [1] "Taxonomic classification not consistent between sp.list and tree."
-# genus family_in_sp.list family_in_tree
-# 249  Emmotum       Icacinaceae Metteniusaceae
-# 721 Viburnum       Viburnaceae      Adoxaceae
-# [1] "Note: 1 taxa fail to be binded to the tree,"
-# [1] NA
-# Error in 1:n : argument of length 0
-# doesn't work! presumably because of above mysterious error
+# and check original names too in case these directly match
+sum(unique(for_phylo$og_species_patch) %in% gbotb$tip.label)
+# 780 with direct matches
+sum(unique(for_phylo$og_species_patch) %in% allotb$tip.label)
+# 1170 with direct matches
 
-#tree_WP <- V.PhyloMaker2::phylo.maker(for_phylo, tree = GBOTB.extended.WP)
-# [1] "Taxonomic classification not consistent between sp.list and tree."
-# genus family_in_sp.list family_in_tree
-# 248  Emmotum       Icacinaceae Metteniusaceae
-# 719 Viburnum       Viburnaceae      Adoxaceae
-# [1] "Note: 1 taxa fail to be binded to the tree,"
-# [1] NA
-# Error in 1:(a1 - 1) : NA/NaN argument
-# ALSO doesn't work! different mysterious error
+# now check which names match and how to improve matching
+# build df of names from trees
+tree_names <- tibble(allotb = allotb$tip.label)
+gbotb_names <- tibble(allotb = gbotb$tip.label, gbotb = gbotb$tip.label)
+tree_names <- dplyr::left_join(tree_names, gbotb_names, by = "allotb")
+tree_names$species <- tree_names$allotb
+rm(gbotb_names)
+# match names from trees to names in data, accepted names first
+for_phylo <- dplyr::left_join(for_phylo, tree_names, by = "species")
+# then filter out these matches
+mismatches <- dplyr::filter(for_phylo, is.na(allotb))
+# then match based on original species names
+mismatches <- mismatches %>%
+  dplyr::select(species, og_species_patch, genus, family) %>%
+  dplyr::left_join(tree_names, by = c("og_species_patch" = "species"))
+# matches 59 more, patch these back in
+matchedpatch <- dplyr::filter(mismatches, !is.na(allotb))
+for_phylo <- for_phylo %>%
+  dplyr::rows_update(matchedpatch, by = c("species", "og_species_patch",
+                                          "genus", "family"))
+rm(matchedpatch)
 
+# okay now 192 to go
+mismatches <- dplyr::filter(for_phylo, is.na(allotb))
+
+# some not matching because of subspecies and var issues
+# first create tree_names version with no subsp and var etc
+tree_names_nosubsp <- tree_names
+tree_names_nosubsp$nosubsp <- gsub("_(?:subsp|var|f)\\._.+$", "", tree_names_nosubsp$species)
+tree_names_nosubsp <- tree_names_nosubsp %>%
+  dplyr::group_by(nosubsp) %>%
+  dplyr::slice_head(n = 1) %>% # randomly select a variant/subspecies BUT ALSO WANT TO MAKE SURE GET THE ONES WITH INFO IN GBOTB CHECK IF ISSUE FOR ANY OF MY TAXA
+  dplyr::ungroup() %>%
+  dplyr::select(-species)
+# above is slow!
+
+# now create matching column in mismatches with no var or subsp etc
+mismatches$species_nosubsp <- gsub("_(?:subsp|var|f)\\._.+$", "", mismatches$species)
+# now match based on no subsp in tree name
+mismatches <- mismatches %>%
+  dplyr::select(species, og_species_patch, genus, family, species_nosubsp) %>%
+  dplyr::left_join(tree_names_nosubsp, by = c("species_nosubsp" = "nosubsp"))
+
+# damn, manual checking Capparis_spinosa_subsp._rupestris should be Capparis_spinosa
+
+# hmm can do this but it does match different subspecies together, probs doesn't matter?
+
+# tried getting rid of subsp and var in tree names, did not match any of my names
+
+
+# can I match on part matches somehow?
+  
 plot(tree_TPL$scenario.3, type = "fan", show.tip.label = FALSE)
 # it's a tree! who knows if it's right! crazy.
 # Hervé unimpressed by number of polytomies

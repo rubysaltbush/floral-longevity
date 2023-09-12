@@ -3,7 +3,6 @@ library(ggpubr) #install.packages("ggpubr")
 library(rtry) #install.packages("rtry")
 library(TNRS) #install.packages("TNRS")
 library(ape) #install.packages("ape")
-library(V.PhyloMaker2) #library(devtools) MAYBE ULTIMATELY USE U.PHYLOMAKER??? devtools::install_github("jinyizju/U.PhyloMaker")
 library(phylolm) #install.packages("phylolm")
 library(phytools) #install.packages("phytools")
 library(nlme) #install.packages("nlme")
@@ -12,13 +11,13 @@ library(nlme) #install.packages("nlme")
 source("scripts/functions/cache_csv.R")
 
 # My rough plan: 
-#~~ -pull together symmetry data from a few published sources as well as the~~
-#~~  PROTEUS database and some previous work of mine~~
+#~~ -pull together symmetry data from a few published sources as well as the ~~
+#~~  PROTEUS database and some previous work of mine ~~
 #~~ -align the taxonomy of symmetry data and Marcos' longevity data to WCVP ~~
-# -score symmetry data for any missing species
-#~~ -match longevity/symmetry data to the Smith and Brown (2018) angiosperm phylogeny
-# -check for any sampling bias of floral longevity
-# -run tests for floral longevity phylogenetic signal and evolutionary rate
+#~~ -score symmetry data for any missing species ~~
+# -match longevity/symmetry data to the Smith and Brown (2018) angiosperm phylogeny
+# -check for any sampling bias of floral longevity and SUBSAMPLE
+# -run tests for floral longevity and symmetry phylogenetic signal and evolutionary rates
 # -run phylogenetic logistic regression to see whether floral longevity is longer 
 #  or shorter in actinomorphic vs. zygomorphic flowers
 # -run (phylogenetic?) GLM with site as a fixed effect for the community studies 
