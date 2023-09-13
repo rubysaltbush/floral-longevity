@@ -116,16 +116,26 @@ tree_names_nosubsp <- dplyr::select(tree_names_nosubsp, allotb, gbotb, stripped_
 #   dplyr::slice_min(order_by = dist, n = 1)
 # readr::write_csv(test, "data_output/fuzzy_matches.csv")
 
+# read back in with some manual updates from checking synonyms on POWO etc
+tree_names <- dplyr::select(tree_names, -match_level, -species)
+fuzzymatchpatch <- readr::read_csv("data_output/fuzzy_matches.csv") %>%
+  dplyr::select(species:family, allotb = manual_match_allotb, match_level) %>%
+  dplyr::filter(!is.na(allotb)) %>%
+  dplyr::left_join(tree_names, by = "allotb")
 
-# options - could match on accepted genus only, but probs a few where 
+# patch in these 14 next, then move to genus level matching
+for_phylo <- for_phylo %>%
+  dplyr::rows_update(fuzzymatchpatch, by = c("species", "og_species_patch",
+                                             "genus", "family"))
 
+# next - match on accepted genus only
 
 table(for_phylo$match_level)
+sum(is.na(for_phylo$allotb))
+
+# 93 to go
 
 
-# manual checking Neotorularia_korolkovii in og_species_patch is probs Neotorularia_korolkowii in tree_names
-
-# can I match on part matches somehow?
   
 plot(tree_TPL$scenario.3, type = "fan", show.tip.label = FALSE)
 # it's a tree! who knows if it's right! crazy.
