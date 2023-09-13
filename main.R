@@ -32,5 +32,6 @@ source("scripts/prepdata/final_data.R")
 source("analysis/compare_longevity.R")
 
 # would be interesting to see how phylogeny changes this - does the relationship
-# get weaker or stronger when evlutionary history is considered?
+# get weaker or stronger when evolutionary history is considered?
 source("analysis/phylogenetics.R")
+

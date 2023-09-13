@@ -20,6 +20,7 @@ for_phylo <- sym_long %>%
   dplyr::distinct() %>%
   dplyr::filter(!is.na(species))
 for_phylo$species <- gsub(" ", "_", for_phylo$species)
+for_phylo$species <- gsub("-", "", for_phylo$species)
 for_phylo$og_species_patch <- gsub(" ", "_", for_phylo$og_species_patch)
 
 # check how many accepted species directly match
@@ -35,17 +36,20 @@ sum(unique(for_phylo$og_species_patch) %in% allotb$tip.label)
 # 1170 with direct matches
 
 # now check which names match and how to improve matching
-# build df of names from trees
+# first build df of names from trees
 tree_names <- tibble(allotb = allotb$tip.label)
 gbotb_names <- tibble(allotb = gbotb$tip.label, gbotb = gbotb$tip.label)
 tree_names <- dplyr::left_join(tree_names, gbotb_names, by = "allotb")
 tree_names$species <- tree_names$allotb
+tree_names$match_level <- "direct_accepted"
 rm(gbotb_names)
+
 # match names from trees to names in data, accepted names first
 for_phylo <- dplyr::left_join(for_phylo, tree_names, by = "species")
 # then filter out these matches
 mismatches <- dplyr::filter(for_phylo, is.na(allotb))
-# then match based on original species names
+# then match again, this time based on original species names
+tree_names$match_level <- "direct_original"
 mismatches <- mismatches %>%
   dplyr::select(species, og_species_patch, genus, family) %>%
   dplyr::left_join(tree_names, by = c("og_species_patch" = "species"))
@@ -62,10 +66,10 @@ mismatches <- dplyr::filter(for_phylo, is.na(allotb))
 # some not matching because of subspecies and var issues
 # first create tree_names version with no subsp and var etc
 tree_names_nosubsp <- tree_names
-tree_names_nosubsp$nosubsp <- gsub("_(?:subsp|var|f)\\._.+$", "", tree_names_nosubsp$species)
+tree_names_nosubsp$species_nosubsp <- gsub("_(?:subsp|var|f)\\._.+$", "", tree_names_nosubsp$species)
 tree_names_nosubsp <- tree_names_nosubsp %>%
-  dplyr::group_by(nosubsp) %>%
-  dplyr::slice_head(n = 1) %>% # randomly select a variant/subspecies BUT ALSO WANT TO MAKE SURE GET THE ONES WITH INFO IN GBOTB CHECK IF ISSUE FOR ANY OF MY TAXA
+  dplyr::group_by(species_nosubsp) %>%
+  dplyr::slice_head(n = 1) %>% # randomly select a variant/subspecies (manually checked, this gets all possible GBOTB matches)
   dplyr::ungroup() %>%
   dplyr::select(-species)
 # above is slow!
@@ -73,16 +77,53 @@ tree_names_nosubsp <- tree_names_nosubsp %>%
 # now create matching column in mismatches with no var or subsp etc
 mismatches$species_nosubsp <- gsub("_(?:subsp|var|f)\\._.+$", "", mismatches$species)
 # now match based on no subsp in tree name
+tree_names_nosubsp$match_level <- "direct_accepted_nosubsp"
 mismatches <- mismatches %>%
   dplyr::select(species, og_species_patch, genus, family, species_nosubsp) %>%
-  dplyr::left_join(tree_names_nosubsp, by = c("species_nosubsp" = "nosubsp"))
+  dplyr::left_join(tree_names_nosubsp, by = "species_nosubsp")
+# matches 85 more, patch these back in
+matchedpatch <- mismatches %>%
+  dplyr::filter(!is.na(allotb)) %>%
+  dplyr::select(-species_nosubsp)
+for_phylo <- for_phylo %>%
+  dplyr::rows_update(matchedpatch, by = c("species", "og_species_patch",
+                                          "genus", "family"))
+rm(matchedpatch)
 
-# damn, manual checking Capparis_spinosa_subsp._rupestris should be Capparis_spinosa
+# okay now 107 to go
+mismatches <- dplyr::filter(mismatches, is.na(allotb))
 
-# hmm can do this but it does match different subspecies together, probs doesn't matter?
+# strip all characters etc from nosubsp names
+mismatches$stripped_name <- gsub("_", " ", mismatches$species_nosubsp)
+mismatches$stripped_name <- gsub("-", "", mismatches$stripped_name)
+# and same for tree
+tree_names_nosubsp$stripped_name <- gsub("_", " ", tree_names_nosubsp$species_nosubsp)
+tree_names_nosubsp$stripped_name <- gsub("-", "", tree_names_nosubsp$stripped_name)
 
-# tried getting rid of subsp and var in tree names, did not match any of my names
+mismatches <- dplyr::select(mismatches, species:family, stripped_name)
+  
+tree_names_nosubsp <- dplyr::select(tree_names_nosubsp, allotb, gbotb, stripped_name)
 
+# try fuzzy matching using fuzzyjoin package
+# SLOW AND INACCURATE
+# test <- fuzzyjoin::stringdist_join(mismatches, tree_names_nosubsp,
+#                                         by = "stripped_name",
+#                                         max_dist = 2,
+#                                         method = "jw",
+#                                         mode = "left",
+#                                         distance_col = "dist") %>%
+#   dplyr::group_by(stripped_name.x) %>%
+#   dplyr::slice_min(order_by = dist, n = 1)
+# readr::write_csv(test, "data_output/fuzzy_matches.csv")
+
+
+# options - could match on accepted genus only, but probs a few where 
+
+
+table(for_phylo$match_level)
+
+
+# manual checking Neotorularia_korolkovii in og_species_patch is probs Neotorularia_korolkowii in tree_names
 
 # can I match on part matches somehow?
   
