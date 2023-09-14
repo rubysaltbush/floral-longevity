@@ -23,3 +23,6 @@ GBOTB.tre - Smith and Brown - added 2023-07-14 - the shorter, 79k tip tree from 
 
 ALLOTB.tre - Smith and Brown - added 2023-07-14 - the longer, 350k tip tree from Smith, S. A., & Brown, J. W. (2018). Constructing a broadly inclusive seed plant phylogeny. American Journal of Botany, 105(3), 302–314. https://doi.org/10.1002/ajb2.1019
 
+fuzzy_matches.csv - Ruby Stephens - added 2023-09-14 - manual matching of species to allotb and gbotb trees after unsuccessful attempt at fuzzy matching (many species just not present in tree, will have to match these at genus level)
+
+last_few_mismatches.csv - Ruby Stephens - added 2023-09-14 - manual matching of last few species to allotb and gbotb by investigating closest related genera, for those taxa with no genus represented in allotb tree

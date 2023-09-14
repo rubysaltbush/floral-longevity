@@ -1,0 +1,9 @@
+species,og_species_patch,genus,family,allotb,gbotb,match_level,match_justification
+Gaiadendron_punctatum,Gaiadendron_punctatum,Gaiadendron,Loranthaceae,Struthanthus_oerstedii,Struthanthus_oerstedii,genus_synonym,closest genus synonym in range and biome type
+Gymnocladus_assamicus,Gymnocladus_assamicus,Gymnocladus,Fabaceae,Gleditsia_triacanthos,Gleditsia_triacanthos,closest_genus,sister genus
+Lophocereus_schottii,Lophocereus_schottii,Lophocereus,Cactaceae,Pachycereus_tepamo,Pachycereus_tepamo,genus_synonym,closest genus synonym in range and subtribe
+Lophocereus_marginatus,Marginatocereus_marginatus,Lophocereus,Cactaceae,Stenocereus_chrysocarpus,Stenocereus_chrysocarpus,genus_synonym,closest genus synonym in range and subtribe
+Blutaparon_vermiculare,Blutaparon_vermiculare,Blutaparon,Amaranthaceae,Gomphrena_vaga,Gomphrena_vaga,genus_synonym,"original species is synonym of Gomphrena vermicularis according to POWO, similarish ranges"
+Prasium_majus,Prasium_majus,Prasium,Lamiaceae,Stachys_setifera_subsp._setifera,Stachys_setifera_subsp._setifera,genus_synonym,"same subfamily, sister genera, overlapping ranges"
+Epipogium_roseum,Epipogium_roseum,Epipogium,Orchidaceae,Epipogon_epipogon,NA,genus_synonym,"genus synonymous with og genus, different ranges in different hemispheres though"
+Myracrodruon_urundeuva,Myracrodruon_urundeuva,Myracrodruon,Anacardiaceae,Astronium_fraxinifolium,Astronium_fraxinifolium,genus_synonym,"genus from same family, similar ranges"
