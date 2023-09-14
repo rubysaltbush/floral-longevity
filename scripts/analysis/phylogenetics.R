@@ -15,6 +15,10 @@ allotb <- ape::read.tree("data_input/ALLOTB.tre")
 # read in taxonomic name matching key
 source("scripts/prepdata/phylo_names_match.R")
 
+# NEXT - prune allotb and gbotb trees to matched names
+# THEN - subsample to one species per genus, in loop (x100?)
+# AND  - run ?phyloglm? for each subsampling scenario, export results
+
 plot(tree_TPL$scenario.3, type = "fan", show.tip.label = FALSE)
 # it's a tree! who knows if it's right! crazy.
 # Hervé unimpressed by number of polytomies

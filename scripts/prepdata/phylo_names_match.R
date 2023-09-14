@@ -178,8 +178,11 @@ sum(is.na(phylo_names_match$allotb))
 
 # done for ALLOTB! later: should I find nearest matches for 492 without GBOTB match?
 # OR is this irrelevant with genus level subsampling?
+# will have to check this with Hervé
 sum(is.na(phylo_names_match$gbotb))
-  
+
+# write to csv for now
+readr::write_csv(phylo_names_match, "data_output/data_phylo_names_matched.csv")
 })
 
 
