@@ -26,3 +26,5 @@ ALLOTB.tre - Smith and Brown - added 2023-07-14 - the longer, 350k tip tree from
 fuzzy_matches.csv - Ruby Stephens - added 2023-09-14 - manual matching of species to allotb and gbotb trees after unsuccessful attempt at fuzzy matching (many species just not present in tree, will have to match these at genus level)
 
 last_few_mismatches.csv - Ruby Stephens - added 2023-09-14 - manual matching of last few species to allotb and gbotb by investigating closest related genera, for those taxa with no genus represented in allotb tree
+
+phylo_match_patch.csv - Ruby Stephens - added 2023-09-15 - final final final patch of slightly inconsistent names from matches to synonyms in og_species_patch column

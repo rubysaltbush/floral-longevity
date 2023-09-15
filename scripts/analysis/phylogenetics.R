@@ -7,6 +7,8 @@
 # - use shorter Smith and Brown tree (GBOTB.tre with 79,881 tips)
 # - use Smith and Brown without Qian and Jin?? (ALLOTB.tre with 353,185 tips)
 
+#### get trees and taxonomic match data ####
+
 # read in short Smith and Brown tree (GBOTB.tre with 79,881 tips)
 gbotb <- ape::read.tree("data_input/GBOTB.tre")
 # read in long Smith and Brown tree (ALLOTB.tre with 353,185 tips)
@@ -15,20 +17,25 @@ allotb <- ape::read.tree("data_input/ALLOTB.tre")
 # read in taxonomic name matching key
 source("scripts/prepdata/phylo_names_match.R")
 
-# NEXT - prune allotb and gbotb trees to matched names
-# THEN - subsample to one species per genus, in loop (x100?)
-# AND  - run ?phyloglm? for each subsampling scenario, export results
+#### prune trees to matched names ####
 
-plot(tree_TPL$scenario.3, type = "fan", show.tip.label = FALSE)
-# it's a tree! who knows if it's right! crazy.
-# Hervé unimpressed by number of polytomies
+# prune allotb tree to 1433 matched taxa
+allotb <- ape::drop.tip(allotb, allotb$tip.label[-match(phylo_names_match$allotb, allotb$tip.label)])
+length(allotb$tip.label)
+plot(allotb, type = "fan", show.tip.label = FALSE)
 
-table(tree_TPL$species.list$status)
-# not sure exactly what bind and prune mean? Maybe bind means it just bound this
-# straight to an available tip, whereas prune means it had to use genus info???
+# prune gbotb tree to 1184 matched taxa (many duplicated as genus-only matches)
+# first filter out NAs
+gbotbnames <- dplyr::filter(phylo_names_match, !is.na(phylo_names_match$gbotb))
+gbotbnames <- gbotbnames$gbotb
+gbotb <- ape::drop.tip(gbotb, gbotb$tip.label[-match(gbotbnames, gbotb$tip.label)])
+rm(gbotbnames)
+length(gbotb$tip.label)
+plot(gbotb, type = "fan", show.tip.label = FALSE)
 
-#### PHYLOGENETIC LOGISTIC REGRESSION ####
-# subset data to variables of interest for phylogenetic logistic regression
+#### run analyses ####
+
+# summarise longevity per ACCEPTED species
 # take mean per species for longevity
 pgls <- sym_long %>%
   dplyr::group_by(species = Accepted_name, sym_species) %>%
@@ -39,63 +46,145 @@ pgls <- sym_long %>%
 # add underscore to match tip labels
 pgls$species <- gsub(" ", "_", pgls$species)
 
-# drop missing data tips from tree NO MISSING DATA AS ALREADY FILTERED
-# lose 0 tips at this stage
-to_drop <- pgls %>%
-  dplyr::filter(is.na(spmean_long_days)|!(sym_species %in% c("actinomorphic", "zygomorphic")))
-tree_nomissing <- ape::drop.tip(tree_TPL$scenario.3, to_drop$species)
-plot(tree_nomissing, type = "fan", show.tip.label = FALSE)
-rm(to_drop)
-# and remove missing data taxa from morphological data
+# match allotb and gbotb names to this data
+phylo_names_match <- phylo_names_match %>%
+  dplyr::select(species, genus:match_level_gbotb) %>%
+  dplyr::distinct()
+# above df has 3 rows more than pgls because of different og name matches giving
+# different match levels, will leave these duplicates for now and should be
+# fixed when I choose one species per genus
 pgls <- pgls %>%
-  dplyr::filter(is.na(spmean_long_days)|sym_species %in% c("actinomorphic", "zygomorphic"))
-# 1452 species obs remain
+  dplyr::left_join(phylo_names_match, by = "species")
+rm(phylo_names_match)
+
+# then loop to subsample one species per genus for ALLOTB analyses
+# first create column of allotb genus
+pgls$allotb_genus <- gsub("_.*", "", pgls$allotb)
+# and build column of match ranking for allotb matches
+pgls$allotb_matchrank <- ifelse(pgls$match_level_allotb %in% c("direct_accepted", 
+                                                               "direct_accepted_nosubsp",
+                                                               "manual_misspelling"), 
+                                "1", 
+                                ifelse(pgls$match_level_allotb %in% c("direct_original",
+                                                                      "manual_synonym"), 
+                                       "2",
+                                       ifelse(pgls$match_level_allotb == "direct_genus_accepted", 
+                                              "3",
+                                              ifelse(pgls$match_level_allotb %in% c("direct_genus_original",
+                                                                                    "closest_genus",
+                                                                                    "genus_synonym"), 
+                                                     "4", NA))))
+table(pgls$allotb_matchrank)
+
+# now loop!
+for (n in 1:100){
+  
+  # first build data frame, randomly sampling one taxon per genus
+  pgls_onepergenus <- pgls %>%
+    dplyr::group_by(allotb_genus) %>%
+    dplyr::slice_min(order_by = allotb_matchrank, n = 1) %>% # first choose taxa with best taxonomic matches in tree (THOUGH THIS WILL MEAN SOME DATA POINTS NEVER USED EVEN WITH RANDOMISATION)
+    dplyr::slice_sample(n = 1) %>% # then randomly choose one of these
+    dplyr::ungroup()
+  # this selects 804 taxa, one in each genus
+  
+  # prune tree to these 804
+  tree_nomissing <- ape::drop.tip(allotb, allotb$tip.label[-match(pgls_onepergenus$allotb, allotb$tip.label)])
+  
+  # reorder data so species order matches order of tips in tree
+  pgls_onepergenus <- as.data.frame(tree_nomissing$tip.label) %>%
+    dplyr::left_join(pgls_onepergenus, by = c("tree_nomissing$tip.label" = "allotb"))
+  pgls_onepergenus$sym_species <- forcats::as_factor(pgls_onepergenus$sym_species)
+  
+  # taxon_name to row names
+  rownames(pgls_onepergenus) <- pgls_onepergenus[,1]
+  pgls_onepergenus[,1] <- NULL
+  
+  # # redefine as 0 and 1
+  pgls_onepergenus$sym_species <- gsub("zygomorphic", "1", pgls_onepergenus$sym_species)
+  pgls_onepergenus$sym_species <- gsub("actinomorphic", "0", pgls_onepergenus$sym_species)
+  table(pgls_onepergenus$sym_species)
+  # ~567 actinomorphic to ~237 zygomorphic taxa (will change with subsampling, record in results)
+  
+  # might need to find way to automatically check and report on variable
+  # distribution in different subsamples, can't eyeball easily
+  
+  PGLS_symlong <- nlme::gls(spmean_long_days ~ sym_species, 
+                            correlation = ape::corBrownian(phy = tree_nomissing),
+                            data = pgls_onepergenus, method = "ML")
+  summary(PGLS_symlong)
+  anova(PGLS_symlong)
+  coef(PGLS_symlong)
+  
+  # :( 
+  
+  PGLogS_symlong <- phylolm::phyloglm(sym_species ~ spmean_long_days, 
+                                      data = pgls_onepergenus, 
+                                      phy = tree_nomissing,
+                                      method = "logistic_IG10", 
+                                      boot = 500) # wow takes a long time with more bootstraps
+  # Warning message:
+  # In phylolm::phyloglm(sym_species ~ spmean_long_days, data = pgls,  :
+  #phyloglm failed to converge.
+  # even with 500 bootstraps! yikes.
+  
+  summary(PGLogS_symlong)
+  
+  # seems like consistently PGLS gives p>0.05 and phy logistic regression gives p<0.05, what gives??? though phyloglm consistently fails to converge, maybe this is why???
+}
+
+
+# AND  - run ?phyloglm? for each subsampling scenario, export results
+
+
+#### analyses with whole data ####
+
 # reorder data so species order matches order of tips in tree
-pgls <- as.data.frame(tree_nomissing$tip.label) %>%
-  dplyr::left_join(pgls, by = c("tree_nomissing$tip.label" = "species"))
+pgls <- as.data.frame(allotb$tip.label) %>%
+  dplyr::left_join(pgls, by = c("allotb$tip.label" = "allotb"))
 pgls$sym_species <- forcats::as_factor(pgls$sym_species)
 
+# for now just randomly drop duplicates
+pgls_nodupes <- pgls %>%
+  dplyr::filter(!duplicated(`allotb$tip.label`))
+
 # taxon_name to row names
-rownames(pgls) <- pgls[,1]
-pgls[,1] <- NULL
+rownames(pgls_nodupes) <- pgls_nodupes[,1]
+pgls_nodupes[,1] <- NULL
 
 # # redefine as 0 and 1
-pgls$sym_species <- gsub("zygomorphic", "1", pgls$sym_species)
-pgls$sym_species <- gsub("actinomorphic", "0", pgls$sym_species)
-table(pgls$sym_species)
-# 985 actinomorphic taxa to 467 zygomorphic taxa
+pgls_nodupes$sym_species <- gsub("zygomorphic", "1", pgls_nodupes$sym_species)
+pgls_nodupes$sym_species <- gsub("actinomorphic", "0", pgls_nodupes$sym_species)
+table(pgls_nodupes$sym_species)
+# 975 actinomorphic taxa to 458 zygomorphic taxa
 
 # double check distribution of continuous variables
-plot(pgls$spmean_long_days) # some outlying high values
-hist(pgls$spmean_long_days) # few outlying high values
+plot(pgls_nodupes$spmean_long_days) # some outlying high values
+hist(pgls_nodupes$spmean_long_days) # few outlying high values
 # generally left-biased distribution, think okay for now?
 
 # quick boxplot of this data subset to compare means between symmetry
-boxplot(spmean_long_days ~ sym_species, data = pgls)
-# marginally longer longevity for zygomorphy
+boxplot(spmean_long_days ~ sym_species, data = pgls_nodupes)
+# longer longevity for zygomorphy
 
 #### run PGLS ####
 
-PGLS_symlong <- nlme::gls(spmean_long_days ~ sym_species, 
-                          correlation = ape::corBrownian(phy = tree_nomissing),
-                          data = pgls, method = "ML")
-anova(PGLS_symlong)
+PGLS_symlong_whole <- nlme::gls(spmean_long_days ~ sym_species, 
+                          correlation = ape::corBrownian(phy = allotb),
+                          data = pgls_nodupes, method = "ML")
+anova(PGLS_symlong_whole)
 
 coef(PGLS_symlong)
-# Warning message:
-#   In Initialize.corPhyl(X[[i]], ...) :
-#   No covariate specified, species will be taken as ordered in the data frame. 
-#   To avoid this message, specify a covariate containing the species names with the 'form' argument.
-# will have to work out how to interpret this, with Luke Harmon's book maybe??
+# can't work out how to get rid of warning message
+# p = 0.0007
 
 #### run model ####
 # below adapted from Joly and Schoen (2021)
 # works without polymorphic or missing data
 # Model fit with Ives and Garlan optimisation
 
-PGLogS_symlong <- phylolm::phyloglm(sym_species ~ spmean_long_days, 
-                                  data = pgls, 
-                                  phy = tree_nomissing,
+PGLogS_symlong_whole <- phylolm::phyloglm(sym_species ~ spmean_long_days, 
+                                  data = pgls_nodupes, 
+                                  phy = allotb,
                                   method = "logistic_IG10", 
                                   boot = 500) # wow takes a long time with more bootstraps
 # Warning message:
@@ -103,9 +192,9 @@ PGLogS_symlong <- phylolm::phyloglm(sym_species ~ spmean_long_days,
                        #phyloglm failed to converge.
 # even with 500 bootstraps! yikes.
 
-summary(PGLogS_symlong)
+summary(PGLogS_symlong_whole)
 
-# p = 0.0003 !
+# p = 0.0002 !
 
 rm(PGLS_symlong, for_phylo)
 

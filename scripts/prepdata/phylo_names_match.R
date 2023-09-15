@@ -203,6 +203,13 @@ rm(gbotb_patch, gbotb_missing, tree_names, tree_names_genus, tree_names_nosubsp)
 table(phylo_names_match$match_level_allotb)
 table(phylo_names_match$match_level_gbotb)
 
+# 5 taxa matched on original names need to be patched manually as inconsistencies
+matchpatch <- readr::read_csv("data_input/phylo_match_patch.csv")
+phylo_names_match <- phylo_names_match %>%
+  dplyr::rows_update(matchpatch, by = c("species", "og_species_patch",
+                                         "genus", "family"))
+rm(matchpatch)
+
 # write to csv for now
 readr::write_csv(phylo_names_match, "data_output/data_phylo_names_matched.csv")
 
