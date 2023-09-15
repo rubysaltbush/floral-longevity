@@ -175,14 +175,38 @@ phylo_names_match <- phylo_names_match %>%
 rm(matchedpatch)
 table(phylo_names_match$match_level)
 sum(is.na(phylo_names_match$allotb))
+rm(mismatches)
 
-# done for ALLOTB! later: should I find nearest matches for 492 without GBOTB match?
-# OR is this irrelevant with genus level subsampling?
-# will have to check this with Hervé
+# done for ALLOTB!
+
 sum(is.na(phylo_names_match$gbotb))
+# now find genus-level matches for 492 without GBOTB match
+gbotb_missing <- phylo_names_match %>%
+  dplyr::filter(is.na(gbotb)) %>%
+  dplyr::select(species:family, match_level_gbotb) %>%
+  dplyr::left_join(tree_names_genus, by = "genus") %>%
+  dplyr::mutate(match_level_gbotb = "direct_genus_accepted")
+sum(is.na(gbotb_missing$gbotb))
+# matches all but 65, this will do - create patch
+gbotb_patch <- gbotb_missing %>%
+  dplyr::filter(!is.na(gbotb)) %>%
+  dplyr::select(species:family, gbotb, match_level_gbotb)
+# and patch back in
+# first make new column so I can keep track of where GBOTB match has come from
+phylo_names_match$match_level_gbotb <- ifelse(is.na(phylo_names_match$gbotb), "NA", phylo_names_match$match_level)
+phylo_names_match <- phylo_names_match %>%
+  dplyr::rows_update(gbotb_patch, by = c("species", "og_species_patch",
+                                          "genus", "family")) %>%
+  dplyr::rename(match_level_allotb = match_level)
+# matching on og genus only adds 6, think not worth it as a bit confusing taxonomically
+rm(gbotb_patch, gbotb_missing, tree_names, tree_names_genus, tree_names_nosubsp)
+table(phylo_names_match$match_level_allotb)
+table(phylo_names_match$match_level_gbotb)
 
 # write to csv for now
 readr::write_csv(phylo_names_match, "data_output/data_phylo_names_matched.csv")
+
+phylo_names_match
 })
 
 
