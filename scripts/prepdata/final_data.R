@@ -163,8 +163,6 @@ sym_long <- sym_long %>%
   dplyr::filter(sym_species != "actinomorphic zygomorphic") # filter out ambiguous symmetry (1 taxon, 2 rows)
 rm(symscored)
 
-# HERE should probs consider where/how to match taxonomy of data to Smith and Brown phylogeny - but no automated way?
-
 # export final version to csv 
 readr::write_csv(sym_long, "data_output/longevity_symmetry_all.csv")
 })
