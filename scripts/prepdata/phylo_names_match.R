@@ -181,6 +181,8 @@ rm(mismatches)
 
 sum(is.na(phylo_names_match$gbotb))
 # now find genus-level matches for 492 without GBOTB match
+# first make new column so I can keep track of where GBOTB match has come from
+phylo_names_match$match_level_gbotb <- ifelse(is.na(phylo_names_match$gbotb), "NA", phylo_names_match$match_level)
 gbotb_missing <- phylo_names_match %>%
   dplyr::filter(is.na(gbotb)) %>%
   dplyr::select(species:family, match_level_gbotb) %>%
@@ -192,8 +194,6 @@ gbotb_patch <- gbotb_missing %>%
   dplyr::filter(!is.na(gbotb)) %>%
   dplyr::select(species:family, gbotb, match_level_gbotb)
 # and patch back in
-# first make new column so I can keep track of where GBOTB match has come from
-phylo_names_match$match_level_gbotb <- ifelse(is.na(phylo_names_match$gbotb), "NA", phylo_names_match$match_level)
 phylo_names_match <- phylo_names_match %>%
   dplyr::rows_update(gbotb_patch, by = c("species", "og_species_patch",
                                           "genus", "family")) %>%
