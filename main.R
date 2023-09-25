@@ -29,9 +29,9 @@ source("scripts/prepdata/final_data.R")
 
 # NOW TO DO SOME PRELIMINARY ANALYSIS!!!
 # first just compare mean longevity by symmetry
-source("analysis/compare_longevity.R")
+source("scripts/analysis/compare_longevity.R")
 
 # would be interesting to see how phylogeny changes this - does the relationship
 # get weaker or stronger when evolutionary history is considered?
-source("analysis/phylogenetics.R")
+source("scripts/analysis/phylogenetics.R")
 

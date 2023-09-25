@@ -85,10 +85,12 @@ pgls_allotb <- as.data.frame(allotb$tip.label) %>%
 # taxon_name to row names
 rownames(pgls_allotb) <- pgls_allotb[,1]
 pgls_allotb[,1] <- NULL
+# taxon names for evolutionary correlation calculation
+spp <- rownames(pgls_allotb)
 
 hist(pgls_allotb$spmean_long_days)
 hist(log(pgls_allotb$spmean_long_days))
-# H says should log transform because of assumptions of Brownian motion
+# will log transform longevity to meet assumptions of Brownian motion
 
 # boxplot of longevity by symmetry, allotb species
 ggplot(data = pgls_allotb, aes(x = log(spmean_long_days), y = sym_species, fill = sym_species)) +
@@ -106,30 +108,31 @@ ttests <- list()
 ttests$allotbspecies <- t.test(log(pgls_allotb$spmean_long_days[pgls_allotb$sym_species == "1"]), 
                                log(pgls_allotb$spmean_long_days[pgls_allotb$sym_species == "0"]))
 ttests$allotbspecies
-# t = 4.3965, df = 865.78, p-value = 1.237e-05
+# t = 4.4473, df = 864.12, p-value = 9.831e-06
 # mean of x   mean of y 
-# 1.0370836 0.7698605 
+# 1.0397000 0.7696431 
 
 pglsresults <- list()
 pglsresults$allotbspecies <- nlme::gls(log(spmean_long_days) ~ sym_species,
-                                       correlation = ape::corBrownian(phy = allotb),
+                                       correlation = ape::corBrownian(phy = allotb, 
+                                                                      form = ~spp),
                                        data = pgls_allotb, method = "ML")
 summary(pglsresults$allotbspecies)
 # Generalized least squares fit by maximum likelihood
 # Model: log(spmean_long_days) ~ sym_species 
 # Data: pgls_allotb 
 # AIC      BIC    logLik
-# 4598.858 4614.661 -2296.429
+# 4594.801 4610.604 -2294.401
 # 
 # Correlation Structure: corBrownian
-# Formula: ~1 
+# Formula: ~spp 
 # Parameter estimate(s):
 #   numeric(0)
 # 
 # Coefficients:
 #   Value Std.Error  t-value p-value
-# (Intercept)  0.8678011 0.7586449 1.143883  0.2529
-# sym_species1 0.3165041 0.0894922 3.536666  0.0004
+# (Intercept)  0.8684088 0.7575712 1.146307  0.2519
+# sym_species1 0.3132770 0.0894827 3.500979  0.0005
 # 
 # Correlation: 
 #   (Intr)
@@ -137,11 +140,13 @@ summary(pglsresults$allotbspecies)
 # 
 # Standardized residuals:
 #   Min          Q1         Med          Q3         Max 
-# -1.08527600 -0.27997534 -0.01706794  0.22158885  0.80360904 
+# -1.08700984 -0.28056831 -0.01624582  0.22079506  0.80455117 
 # 
-# Residual standard error: 3.099563 
+# Residual standard error: 3.095178 
 # Degrees of freedom: 1433 total; 1431 residual
 plot(log(spmean_long_days) ~ sym_species, data = pgls_allotb)
+
+rm(spp, pgls_allotb)
 
 #* PGLS without subsampling, GBOTB ----
 
@@ -176,10 +181,12 @@ pgls_gbotb <- as.data.frame(gbotb$tip.label) %>%
 # taxon_name to row names
 rownames(pgls_gbotb) <- pgls_gbotb[,1]
 pgls_gbotb[,1] <- NULL
+# taxon names for evolutionary correlation calculation
+spp <- rownames(pgls_gbotb)
 
 hist(pgls_gbotb$spmean_long_days)
 hist(log(pgls_gbotb$spmean_long_days))
-# H says should log transform because of assumptions of Brownian motion
+# will log transform longevity to meet assumptions of Brownian motion
 
 # boxplot of longevity by symmetry, allotb species
 ggplot(data = pgls_gbotb, aes(x = log(spmean_long_days), y = sym_species, fill = sym_species)) +
@@ -196,42 +203,45 @@ ggsave("figures/symmetry_longevity_gbotbspecies_boxplot.pdf", width = 9, height 
 ttests$gbotbspecies <- t.test(log(pgls_gbotb$spmean_long_days[pgls_gbotb$sym_species == "1"]), 
                               log(pgls_gbotb$spmean_long_days[pgls_gbotb$sym_species == "0"]))
 ttests$gbotbspecies
-# t = 4.1448, df = 665.13, p-value = 3.841e-05
+# t = 4.2181, df = 665.12, p-value = 2.806e-05
 # mean of x   mean of y 
-# 1.0814189   0.7990447 
+# 1.0842894 0.7983383 
 
 # PGLS of longevity by symmetry with phylogeny considered
 pglsresults$gbotbspecies <- nlme::gls(log(spmean_long_days) ~ sym_species,
-                                      correlation = ape::corBrownian(phy = gbotb),
+                                      correlation = ape::corBrownian(phy = gbotb,
+                                                                     form = ~spp),
                                       data = pgls_gbotb, method = "ML")
 summary(pglsresults$gbotbspecies)
 # Generalized least squares fit by maximum likelihood
 # Model: log(spmean_long_days) ~ sym_species 
 # Data: pgls_gbotb 
-# AIC      BIC    logLik
-# 4037.224 4052.462 -2015.612
+# AIC     BIC    logLik
+# 4060.513 4075.75 -2027.256
 # 
 # Correlation Structure: corBrownian
-# Formula: ~1 
+# Formula: ~spp 
 # Parameter estimate(s):
 #   numeric(0)
 # 
 # Coefficients:
 #   Value Std.Error  t-value p-value
-# (Intercept)  0.8420417 0.8449287 0.996583  0.3192
-# sym_species1 0.3897138 0.1058828 3.680614  0.0002
+# (Intercept)  0.8170607 0.8532520 0.957584  0.3385
+# sym_species1 0.3710309 0.1050007 3.533602  0.0004
 # 
 # Correlation: 
 #   (Intr)
 # sym_species1 -0.022
 # 
 # Standardized residuals:
-#   Min           Q1          Med           Q3          Max 
-# -0.976728059 -0.246379808  0.006146746  0.208960294  0.736351219 
+#   Min          Q1         Med          Q3         Max 
+# -0.95995534 -0.23673665  0.01692324  0.21957171  0.67612298 
 # 
-# Residual standard error: 3.417657 
+# Residual standard error: 3.451349 
 # Degrees of freedom: 1187 total; 1185 residual
 plot(log(spmean_long_days) ~ sym_species, data = pgls_gbotb)
+
+rm(spp, pgls_gbotb)
 
 #* PGLS with subsampling ----
 
@@ -255,12 +265,12 @@ pgls$allotb_matchrank <- ifelse(pgls$match_level_allotb %in% c("direct_accepted"
 table(pgls$allotb_matchrank)
 
 # now loop!
-for (n in 1:10){
+for (n in 1:50){
   
   # first build data frame, randomly sampling one taxon per genus
   pgls_onepergenus <- pgls %>%
     dplyr::group_by(allotb_genus) %>%
-    dplyr::slice_min(order_by = allotb_matchrank, n = 1) %>% # first choose taxa with best taxonomic matches in tree (THOUGH THIS WILL MEAN SOME DATA POINTS NEVER USED EVEN WITH RANDOMISATION)
+    dplyr::slice_min(order_by = allotb_matchrank, n = 1) %>% # first choose taxa with best taxonomic matches in tree
     dplyr::slice_sample(n = 1) %>% # then randomly choose one of these
     dplyr::ungroup()
   # this selects 804 taxa, one in each genus
@@ -272,11 +282,12 @@ for (n in 1:10){
   # reorder data so species order matches order of tips in tree
   pgls_onepergenus <- as.data.frame(tree_nomissing$tip.label) %>%
     dplyr::left_join(pgls_onepergenus, by = c("tree_nomissing$tip.label" = "allotb"))
-  #pgls_onepergenus$sym_species <- forcats::as_factor(pgls_onepergenus$sym_species)
   
   # taxon_name to row names
   rownames(pgls_onepergenus) <- pgls_onepergenus[,1]
   pgls_onepergenus[,1] <- NULL
+  # taxon names for evolutionary correlation calculation
+  spp <- rownames(pgls_onepergenus)
   
   table(pgls_onepergenus$sym_species)
   # ~566 actinomorphic to ~238 zygomorphic taxa (will change with subsampling, record in results)
@@ -284,31 +295,45 @@ for (n in 1:10){
   # might need to find way to automatically check and report on variable
   # distribution in different subsamples, can't eyeball easily
   
-  pglsresults[[paste0("subsample", n)]] <- nlme::gls(log(spmean_long_days) ~ sym_species, 
-                                correlation = ape::corBrownian(phy = tree_nomissing),
-                                data = pgls_onepergenus, method = "ML")
+  pglsresults[[paste0("subsample", n)]] <- nlme::gls(log(spmean_long_days) ~ 
+                                                       sym_species, 
+                                                     correlation = ape::corBrownian(phy = tree_nomissing,
+                                                                                    form = ~spp),
+                                                     data = pgls_onepergenus, method = "ML")
   
 }
+
+rm(n, spp, tree_nomissing, pgls_onepergenus)
 
 # next - export results from all subsampling
 # find ways to check model assumptions??
 summary(pglsresults$subsample1)
 plot(pglsresults$subsample1$residuals)
 summary(pglsresults$subsample2)
+plot(pglsresults$subsample2$residuals)
 summary(pglsresults$subsample3)
+plot(pglsresults$subsample3$residuals)
 summary(pglsresults$subsample4)
+plot(pglsresults$subsample4$residuals)
 summary(pglsresults$subsample5)
+plot(pglsresults$subsample5$residuals)
 summary(pglsresults$subsample6)
+plot(pglsresults$subsample6$residuals)
 summary(pglsresults$subsample7)
+plot(pglsresults$subsample7$residuals)
 summary(pglsresults$subsample8)
+plot(pglsresults$subsample8$residuals)
 summary(pglsresults$subsample9)
+plot(pglsresults$subsample9$residuals)
 summary(pglsresults$subsample10)
+plot(pglsresults$subsample10$residuals)
 
-#### analyses with whole data ####
+# could maybe do something with par to plot multiple qqplots?
+# and multiple residual plots?
+qqnorm(pglsresults$subsample10$residuals)
+qqline(pglsresults$subsample10$residuals)
 
-
-pglsresults$``
-
+# all look like p<0.05, how to sumarise and batch check assumptions
 
 #### model longevity evolution ####
 

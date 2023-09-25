@@ -14,6 +14,7 @@ ggsave("figures/symmetry_longevity_boxplot.pdf", width = 9, height = 5)
 # for Hervé, check distribution of longevity for actin vs zyg taxa
 hist(sym_long$mean_long_days[sym_long$sym_species == "zygomorphic"])
 hist(sym_long$mean_long_days[sym_long$sym_species == "actinomorphic"])
+# look very similar
 
 # t-test of longevity by symmetry
 ttest <- t.test(sym_long$mean_long_days[sym_long$sym_species == "zygomorphic"], 
