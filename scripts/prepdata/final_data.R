@@ -26,7 +26,7 @@ longev_tnrs <- cache_csv("data_output/longev_taxa.csv", function() {
   readr::write_csv(longev_tnrs, "data_output/longev_taxa.csv")
 })
 
-# then symmetry (will take longer)
+# then symmetry (will take longer if not cached)
 sym_tnrs <- cache_csv("data_output/sym_taxa.csv", function() {
  # first reduce to taxa
  sym_taxa <- sym_data %>%

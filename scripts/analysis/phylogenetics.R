@@ -37,36 +37,36 @@ plot(gbotb, type = "fan", show.tip.label = FALSE)
 
 # summarise longevity per ACCEPTED species
 # take mean per species for longevity
-pgls <- sym_long %>%
+pgls_data <- sym_long %>%
   dplyr::group_by(species = Accepted_name, sym_species) %>%
   dplyr::summarise(spmean_long_days = mean(mean_long_days)) %>%
   dplyr::ungroup() %>%
   dplyr::filter(!is.na(species)) %>%
   as.data.frame()
 # add underscore to match tip labels
-pgls$species <- gsub(" ", "_", pgls$species)
+pgls_data$species <- gsub(" ", "_", pgls_data$species)
 
 # match allotb and gbotb names to this data
 phylo_names_match <- phylo_names_match %>%
   dplyr::select(species, genus:match_level_gbotb) %>%
   dplyr::distinct()
-# above df has 3 rows more than pgls because of different og name matches giving
+# above df has 3 rows more than pgls_data because of different og name matches giving
 # different match levels, will leave these duplicates for now and should be
 # fixed when I choose one species per genus
-pgls <- pgls %>%
+pgls_data <- pgls_data %>%
   dplyr::left_join(phylo_names_match, by = "species")
 rm(phylo_names_match)
 
 # redefine symmetry as 0 and 1
-pgls$sym_species <- gsub("zygomorphic", "1", pgls$sym_species)
-pgls$sym_species <- gsub("actinomorphic", "0", pgls$sym_species)
-table(pgls$sym_species)
+pgls_data$sym_species <- gsub("zygomorphic", "1", pgls_data$sym_species)
+pgls_data$sym_species <- gsub("actinomorphic", "0", pgls_data$sym_species)
+table(pgls_data$sym_species)
 # 986 actinomorphic to 469 zygomorphic taxa (will change with subsampling, record in results)
 
 #* PGLS without subsampling, ALLOTB ----
 
 # remove allotb duplicate matches from data, randomly choose best matches
-pgls_allotb <- pgls
+pgls_allotb <- pgls_data
 pgls_allotb$allotbgenusmatch <- ifelse(pgls_allotb$match_level_allotb %in% c("direct_genus_accepted",
                                                                              "direct_genus_original",
                                                                              "closest_genus",
@@ -95,7 +95,7 @@ hist(log(pgls_allotb$spmean_long_days))
 # boxplot of longevity by symmetry, allotb species
 ggplot(data = pgls_allotb, aes(x = log(spmean_long_days), y = sym_species, fill = sym_species)) +
   geom_boxplot() +
-  scale_fill_viridis_d(alpha = 0.6) +
+  scale_fill_discrete(type = setNames(my_colours$symmetry, c(1, 0))) +
   geom_jitter(color="black", size=0.4, alpha=0.9) +
   ggpubr::theme_pubr(legend = "none") +
   xlab("Floral longevity (log days)") +
@@ -112,12 +112,14 @@ ttests$allotbspecies
 # mean of x   mean of y 
 # 1.0397000 0.7696431 
 
-pglsresults <- list()
-pglsresults$allotbspecies <- nlme::gls(log(spmean_long_days) ~ sym_species,
+# exact results vary with random subsampling
+
+pgls_models <- list()
+pgls_models$allotbspecies <- nlme::gls(log(spmean_long_days) ~ sym_species,
                                        correlation = ape::corBrownian(phy = allotb, 
                                                                       form = ~spp),
                                        data = pgls_allotb, method = "ML")
-summary(pglsresults$allotbspecies)
+summary(pgls_models$allotbspecies)
 # Generalized least squares fit by maximum likelihood
 # Model: log(spmean_long_days) ~ sym_species 
 # Data: pgls_allotb 
@@ -144,25 +146,26 @@ summary(pglsresults$allotbspecies)
 # 
 # Residual standard error: 3.095178 
 # Degrees of freedom: 1433 total; 1431 residual
-plot(log(spmean_long_days) ~ sym_species, data = pgls_allotb)
+
+#** CHECK ASSUMPTIONS HERE??? ####
 
 rm(spp, pgls_allotb)
 
 #* PGLS without subsampling, GBOTB ----
 
 # remove gbotb duplicates from data, randomly choose best matches
-pgls_gbotb <- pgls
+pgls_gbotb <- pgls_data
 # build column of match ranking for gbotb matches
-pgls_gbotb$gbotb_matchrank <- ifelse(pgls$match_level_gbotb %in% c("direct_accepted", 
+pgls_gbotb$gbotb_matchrank <- ifelse(pgls_gbotb$match_level_gbotb %in% c("direct_accepted", 
                                                                "direct_accepted_nosubsp",
                                                                "manual_misspelling"), 
                                      "1", 
-                                     ifelse(pgls$match_level_gbotb %in% c("direct_original",
+                                     ifelse(pgls_gbotb$match_level_gbotb %in% c("direct_original",
                                                                       "manual_synonym"),
                                             "2",
-                                            ifelse(pgls$match_level_gbotb == "direct_genus_accepted", 
+                                            ifelse(pgls_gbotb$match_level_gbotb == "direct_genus_accepted", 
                                               "3",
-                                              ifelse(pgls$match_level_gbotb %in% c("direct_genus_original",
+                                              ifelse(pgls_gbotb$match_level_gbotb %in% c("direct_genus_original",
                                                                                     "closest_genus",
                                                                                     "genus_synonym"),
                                                      "4", "5"))))
@@ -191,7 +194,7 @@ hist(log(pgls_gbotb$spmean_long_days))
 # boxplot of longevity by symmetry, allotb species
 ggplot(data = pgls_gbotb, aes(x = log(spmean_long_days), y = sym_species, fill = sym_species)) +
   geom_boxplot() +
-  scale_fill_viridis_d(alpha = 0.6) +
+  scale_fill_discrete(type = setNames(my_colours$symmetry, c(1, 0))) +
   geom_jitter(color="black", size=0.4, alpha=0.9) +
   ggpubr::theme_pubr(legend = "none") +
   xlab("Floral longevity (log days)") +
@@ -208,11 +211,11 @@ ttests$gbotbspecies
 # 1.0842894 0.7983383 
 
 # PGLS of longevity by symmetry with phylogeny considered
-pglsresults$gbotbspecies <- nlme::gls(log(spmean_long_days) ~ sym_species,
+pgls_models$gbotbspecies <- nlme::gls(log(spmean_long_days) ~ sym_species,
                                       correlation = ape::corBrownian(phy = gbotb,
                                                                      form = ~spp),
                                       data = pgls_gbotb, method = "ML")
-summary(pglsresults$gbotbspecies)
+summary(pgls_models$gbotbspecies)
 # Generalized least squares fit by maximum likelihood
 # Model: log(spmean_long_days) ~ sym_species 
 # Data: pgls_gbotb 
@@ -239,36 +242,37 @@ summary(pglsresults$gbotbspecies)
 # 
 # Residual standard error: 3.451349 
 # Degrees of freedom: 1187 total; 1185 residual
-plot(log(spmean_long_days) ~ sym_species, data = pgls_gbotb)
+
+#** CHECK ASSUMPTIONS HERE??? ####
 
 rm(spp, pgls_gbotb)
 
 #* PGLS with subsampling ----
 
-# then loop to subsample one species per genus for ALLOTB analyses
+# loop to subsample one species per genus for ALLOTB analyses
 # first create column of allotb genus
-pgls$allotb_genus <- gsub("_.*", "", pgls$allotb)
+pgls_data$allotb_genus <- gsub("_.*", "", pgls_data$allotb)
 # and build column of match ranking for allotb matches
-pgls$allotb_matchrank <- ifelse(pgls$match_level_allotb %in% c("direct_accepted", 
+pgls_data$allotb_matchrank <- ifelse(pgls_data$match_level_allotb %in% c("direct_accepted", 
                                                                "direct_accepted_nosubsp",
                                                                "manual_misspelling"), 
                                 "1", 
-                                ifelse(pgls$match_level_allotb %in% c("direct_original",
+                                ifelse(pgls_data$match_level_allotb %in% c("direct_original",
                                                                       "manual_synonym"), 
                                        "2",
-                                       ifelse(pgls$match_level_allotb == "direct_genus_accepted", 
+                                       ifelse(pgls_data$match_level_allotb == "direct_genus_accepted", 
                                               "3",
-                                              ifelse(pgls$match_level_allotb %in% c("direct_genus_original",
+                                              ifelse(pgls_data$match_level_allotb %in% c("direct_genus_original",
                                                                                     "closest_genus",
                                                                                     "genus_synonym"), 
                                                      "4", "5"))))
-table(pgls$allotb_matchrank)
+table(pgls_data$allotb_matchrank)
 
 # now loop!
 for (n in 1:50){
   
   # first build data frame, randomly sampling one taxon per genus
-  pgls_onepergenus <- pgls %>%
+  pgls_onepergenus <- pgls_data %>%
     dplyr::group_by(allotb_genus) %>%
     dplyr::slice_min(order_by = allotb_matchrank, n = 1) %>% # first choose taxa with best taxonomic matches in tree
     dplyr::slice_sample(n = 1) %>% # then randomly choose one of these
@@ -295,7 +299,7 @@ for (n in 1:50){
   # might need to find way to automatically check and report on variable
   # distribution in different subsamples, can't eyeball easily
   
-  pglsresults[[paste0("subsample", n)]] <- nlme::gls(log(spmean_long_days) ~ 
+  pgls_models[[paste0("subsample", n)]] <- nlme::gls(log(spmean_long_days) ~ 
                                                        sym_species, 
                                                      correlation = ape::corBrownian(phy = tree_nomissing,
                                                                                     form = ~spp),
@@ -305,22 +309,36 @@ for (n in 1:50){
 
 rm(n, spp, tree_nomissing, pgls_onepergenus)
 
+#** CHECK ASSUMPTIONS HERE??? ####
+
+# export results from all PGLS models in simple table with subsamples and their mean
+
+#create data frame for regression results table
+pglsresults <- data.frame()
+
+for (model in names(pgls_models)) {
+  new_row <- broom::glance(pgls_models[[model]])
+  new_row$slope <- pgls_models[[model]]$coefficients[[2]]
+  new_row$model <- model
+  pglsresults <- rbind(pglsresults, new_row)
+}
+
 # next - export results from all subsampling
 # find ways to check model assumptions??
-summary(pglsresults$subsample1)
-plot(pglsresults$subsample1$residuals)
-summary(pglsresults$subsample2)
-plot(pglsresults$subsample2$residuals)
-summary(pglsresults$subsample3)
-plot(pglsresults$subsample3$residuals)
-summary(pglsresults$subsample4)
-plot(pglsresults$subsample4$residuals)
-summary(pglsresults$subsample5)
-plot(pglsresults$subsample5$residuals)
-summary(pglsresults$subsample6)
-plot(pglsresults$subsample6$residuals)
-summary(pglsresults$subsample7)
-plot(pglsresults$subsample7$residuals)
+summary(pgls_models$subsample1)
+plot(pgls_models$subsample1$residuals)
+summary(pgls_models$subsample2)
+plot(pgls_models$subsample2$residuals)
+summary(pgls_models$subsample3)
+plot(pgls_models$subsample3$residuals)
+summary(pgls_models$subsample4)
+plot(pgls_models$subsample4$residuals)
+summary(pgls_models$subsample5)
+plot(pgls_models$subsample5$residuals)
+summary(pgls_models$subsample6)
+plot(pgls_models$subsample6$residuals)
+summary(pgls_models$subsample7)
+plot(pgls_models$subsample7$residuals)
 summary(pglsresults$subsample8)
 plot(pglsresults$subsample8$residuals)
 summary(pglsresults$subsample9)
