@@ -63,18 +63,30 @@ pgls_data$sym_species <- gsub("actinomorphic", "0", pgls_data$sym_species)
 table(pgls_data$sym_species)
 # 986 actinomorphic to 469 zygomorphic taxa (will change with subsampling, record in results)
 
+# define heirarchy of matches for randomly sampling within these
+pgls_data$allotb_matchrank <- ifelse(pgls_data$match_level_allotb %in% c("direct_accepted", 
+                                                                         "direct_accepted_nosubsp",
+                                                                         "manual_misspelling"), 
+                                     "1", 
+                                     ifelse(pgls_data$match_level_allotb %in% c("direct_original",
+                                                                                "manual_synonym"), 
+                                            "2",
+                                            ifelse(pgls_data$match_level_allotb == "direct_genus_accepted", 
+                                                   "3",
+                                                   ifelse(pgls_data$match_level_allotb %in% c("direct_genus_original",
+                                                                                              "closest_genus",
+                                                                                              "genus_synonym"), 
+                                                          "4", "5"))))
+table(pgls_data$allotb_matchrank)
+
 #* PGLS without subsampling, ALLOTB ----
 
 # remove allotb duplicate matches from data, randomly choose best matches
 pgls_allotb <- pgls_data
-pgls_allotb$allotbgenusmatch <- ifelse(pgls_allotb$match_level_allotb %in% c("direct_genus_accepted",
-                                                                             "direct_genus_original",
-                                                                             "closest_genus",
-                                                                             "genus_synonym"),
-                                       "1", "0")
+
 pgls_allotb <- pgls_allotb %>%
   dplyr::group_by(allotb) %>% # group by allotb species
-  dplyr::slice_min(order_by = allotbgenusmatch, n = 1) %>% # if possible choose taxa without genus level match
+  dplyr::slice_min(order_by = allotb_matchrank, n = 1) %>% # choose best possible taxonomic match
   dplyr::slice_sample(n = 1) %>% # then randomly choose one of these
   dplyr::ungroup()
 
@@ -252,21 +264,6 @@ rm(spp, pgls_gbotb)
 # loop to subsample one species per genus for ALLOTB analyses
 # first create column of allotb genus
 pgls_data$allotb_genus <- gsub("_.*", "", pgls_data$allotb)
-# and build column of match ranking for allotb matches
-pgls_data$allotb_matchrank <- ifelse(pgls_data$match_level_allotb %in% c("direct_accepted", 
-                                                               "direct_accepted_nosubsp",
-                                                               "manual_misspelling"), 
-                                "1", 
-                                ifelse(pgls_data$match_level_allotb %in% c("direct_original",
-                                                                      "manual_synonym"), 
-                                       "2",
-                                       ifelse(pgls_data$match_level_allotb == "direct_genus_accepted", 
-                                              "3",
-                                              ifelse(pgls_data$match_level_allotb %in% c("direct_genus_original",
-                                                                                    "closest_genus",
-                                                                                    "genus_synonym"), 
-                                                     "4", "5"))))
-table(pgls_data$allotb_matchrank)
 
 # now loop!
 for (n in 1:50){
@@ -311,13 +308,18 @@ rm(n, spp, tree_nomissing, pgls_onepergenus)
 
 #** CHECK ASSUMPTIONS HERE??? ####
 
+plot(pgls_models$subsample1, Genre ~ resid(.), abline = 0 )
+
 # export results from all PGLS models in simple table with subsamples and their mean
 
 #create data frame for regression results table
 pglsresults <- data.frame()
 
 for (model in names(pgls_models)) {
-  new_row <- broom::glance(pgls_models[[model]])
+  new_row <- tibble(model = model,
+                    n = pgls_models[[model]]$dims$N,
+                    
+  )
   new_row$slope <- pgls_models[[model]]$coefficients[[2]]
   new_row$model <- model
   pglsresults <- rbind(pglsresults, new_row)
@@ -339,55 +341,49 @@ summary(pgls_models$subsample6)
 plot(pgls_models$subsample6$residuals)
 summary(pgls_models$subsample7)
 plot(pgls_models$subsample7$residuals)
-summary(pglsresults$subsample8)
-plot(pglsresults$subsample8$residuals)
-summary(pglsresults$subsample9)
-plot(pglsresults$subsample9$residuals)
-summary(pglsresults$subsample10)
-plot(pglsresults$subsample10$residuals)
+summary(pgls_models$subsample8)
+plot(pgls_models$subsample8$residuals)
+summary(pgls_models$subsample9)
+plot(pgls_models$subsample9$residuals)
+summary(pgls_models$subsample10)
+plot(pgls_models$subsample10$residuals)
+# seem like all have p<0.05, curious lines in residual plots probably from many 1 and half day longevities in data
 
 # could maybe do something with par to plot multiple qqplots?
 # and multiple residual plots?
-qqnorm(pglsresults$subsample10$residuals)
-qqline(pglsresults$subsample10$residuals)
+qqnorm(pgls_models$subsample10$residuals)
+qqline(pgls_models$subsample10$residuals)
 
 # all look like p<0.05, how to sumarise and batch check assumptions
 
 #### model longevity evolution ####
 
-# first summarise longevity mean per species
-longevspmean <- sym_long %>%
-  dplyr::group_by(species = Accepted_name) %>%
-  dplyr::summarise(spmean_long_days = mean(mean_long_days)) %>%
-  dplyr::ungroup() %>%
-  dplyr::filter(!is.na(species))
-# join symmetry data back on
-sym <- sym_long %>%
-  dplyr::select(species = Accepted_name, sym_species) %>%
-  dplyr::filter(!is.na(species)) %>%
-  dplyr::distinct()
-longevspmean <- longevspmean %>%
-  dplyr::left_join(sym, by = "species")
-rm(sym)
-longevspmean$sym_species[is.na(longevspmean$sym_species)] <- "blank" # add dummy category for NA symmetry
-# add underscore to match tip labels
-longevspmean$species <- gsub(" ", "_", longevspmean$species)
+# prep data for modelling
+longevspmean <- pgls_data %>%
+  dplyr::select(allotb, sym_species, spmean_long_days, allotb_matchrank) %>%
+  dplyr::group_by(allotb) %>% # group by allotb species
+  dplyr::slice_min(order_by = allotb_matchrank, n = 1) %>% # choose best possible taxonomic match
+  dplyr::slice_sample(n = 1) %>% # then randomly choose one of these
+  dplyr::ungroup()
+
+#longevspmean$sym_species[is.na(longevspmean$sym_species)] <- "blank" # add dummy category for NA symmetry
+
 # change longevity data into a named vector for phytools
 longevspmeanV <- log(longevspmean$spmean_long_days)
-names(longevspmeanV) <- longevspmean$species
+names(longevspmeanV) <- longevspmean$allotb
 # and prep symmetry data also
 symV <- as.factor(longevspmean$sym_species)
-names(symV) <- longevspmean$species
+names(symV) <- longevspmean$allotb
 
 # visualise longevity evolution across phylogeny
-contmap <- phytools::contMap(tree_TPL$scenario.3, longevspmeanV, plot = FALSE)
+contmap <- phytools::contMap(allotb, longevspmeanV, plot = FALSE)
 # re-colour contmap with viridis scale
-contmap <- phytools::setMap(contmap, c("#440154FF", "#46337EFF", "#365C8DFF", "#277F8EFF", "#1FA187FF", "#4AC16DFF", "#9FDA3AFF", "#FDE725FF"))
+contmap <- phytools::setMap(contmap, my_colours$longevity)
 
 # make sure discrete character is in the order of tree
 symV <- symV[contmap$tree$tip.label]
 # set factor colours
-cols <- setNames(c("#7570B3", "#D95F02"), levels(symV))
+cols <- setNames(c(my_colours$symmetry[2], my_colours$symmetry[1]), c("0", "1"))
 
 # dummy plot to get locations to draw tip labels coloured by symmetry
 plot(contmap, fsize = c(0.5, 0.7))
@@ -398,7 +394,7 @@ lastPP <- get("last_plot.phylo", envir = .PlotPhyloEnv)
 
 # and plot it! v tall plot with tip labels
 pdf(file = "figures/contmap_spmeanlongevity.pdf", width = 20, height = 80)
-plot(contmap, legend = 0.7*max(nodeHeights(tree_TPL$scenario.3)), sig = 1, 
+plot(contmap, legend = 0.7*max(nodeHeights(allotb)), sig = 1, 
      lwd = 4, outline = FALSE, ftype = "off", #type = "fan",
      xlim = lastPP$x.lim, #ylim = lastPP$y.lim,
      leg.txt = "Floral longevity (log mean # days)")
@@ -407,7 +403,7 @@ for(i in 1:length(symV)) {
        pos = 4, cex = 0.6, col = cols[symV[i]], font = 3)
 }
 # insert legend
-legend(x = "bottomright", legend = names(cols), bg = "white",
+legend(x = "bottomright", legend = c("zygomorphic", "actinomorphic"), bg = "white",
        fill = cols, cex = 3, pt.lwd = 0.001, bty = "n",
        title = "Floral symmetry")
 dev.off()
@@ -417,4 +413,4 @@ dev.off()
 # will build this LATER if decide it's worth it
 rm(symV, longevspmean, lastPP, contmap, longevspmeanV, i, cols)
 
-rm(tree_TPL)
+
