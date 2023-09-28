@@ -276,7 +276,11 @@ for (n in 1:50){
     dplyr::ungroup()
   # this selects 804 taxa, one in each genus
   
-  # prune tree to these 804
+  # first run straight t-test to get means and sample sizes in each group
+  ttests[[paste0("subsample", n)]] <- t.test(log(pgls_onepergenus$spmean_long_days[pgls_onepergenus$sym_species == "1"]),
+                                             log(pgls_onepergenus$spmean_long_days[pgls_onepergenus$sym_species == "0"]))
+  
+  # prune tree to 804 selected taxa
   tree_nomissing <- ape::drop.tip(allotb, allotb$tip.label[-match(pgls_onepergenus$allotb, allotb$tip.label)])
   length(tree_nomissing$tip.label)
   
@@ -289,13 +293,7 @@ for (n in 1:50){
   pgls_onepergenus[,1] <- NULL
   # taxon names for evolutionary correlation calculation
   spp <- rownames(pgls_onepergenus)
-  
-  table(pgls_onepergenus$sym_species)
-  # ~566 actinomorphic to ~238 zygomorphic taxa (will change with subsampling, record in results)
-  
-  # might need to find way to automatically check and report on variable
-  # distribution in different subsamples, can't eyeball easily
-  
+  # run model!
   pgls_models[[paste0("subsample", n)]] <- nlme::gls(log(spmean_long_days) ~ 
                                                        sym_species, 
                                                      correlation = ape::corBrownian(phy = tree_nomissing,
@@ -304,50 +302,45 @@ for (n in 1:50){
   
 }
 
-rm(n, spp, tree_nomissing, pgls_onepergenus)
+rm(n, spp, tree_nomissing)
+
+table(pgls_onepergenus$sym_species)
+# ~566 actinomorphic to ~238 zygomorphic taxa (will change with subsampling, record in results)
+# might need to find way to automatically check and report on variable
+# distribution in different subsamples, can't eyeball easily
+
 
 #** CHECK ASSUMPTIONS HERE??? ####
 
-plot(pgls_models$subsample1, Genre ~ resid(.), abline = 0 )
+plot(pgls_models$subsample1, abline = 0)
 
 # export results from all PGLS models in simple table with subsamples and their mean
 
 #create data frame for regression results table
 pglsresults <- data.frame()
-
+# loop through all results and build table of relevant values
+# can't find how to get sample size in each group?? maybe from 2 types of values in fitted?
 for (model in names(pgls_models)) {
   new_row <- tibble(model = model,
                     n = pgls_models[[model]]$dims$N,
-                    
+                    zygmean = ttests[[model]]$estimate[1],
+                    actmean = ttests[[model]]$estimate[2],
+                    pgls_logLik = pgls_models[[model]]$logLik,
+                    pgls_intercept = pgls_models[[model]]$coefficients[1],
+                    pgls_symspecies1 = pgls_models[[model]]$coefficients[2],
+                    pgls_pvalue = summary(pgls_models[[model]])$tTable[2,4]
   )
-  new_row$slope <- pgls_models[[model]]$coefficients[[2]]
-  new_row$model <- model
   pglsresults <- rbind(pglsresults, new_row)
 }
+
+# amazing! try to get n in each group, then export?
 
 # next - export results from all subsampling
 # find ways to check model assumptions??
 summary(pgls_models$subsample1)
-plot(pgls_models$subsample1$residuals)
+plot(pgls_models$subsample1)
 summary(pgls_models$subsample2)
-plot(pgls_models$subsample2$residuals)
-summary(pgls_models$subsample3)
-plot(pgls_models$subsample3$residuals)
-summary(pgls_models$subsample4)
-plot(pgls_models$subsample4$residuals)
-summary(pgls_models$subsample5)
-plot(pgls_models$subsample5$residuals)
-summary(pgls_models$subsample6)
-plot(pgls_models$subsample6$residuals)
-summary(pgls_models$subsample7)
-plot(pgls_models$subsample7$residuals)
-summary(pgls_models$subsample8)
-plot(pgls_models$subsample8$residuals)
-summary(pgls_models$subsample9)
-plot(pgls_models$subsample9$residuals)
-summary(pgls_models$subsample10)
-plot(pgls_models$subsample10$residuals)
-# seem like all have p<0.05, curious lines in residual plots probably from many 1 and half day longevities in data
+plot(pgls_models$subsample2)
 
 # could maybe do something with par to plot multiple qqplots?
 # and multiple residual plots?
