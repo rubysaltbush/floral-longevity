@@ -159,8 +159,6 @@ summary(pgls_models$allotbspecies)
 # Residual standard error: 3.095178 
 # Degrees of freedom: 1433 total; 1431 residual
 
-#** CHECK ASSUMPTIONS HERE??? ####
-
 rm(spp, pgls_allotb)
 
 #* PGLS without subsampling, GBOTB ----
@@ -255,8 +253,6 @@ summary(pgls_models$gbotbspecies)
 # Residual standard error: 3.451349 
 # Degrees of freedom: 1187 total; 1185 residual
 
-#** CHECK ASSUMPTIONS HERE??? ####
-
 rm(spp, pgls_gbotb)
 
 #* PGLS with subsampling ----
@@ -309,20 +305,18 @@ table(pgls_onepergenus$sym_species)
 # might need to find way to automatically check and report on variable
 # distribution in different subsamples, can't eyeball easily
 
-
-#** CHECK ASSUMPTIONS HERE??? ####
-
-plot(pgls_models$subsample1, abline = 0)
-
 # export results from all PGLS models in simple table with subsamples and their mean
 
 #create data frame for regression results table
 pglsresults <- data.frame()
+
 # loop through all results and build table of relevant values
-# can't find how to get sample size in each group?? maybe from 2 types of values in fitted?
 for (model in names(pgls_models)) {
+  t <- as.data.frame(table(pgls_models[[model]]$fitted)) # 2 values of fitted indicate n in each symemtry group
   new_row <- tibble(model = model,
-                    n = pgls_models[[model]]$dims$N,
+                    total_n = pgls_models[[model]]$dims$N,
+                    zyg_n = min(t$Freq), # assume zyg will always be smaller n
+                    act_n = max(t$Freq), # assume actin always higher n
                     zygmean = ttests[[model]]$estimate[1],
                     actmean = ttests[[model]]$estimate[2],
                     pgls_logLik = pgls_models[[model]]$logLik,
@@ -333,21 +327,44 @@ for (model in names(pgls_models)) {
   pglsresults <- rbind(pglsresults, new_row)
 }
 
-# amazing! try to get n in each group, then export?
+# amazing! 
+rm(new_row, t, model, pgls_onepergenus)
 
-# next - export results from all subsampling
-# find ways to check model assumptions??
-summary(pgls_models$subsample1)
-plot(pgls_models$subsample1)
-summary(pgls_models$subsample2)
-plot(pgls_models$subsample2)
+# export results to csv
+readr::write_csv(pglsresults, "results/PGLS_models_key_results.csv")
 
-# could maybe do something with par to plot multiple qqplots?
-# and multiple residual plots?
-qqnorm(pgls_models$subsample10$residuals)
-qqline(pgls_models$subsample10$residuals)
+#** check model assumptions ####
 
-# all look like p<0.05, how to sumarise and batch check assumptions
+# export qqplots for each model
+pdf("figures/qqplots_PGLS.pdf", width = 10, height = 10)
+par(mfrow = c(8, 7), mar = c(1, 1, 1, 1))
+for (model in names(pgls_models)) {
+  
+  print(qqnorm(resid(pgls_models[[model]]), main = "",
+               xlab = "", ylab = "",))
+  print(qqline(resid(pgls_models[[model]])))
+  
+}
+dev.off()
+
+# export residual vs fitted plots for each model
+pdf("figures/residual_vs_fitted_PGLS.pdf", width = 10, height = 10)
+par(mfrow = c(8, 7), mar = c(1, 1, 1, 1))
+for (model in names(pgls_models)) {
+  
+  print(plot(resid(pgls_models[[model]], type = "p") ~ fitted(pgls_models[[model]]),
+             col = "mediumblue", xlab = "", ylab = ""))
+  abline(0, 0)
+  grid()
+  
+}
+dev.off()
+
+# mostly look okay, 1-2 outlying low residuals in actinomorphic category but
+# they don't look so outlying as to be hugely influential
+
+rm(pgls_data, pgls_models, model, ttests, pglsresults)
+
 
 #### model longevity evolution ####
 
