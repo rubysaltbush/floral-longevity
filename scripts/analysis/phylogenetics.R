@@ -363,7 +363,7 @@ dev.off()
 # mostly look okay, 1-2 outlying low residuals in actinomorphic category but
 # they don't look so outlying as to be hugely influential
 
-rm(pgls_data, pgls_models, model, ttests, pglsresults)
+rm(pgls_models, model, ttests, pglsresults)
 
 
 #### model longevity evolution ####
@@ -375,8 +375,6 @@ longevspmean <- pgls_data %>%
   dplyr::slice_min(order_by = allotb_matchrank, n = 1) %>% # choose best possible taxonomic match
   dplyr::slice_sample(n = 1) %>% # then randomly choose one of these
   dplyr::ungroup()
-
-#longevspmean$sym_species[is.na(longevspmean$sym_species)] <- "blank" # add dummy category for NA symmetry
 
 # change longevity data into a named vector for phytools
 longevspmeanV <- log(longevspmean$spmean_long_days)
