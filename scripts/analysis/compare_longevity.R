@@ -1,7 +1,7 @@
 # script to compare longevity between zygomorphic and actinomorphic taxa
 # just using straight up means, no phylogeny at first
 
-# boxplot of longevity by symmetry INDIVIDUALS
+# boxplot of longevity by symmetry for all individuals
 ggplot(data = sym_long, aes(x = mean_long_days, y = sym_species, fill = sym_species)) +
   geom_boxplot() +
   scale_fill_discrete(type = my_colours$symmetry) +
@@ -9,22 +9,21 @@ ggplot(data = sym_long, aes(x = mean_long_days, y = sym_species, fill = sym_spec
   ggpubr::theme_pubr(legend = "none") +
   xlab("Floral longevity (days)") +
   ylab("")
-ggsave("figures/symmetry_longevity_boxplot.pdf", width = 9, height = 5)
+ggsave("figures/symmetry_longevity_boxplot_individuals.pdf", width = 9, height = 5)
 
-# for Hervé, check distribution of longevity for actin vs zyg taxa
+# check distribution of longevity for actin vs zyg taxa
 hist(sym_long$mean_long_days[sym_long$sym_species == "zygomorphic"])
 hist(sym_long$mean_long_days[sym_long$sym_species == "actinomorphic"])
 # look very similar
 
 # t-test of longevity by symmetry
-ttest <- t.test(sym_long$mean_long_days[sym_long$sym_species == "zygomorphic"], 
-                sym_long$mean_long_days[sym_long$sym_species == "actinomorphic"])
-ttest
+t.test(sym_long$mean_long_days[sym_long$sym_species == "zygomorphic"], 
+       sym_long$mean_long_days[sym_long$sym_species == "actinomorphic"])
+
 # p = 0.0001, actinomorphic mean 3.85, zygomorphic 4.67
 # zygomorphic flowers longer lived which makes sense if fewer visitors
 # BUT shall have to see if this difference remains when phylogeny considered
 # and genera subsampled to reduce taxonomic bias
-rm(ttest)
 
 # what are the longest lived flowers?
 sym_long %>%

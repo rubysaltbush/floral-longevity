@@ -87,7 +87,7 @@ species_individual <- data %>%
   dplyr::distinct()
 species_sym_and_site <- species_individual %>%
   dplyr::left_join(species_sym_and_site, by = "species")
-rm(species_individual)
+rm(species_individual, trait_data)
 
 # join symmetry to longevity
 longevity <- longevity %>%
