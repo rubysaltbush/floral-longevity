@@ -5,7 +5,9 @@
 longevity_all <- cache_csv("data_output/longevity_data_all.csv", function() {
 
 #* my field data ----
-fieldlong <- readr::read_csv("data_output/mean_longevity_Sydney_fieldwork.csv")
+# longevity and symmetry data for 34 native Australian plant species
+# collected on fieldwork in Ku-ring-gai National Park and Springwood, NSW
+source("scripts/prepdata/field_data.R")
 
 # summarise down to species, mean and SE longevity (days), symmetry, lat + longs
 fieldlong <- fieldlong %>%

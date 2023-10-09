@@ -156,6 +156,3 @@ rm(sym_data_sources)
 readr::write_csv(sym_data, "data_output/sym_data.csv")
 })
 
-# TO DO - PROTEUS data? Have checked and not much extra in Schonenberger et al. (2020) data
-#       - once I've scored symmetry for remaining longevity taxa can read in here
-

@@ -2,6 +2,9 @@
 # into mean and standard deviation floral longevity per species
 # coupled with floral symmetry
 
+fieldlong <- cache_csv("data_output/mean_longevity_Sydney_fieldwork.csv", 
+                       function() {
+
 # read in longevity monitoring data straight from google sheet
 data <- readr::read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQlJKKlDeLMZYH32YtGRqpnL9kJFLfiUOokQZ51kvvRTgvvx4WwpemWiwCnz6hlMarYmRViWOQxVbHn/pub?gid=1585669731&single=true&output=csv")
 
@@ -56,7 +59,7 @@ longevity <- longevity %>%
 colnames(longevity) <- c("individual", "birthtime", "deathtime", "no_flowers")
 rm(deathtime, no_flowers)
 # 4 individuals with only 1 flower monitored, 9 with 2 flowers
-paste("on average", mean(longevity$no_flowers), "flowers monitored per plant")
+paste("on average", round(mean(longevity$no_flowers), 1), "flowers monitored per plant")
 
 # calculate mean longevity per plant in days
 longevity$longevity_days <- difftime(longevity$deathtime, longevity$birthtime, units = "days")
@@ -90,11 +93,18 @@ rm(species_individual)
 longevity <- longevity %>%
   dplyr::left_join(species_sym_and_site, by = "individual")
 
-# save this data as csv to check later
-readr::write_csv(longevity, "data_output/floral_longevity_output.csv")
+# boxplot of longevity by symmetry INDIVIDUALS
+ggplot(data = longevity, aes(x = longevity_days, y = symmetry, fill = symmetry)) +
+  geom_boxplot() +
+  scale_fill_viridis_d(alpha = 0.6) +
+  geom_jitter(color="black", size=0.4, alpha=0.9) +
+  ggpubr::theme_pubr(legend = "none") +
+  xlab("Floral longevity (days)") +
+  ylab("")
+ggsave("figures/field_data_individuals_symmetry_longevity_boxplot.pdf", width = 9, height = 5)
 
-# calculate mean per species
-mean_longevity <- longevity %>%
+# calculate mean longevity per species
+fieldlong <- longevity %>%
   dplyr::group_by(species) %>%
   dplyr::summarise(mean_long_days = mean(longevity_days, na.rm = TRUE))
 
@@ -108,114 +118,46 @@ n <- longevity %>%
   dplyr::group_by(species) %>%
   dplyr::summarise(n = n())
 
-mean_longevity <- mean_longevity %>%
+# join all together
+fieldlong <- fieldlong %>%
   dplyr::left_join(sd, by = "species") %>%
   dplyr::left_join(n, by = "species")
-rm(sd, n)
+rm(sd, n, longevity)
 
 # add species symmetry to means
 species_sym_and_site <- species_sym_and_site %>%
   dplyr::select(species, site, latitude, longitude, symmetry) %>%
   dplyr::distinct()
 
-mean_longevity <- mean_longevity %>%
+fieldlong <- fieldlong %>%
   dplyr::left_join(species_sym_and_site, by = "species")
-rm(species_sym_and_site)
-
-# output species means with symmetry
-readr::write_csv(mean_longevity, "data_output/mean_longevity_Sydney_fieldwork.csv")
-
-# boxplot of longevity by symmetry INDIVIDUALS
-ggplot(data = longevity, aes(x = longevity_days, y = symmetry, fill = symmetry)) +
-  geom_boxplot() +
-  scale_fill_viridis_d(alpha = 0.6) +
-  geom_jitter(color="black", size=0.4, alpha=0.9) +
-  ggpubr::theme_pubr(legend = "none") +
-  xlab("Floral longevity (days)") +
-  ylab("")
-ggsave("figures/symmetry_longevity_boxplot.pdf", width = 9, height = 5)
-
-# t-test of longevity by symmetry
-ttest <- t.test(longevity$longevity_days[longevity$symmetry == "zygomorphic"], 
-                longevity$longevity_days[longevity$symmetry != "zygomorphic"])
-ttest
-# NO LONGER SIGNIFICANT WITH DIANELLA ADDED IN
+rm(species_sym_and_site, data)
 
 # boxplot of longevity by symmetry SPECIES
-ggplot(data = mean_longevity, aes(x = mean_long_days, y = symmetry, fill = symmetry)) +
+ggplot(data = fieldlong, aes(x = mean_long_days, y = symmetry, fill = symmetry)) +
   geom_boxplot() +
   scale_fill_viridis_d(alpha = 0.6) +
   geom_jitter(color="black", size=0.4, alpha=0.9) +
   ggpubr::theme_pubr(legend = "none") +
   xlab("Species mean floral longevity (days)") +
   ylab("")
-ggsave("figures/symmetry_longevity_boxplot_speciesmean.pdf", width = 9, height = 5)
+ggsave("figures/field_data_speciesmean_symmetry_longevity_boxplot.pdf", width = 9, height = 5)
 
 # t-test of species mean longevity by symmetry
-ttest_species <- t.test(mean_longevity$mean_long_days[mean_longevity$symmetry == "zygomorphic"], 
-                        mean_longevity$mean_long_days[mean_longevity$symmetry != "zygomorphic"])
-ttest_species
+t.test(fieldlong$mean_long_days[fieldlong$symmetry == "zygomorphic"], 
+       fieldlong$mean_long_days[fieldlong$symmetry != "zygomorphic"])
+# no difference in mean longevity by symmetry for these 34 species
 
-# yup I was inflating my power by including all individuals rather than species :(
+# output species mean longevity with symmetry
+readr::write_csv(fieldlong, "data_output/mean_longevity_Sydney_fieldwork.csv")
 
-# out of curiosity are SD different?
-ttest_speciesSD <- t.test(mean_longevity$sd_long[mean_longevity$symmetry == "zygomorphic"], 
-                          mean_longevity$sd_long[mean_longevity$symmetry != "zygomorphic"])
-ttest_speciesSD
-# nope! they're not, ach well
+})
 
-# 3 zygomorphic outliers, one actinomorphic outlier, what if I removed these?
+# possible that zygomorphic flowers EITHER flower for a short time bc good 
+# quality visitation OR flower for a long time because low frequency of 
+# visitation, and you'd need visitation data to tease this out in field study
 
-mean_longevity_nooutliers <- mean_longevity %>%
-  dplyr::filter(!(species %in% c("Hakea sericea", "Grevillea buxifolia", "Hybanthus vernonii", "Acacia oxycedrus")))
-
-# boxplot of longevity by symmetry
-ggplot(data = mean_longevity_nooutliers, aes(x = mean_long_days, y = symmetry, fill = symmetry)) +
-  geom_boxplot() +
-  scale_fill_viridis_d(alpha = 0.6) +
-  geom_jitter(color="black", size=0.4, alpha=0.9) +
-  ggpubr::theme_pubr(legend = "none") +
-  xlab("Species mean floral longevity (days)") +
-  ylab("")
-ggsave("figures/symmetry_longevity_boxplot_speciesmean_nooutliers.pdf", width = 9, height = 5)
-
-# t-test of species mean longevity by symmetry
-ttest_species <- t.test(mean_longevity_nooutliers$mean_long_days[mean_longevity_nooutliers$symmetry == "zygomorphic"], 
-                        mean_longevity_nooutliers$mean_long_days[mean_longevity_nooutliers$symmetry != "zygomorphic"])
-ttest_species
-
-# aha yes so it is the outliers, how justified is removing them though?
-# WITH DIANELLA ADDED IN NOT SIGNIFICANT
-# for Hybanthus I would think that cleistogamy might be playing a role?? very low insect visitation
-
-# seems like symmetry not the go here, possible that zygomorphic flowers EITHER
-# flower for a short time bc good quality visitation OR flower for a long time
-# because low frequency of visitation, and you'd need visitation data to know
-# this for sure. If longevity is an evolved trait though, what determines it?
-
-# Could I publish a paper that concludes longevity ≠ symmetry? Is this worth
-# pursuing?
-
-# Song et al (2022) suggest that longevity is more influenced by components of 
-# male than female fitness - so, flowers putting more effort into pollen export
-# will last longer than flowers more focussed on pollen receipt. How could you test
-# this idea?
-
-# quick test between longevity and plant height out of curiosity, not that
-# I've sampled a large range of plant heights
-
-plot(height_m ~ longevity_days, data = longevity)
-plot(infloheight_m ~ longevity_days, data = longevity)
-
-# and out of curiosity, longevity and number flowers per plant (proxy for plant attractiveness??)
-plot(flowersperplant ~ longevity_days, data = longevity)
-plot(budsperplant ~ longevity_days, data = longevity)
-longevity$display <- longevity$flowersperplant + longevity$budsperplant
-plot(display ~ longevity_days, data = longevity)
-# not much there really
-plot(florallength_cm ~ longevity_days, data = longevity)
-plot(floraldiam_cm ~ longevity_days, data = longevity)
-longevity$flordimen_cm <- as.numeric(longevity$floraldiam_cm)*as.numeric(longevity$florallength_cm)
-plot(flordimen_cm ~ longevity_days, data = longevity)
-# looks like some signal here for flower size? might be spurious tho
+# given phylogenetic signal in both floral symmetry and floral longevity, 
+# likely need a much larger sample of multiple families and genera to explore
+# evolutionary relationship between these two traits
 
