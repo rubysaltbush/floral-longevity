@@ -1,13 +1,10 @@
-# script to generate phylogeny for taxa from Smith and Brown (2018) tree
-# and run some basic phylogenetic analyses to see if floral longevity and
-# floral symmetry are co-evolving traits
+# this script adapts Smith and Brown (2018) evolutionary trees to sample taxa,
+# runs phylogenetic generalised least squares regressions (PGLS) to see if 
+# flowers have evolved to last longer or shorter in taxa with zygomorphic 
+# flowers, and test the phylogenetic signal and evolutionary rate of floral 
+# symmetry and floral longevity evolution
 
-# TO INVESTIGATE
-# - randomly sample one species per genus. Same results?
-# - use shorter Smith and Brown tree (GBOTB.tre with 79,881 tips)
-# - use Smith and Brown without Qian and Jin?? (ALLOTB.tre with 353,185 tips)
-
-#### get trees and taxonomic match data ####
+#### get trees and match taxonomy ####
 
 # read in short Smith and Brown tree (GBOTB.tre with 79,881 tips)
 gbotb <- ape::read.tree("data_input/GBOTB.tre")
@@ -61,9 +58,9 @@ rm(phylo_names_match)
 pgls_data$sym_species <- gsub("zygomorphic", "1", pgls_data$sym_species)
 pgls_data$sym_species <- gsub("actinomorphic", "0", pgls_data$sym_species)
 table(pgls_data$sym_species)
-# 986 actinomorphic to 469 zygomorphic taxa (will change with subsampling, record in results)
+# 986 actinomorphic to 469 zygomorphic taxa (will change with subsampling)
 
-# define heirarchy of matches for randomly sampling within these
+# define heirarchy of taxonomic matches so can sample best matches first
 pgls_data$allotb_matchrank <- ifelse(pgls_data$match_level_allotb %in% c("direct_accepted", 
                                                                          "direct_accepted_nosubsp",
                                                                          "manual_misspelling"), 
@@ -261,7 +258,7 @@ rm(spp, pgls_gbotb)
 # first create column of allotb genus
 pgls_data$allotb_genus <- gsub("_.*", "", pgls_data$allotb)
 
-# now loop!
+# loop through to subsample one per genus and run ttest and PGLS for each
 for (n in 1:50){
   
   # first build data frame, randomly sampling one taxon per genus
@@ -298,12 +295,7 @@ for (n in 1:50){
   
 }
 
-rm(n, spp, tree_nomissing)
-
-table(pgls_onepergenus$sym_species)
-# ~566 actinomorphic to ~238 zygomorphic taxa (will change with subsampling, record in results)
-# might need to find way to automatically check and report on variable
-# distribution in different subsamples, can't eyeball easily
+rm(n, spp, tree_nomissing, pgls_onepergenus)
 
 # export results from all PGLS models in simple table with subsamples and their mean
 
@@ -328,7 +320,7 @@ for (model in names(pgls_models)) {
 }
 
 # amazing! 
-rm(new_row, t, model, pgls_onepergenus)
+rm(new_row, t, model)
 
 # export results to csv
 readr::write_csv(pglsresults, "results/PGLS_models_key_results.csv")
@@ -385,7 +377,7 @@ names(symV) <- longevspmean$allotb
 
 # visualise longevity evolution across phylogeny
 contmap <- phytools::contMap(allotb, longevspmeanV, plot = FALSE)
-# re-colour contmap with viridis scale
+# re-colour contmap with custom scale
 contmap <- phytools::setMap(contmap, my_colours$longevity)
 
 # make sure discrete character is in the order of tree
@@ -397,11 +389,8 @@ cols <- setNames(c(my_colours$symmetry[2], my_colours$symmetry[1]), c("0", "1"))
 plot(contmap, fsize = c(0.5, 0.7))
 lastPP <- get("last_plot.phylo", envir = .PlotPhyloEnv)
 
-# have to figure out type = "fan" later, doesn't draw tips in right direction
-# but can probs do tip points easily
-
 # and plot it! v tall plot with tip labels
-pdf(file = "figures/contmap_spmeanlongevity.pdf", width = 20, height = 80)
+pdf(file = "figures/contmap_spmeanlongevity.pdf", width = 20, height = 120)
 plot(contmap, legend = 0.7*max(nodeHeights(allotb)), sig = 1, 
      lwd = 4, outline = FALSE, ftype = "off", #type = "fan",
      xlim = lastPP$x.lim, #ylim = lastPP$y.lim,
@@ -411,14 +400,92 @@ for(i in 1:length(symV)) {
        pos = 4, cex = 0.6, col = cols[symV[i]], font = 3)
 }
 # insert legend
-legend(x = "bottomright", legend = c("zygomorphic", "actinomorphic"), bg = "white",
+legend(x = "bottomright", legend = c("actinomorphic", "zygomorphic"), bg = "white",
        fill = cols, cex = 3, pt.lwd = 0.001, bty = "n",
        title = "Floral symmetry")
 dev.off()
+rm(lastPP)
 
-# ultimately think contMap plot would look best in fan style, with points at tips 
-# to indicate if taxon is actinomorphic or zygomorphic and round clade labels
-# will build this LATER if decide it's worth it
+#### CIRCULAR PLOT ####
+
+# build fan style plot for main figure
+#pdf(file = "figures/allotb_longevity_contMap_fan.pdf", width = 20, height = 20)
+
+plot(contmap, type = "fan", legend = FALSE, lwd = 4, outline = FALSE, 
+     ftype = "off", xlim = c(-180, 140))
+
+# label Cretaceous period, 139 to 66 mya shown here
+plotrix::draw.circle(0, 0, radius = max(nodeHeights(allotb)) - 66, 
+                     col = "#dadada", lty = 0)
+
+# plot contMap again
+par(new = TRUE) # hack to force below to plot on top of above 
+plot(contmap, type = "fan", legend = FALSE, lwd = 4, outline = FALSE, 
+     ftype = "off", xlim = c(-180, 140), add = TRUE)
+
+# below adapted from http://blog.phytools.org/2016/08/vertical-legend-in-contmap-style-plots.html
+# add bud size legend using phytools function
+phytools::add.color.bar(leg = 100,
+                        cols = contmap$cols,
+                        title = "Floral longevity (log days)",
+                        lims = NULL,
+                        digits = 2,
+                        prompt = FALSE,
+                        lwd = 12,
+                        direction = "upwards",
+                        subtitle = "",
+                        x = -180,
+                        y = -50)
+
+# then add custom tick marks
+lines(x = rep(-175.525, 2), y = c(-50, 52)) # draw vertical line
+Y <- cbind(seq(-50, 52, length.out = 5), # define x pos for ticks
+           seq(-50, 52, length.out = 5))
+X <- cbind(rep(-175.525, 5), # define y pos for ticks
+           rep(-173.925, 5))
+for(i in 1:nrow(Y)) lines(X[i,], Y[i,]) # draw ticks
+ticks <- seq(contmap$lims[1], contmap$lims[2], length.out = 5) # get tick values
+text(x = X[,2], y = Y[,2], round(ticks, 1), pos = 4, cex = 0.8) # draw tick values
+rm(X, Y, i, ticks)
+
+# now to plot tip points coloured by flower symmetry
+
+# assign plot to object
+pp <- get("last_plot.phylo", envir = .PlotPhyloEnv)
+# from pp object will pull out x and y coordinates to plot points
+
+#function below by GM to offset x and y points, huzzah
+offset_xx_yy <- function(xx, yy, offset) {
+  angle <- atan2(yy, xx)
+  data.frame(
+    xx = xx + offset * cos(angle),
+    yy = yy + offset * sin(angle)
+  )
+}
+
+xx_yy <- offset_xx_yy(
+  xx = pp$xx[1:ape::Ntip(allotb)],
+  yy = pp$yy[1:ape::Ntip(allotb)],
+  offset = 5
+)
+
+# add flower symmetry points
+points(xx_yy$xx,
+       xx_yy$yy,
+       pch = 15, cex = 0.5,
+       col = cols[symV[allotb$tip.label]])
+# will need to use trigonometry if want to offset these points at all
+
+legend(x = "topright", legend = c("actinomorphic", "zygomorphic"), col = cols, 
+       bty = "n", cex = 0.8, title = "Flower symmetry", pch = 15)
+
+#dev.off()
+
+# TO DO
+# - label clades
+# - offset or enlarge tip points?
+
+
 rm(symV, longevspmean, lastPP, contmap, longevspmeanV, i, cols)
 
 
