@@ -21,6 +21,10 @@ allotb <- ape::drop.tip(allotb, allotb$tip.label[-match(phylo_names_match$allotb
 length(allotb$tip.label)
 plot(allotb, type = "fan", show.tip.label = FALSE)
 
+# TRY reordering tip positions to make plot more nicely
+allotb <- ape::reorder.phylo(allotb, order = "postorder")
+plot(allotb, type = "fan", show.tip.label = FALSE)
+
 # prune gbotb tree to 1187 matched taxa (many duplicated as genus-only matches)
 # first filter out NAs
 gbotbnames <- dplyr::filter(phylo_names_match, !is.na(phylo_names_match$gbotb))
@@ -389,6 +393,8 @@ spmean_long_sub$family[spmean_long_sub$position %in% 589:592] <- "Lamiaceae (a)"
 spmean_long_sub$family[spmean_long_sub$position %in% 426:469] <- "Lamiaceae (b)"
 spmean_long_sub$family[spmean_long_sub$position == 205] <- "Fabaceae (a)"
 spmean_long_sub$family[spmean_long_sub$position %in% 95:201] <- "Fabaceae (b)"
+spmean_long_sub$family[spmean_long_sub$position == 886] <- "Primulaceae (a)"
+spmean_long_sub$family[spmean_long_sub$position %in% 864:876] <- "Primulaceae (b)"
 
 # change longevity data into a named vector for phytools
 spmean_long_subV <- log(spmean_long_sub$spmean_long_days)
@@ -440,7 +446,7 @@ family_labels <- function(xpos = 200){
   rm(tip_pos)
 }
 
-family_labels(xpos = 159)
+family_labels(xpos = 160)
 
 # function to work out highest and lowest tip numbers for each order,
 # then loop through these to draw segment and text labels for each order
@@ -474,7 +480,7 @@ rm(lastPP, family_labels, order_labels, i)
 pdf(file = "figures/allotb_longevity_contMap_fan.pdf", width = 15, height = 15)
 
 plot(contmap, type = "fan", legend = FALSE, lwd = 4, outline = FALSE, 
-     ftype = "off", xlim = c(-185, 150), rotate.tree = 180)
+     ftype = "off", xlim = c(-185, 150)) # rotate.tree = 180 DOES NOT WORK :(
 
 # label Cretaceous period, 139 to 66 mya shown here
 plotrix::draw.circle(0, 0, radius = max(nodeHeights(allotb)) - 66, 
@@ -483,7 +489,7 @@ plotrix::draw.circle(0, 0, radius = max(nodeHeights(allotb)) - 66,
 # plot contMap again
 par(new = TRUE) # hack to force below to plot on top of above 
 plot(contmap, type = "fan", legend = FALSE, lwd = 4, outline = FALSE, 
-     ftype = "off", xlim = c(-185, 150), rotate.tree = 180, add = TRUE)
+     ftype = "off", xlim = c(-185, 150), add = TRUE) # rotate.tree = 180
 
 # below adapted from http://blog.phytools.org/2016/08/vertical-legend-in-contmap-style-plots.html
 # add bud size legend using phytools function
