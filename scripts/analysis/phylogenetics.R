@@ -471,10 +471,10 @@ rm(lastPP, family_labels, order_labels, i)
 #* circular plot ----
 
 # build fan style plot for main figure
-#pdf(file = "figures/allotb_longevity_contMap_fan.pdf", width = 15, height = 15)
+pdf(file = "figures/allotb_longevity_contMap_fan.pdf", width = 15, height = 15)
 
 plot(contmap, type = "fan", legend = FALSE, lwd = 4, outline = FALSE, 
-     ftype = "off", xlim = c(-180, 140))
+     ftype = "off", xlim = c(-185, 150), rotate.tree = 180)
 
 # label Cretaceous period, 139 to 66 mya shown here
 plotrix::draw.circle(0, 0, radius = max(nodeHeights(allotb)) - 66, 
@@ -483,7 +483,7 @@ plotrix::draw.circle(0, 0, radius = max(nodeHeights(allotb)) - 66,
 # plot contMap again
 par(new = TRUE) # hack to force below to plot on top of above 
 plot(contmap, type = "fan", legend = FALSE, lwd = 4, outline = FALSE, 
-     ftype = "off", xlim = c(-180, 140), add = TRUE)
+     ftype = "off", xlim = c(-185, 150), rotate.tree = 180, add = TRUE)
 
 # below adapted from http://blog.phytools.org/2016/08/vertical-legend-in-contmap-style-plots.html
 # add bud size legend using phytools function
@@ -497,12 +497,12 @@ phytools::add.color.bar(leg = 100,
                         direction = "upwards",
                         subtitle = "",
                         x = -180,
-                        y = -50)
+                        y = 45)
 
 # then add custom tick marks
-lines(x = rep(-176.525, 2), y = c(-50, 52)) # draw vertical line
-Y <- cbind(seq(-50, 52, length.out = 5), # define x pos for ticks
-           seq(-50, 52, length.out = 5))
+lines(x = rep(-176.525, 2), y = c(45, 147)) # draw vertical line
+Y <- cbind(seq(45, 147, length.out = 5), # define x pos for ticks
+           seq(45, 147, length.out = 5))
 X <- cbind(rep(-176.525, 5), # define y pos for ticks
            rep(-173.925, 5))
 for(i in 1:nrow(Y)) lines(X[i,], Y[i,]) # draw ticks
@@ -528,7 +528,7 @@ offset_xx_yy <- function(xx, yy, offset) {
 xx_yy <- offset_xx_yy(
   xx = pp$xx[1:ape::Ntip(allotb)],
   yy = pp$yy[1:ape::Ntip(allotb)],
-  offset = 5
+  offset = 2
 )
 
 # add flower symmetry points
@@ -537,13 +537,47 @@ points(xx_yy$xx,
        pch = 15, cex = 1,
        col = cols[symV[allotb$tip.label]])
 
-legend(x = "topright", legend = c("actinomorphic", "zygomorphic"), col = cols, 
+legend(x = 130, y = 150, legend = c("actinomorphic", "zygomorphic"), col = cols, 
        bty = "n", cex = 0.8, title = "Flower symmetry", pch = 15)
 
-# TO DO - ADD CLADE LABELS!!!
-source("scripts/functions/arclabel.R")
+# greyscale clade labelling using custom arclabel function for circular (fan) tree
 
-#dev.off()
+cladelabels_fan <- function(offset = 1){ # use offset argument to move labels closer (<1) or further away (>1) from tree
+  source("scripts/functions/arclabel.R") # get arclabel function
+  arclabel(text = "ANA", tips = c(1432, 1433),
+           lwd = 20, cex = 1.6, col = "#bdbdbd",
+           ln.offset = offset + .07, lab.offset = offset + .11,
+           orientation = "perpendicular",
+           lend = "butt")
+  arclabel(text = "Magnoliids", tips = c(1388, 1431), 
+           lwd = 20, cex = 1.6, col = "#636363",
+           ln.offset = offset + .07, lab.offset = offset + .11,
+           lend = "butt")
+  arclabel(text = "Monocots", tips = c(1135, 1387), 
+           lwd = 20, cex = 1.6, col = "#bdbdbd",
+           ln.offset = offset + .07, lab.offset = offset + .11,
+           lend = "butt")
+  arclabel(text = "Commelinids", tips = c(1135, 1229), 
+           lwd = 15, cex = 1.6, col = "#636363",
+           ln.offset = offset + .06, lab.offset = offset + .11,
+           lend = "butt")
+  arclabel(text = "Eudicots", tips = c(1, 1134),
+           lwd = 20, cex = 1.6, col = "#636363",
+           ln.offset = offset + .07, lab.offset = offset + .11,
+           lend = "butt")
+  arclabel(text = "Rosids", tips = c(1, 376),
+           lwd = 15, cex = 1.6, col = "#bdbdbd",
+           ln.offset = offset + .06, lab.offset = offset + .11,
+           lend = "butt")
+  arclabel(text = "Asterids", tips = c(399, 956), 
+           lwd = 15, cex = 1.6, col = "#bdbdbd",
+           ln.offset = offset + .06, lab.offset = offset + .11,
+           lend = "butt")
+}
+
+cladelabels_fan(offset = 1.05)
+
+dev.off()
 
 # TO DO
 # - label clades

@@ -1,6 +1,8 @@
 ## function to create curved clade labels for a fan tree THAT ACTUALLY WORKS
 ## adapted from arc.cladelabels by Liam J. Revell 2017, 2022 by Gregory McIntyre
 
+# FUNCTION DOES NOT ORDER TIP NUMBERS FROM MIN TO MAX, SHOULD DO THIS
+
 # TO USE within plotting call e.g. arclabel(text = "Clade1", tips = c(1, 12))
 # orientation can be curved, perpendicular or horizontal
 
