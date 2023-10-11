@@ -4,7 +4,7 @@
 # flowers, and test the phylogenetic signal and evolutionary rate of floral 
 # symmetry and floral longevity evolution
 
-#### get trees and match taxonomy ####
+#### prep trees & data ####
 
 # read in short Smith and Brown tree (GBOTB.tre with 79,881 tips)
 gbotb <- ape::read.tree("data_input/GBOTB.tre")
@@ -14,7 +14,7 @@ allotb <- ape::read.tree("data_input/ALLOTB.tre")
 # read in taxonomic name matching key
 source("scripts/prepdata/phylo_names_match.R")
 
-#### prune trees to matched names ####
+#* prune trees ----
 
 # prune allotb tree to 1433 matched taxa
 allotb <- ape::drop.tip(allotb, allotb$tip.label[-match(phylo_names_match$allotb, allotb$tip.label)])
@@ -30,56 +30,61 @@ rm(gbotbnames)
 length(gbotb$tip.label)
 plot(gbotb, type = "fan", show.tip.label = FALSE)
 
-#### run analyses ####
+#* prep longev data ----
 
 # summarise longevity per ACCEPTED species
 # take mean per species for longevity
-pgls_data <- sym_long %>%
+spmean_long <- sym_long %>%
   dplyr::group_by(species = Accepted_name, sym_species) %>%
   dplyr::summarise(spmean_long_days = mean(mean_long_days)) %>%
   dplyr::ungroup() %>%
   dplyr::filter(!is.na(species)) %>%
   as.data.frame()
 # add underscore to match tip labels
-pgls_data$species <- gsub(" ", "_", pgls_data$species)
+spmean_long$species <- gsub(" ", "_", spmean_long$species)
 
 # match allotb and gbotb names to this data
 phylo_names_match <- phylo_names_match %>%
   dplyr::select(species, genus:match_level_gbotb) %>%
   dplyr::distinct()
-# above df has 3 rows more than pgls_data because of different og name matches giving
+# above df has 3 rows more than spmean_long because of different og name matches giving
 # different match levels, will leave these duplicates for now and should be
 # fixed when I choose one species per genus
-pgls_data <- pgls_data %>%
+spmean_long <- spmean_long %>%
   dplyr::left_join(phylo_names_match, by = "species")
 rm(phylo_names_match)
 
 # redefine symmetry as 0 and 1
-pgls_data$sym_species <- gsub("zygomorphic", "1", pgls_data$sym_species)
-pgls_data$sym_species <- gsub("actinomorphic", "0", pgls_data$sym_species)
-table(pgls_data$sym_species)
+spmean_long$sym_species <- gsub("zygomorphic", "1", spmean_long$sym_species)
+spmean_long$sym_species <- gsub("actinomorphic", "0", spmean_long$sym_species)
+table(spmean_long$sym_species)
 # 986 actinomorphic to 469 zygomorphic taxa (will change with subsampling)
 
 # define heirarchy of taxonomic matches so can sample best matches first
-pgls_data$allotb_matchrank <- ifelse(pgls_data$match_level_allotb %in% c("direct_accepted", 
-                                                                         "direct_accepted_nosubsp",
-                                                                         "manual_misspelling"), 
-                                     "1", 
-                                     ifelse(pgls_data$match_level_allotb %in% c("direct_original",
-                                                                                "manual_synonym"), 
-                                            "2",
-                                            ifelse(pgls_data$match_level_allotb == "direct_genus_accepted", 
-                                                   "3",
-                                                   ifelse(pgls_data$match_level_allotb %in% c("direct_genus_original",
-                                                                                              "closest_genus",
-                                                                                              "genus_synonym"), 
-                                                          "4", "5"))))
-table(pgls_data$allotb_matchrank)
+spmean_long$allotb_matchrank <- ifelse(spmean_long$match_level_allotb %in% c("direct_accepted", 
+                                                                             "direct_accepted_nosubsp",
+                                                                             "manual_misspelling"), 
+                                       "1", 
+                                       ifelse(spmean_long$match_level_allotb %in% c("direct_original",
+                                                                                    "manual_synonym"), 
+                                              "2",
+                                              ifelse(spmean_long$match_level_allotb == "direct_genus_accepted", 
+                                                     "3",
+                                                     ifelse(spmean_long$match_level_allotb %in% c("direct_genus_original",
+                                                                                                  "closest_genus",
+                                                                                                  "genus_synonym"), 
+                                                            "4", "5"))))
+table(spmean_long$allotb_matchrank)
 
-#* PGLS without subsampling, ALLOTB ----
+# create column of allotb genus for subsampling
+spmean_long$allotb_genus <- gsub("_.*", "", spmean_long$allotb)
+
+#### PGLS analyses ####
+
+#* ALLOTB PGLS ----
 
 # remove allotb duplicate matches from data, randomly choose best matches
-pgls_allotb <- pgls_data
+pgls_allotb <- spmean_long
 
 pgls_allotb <- pgls_allotb %>%
   dplyr::group_by(allotb) %>% # group by allotb species
@@ -158,10 +163,10 @@ summary(pgls_models$allotbspecies)
 
 rm(spp, pgls_allotb)
 
-#* PGLS without subsampling, GBOTB ----
+#* GBOTB PGLS ----
 
 # remove gbotb duplicates from data, randomly choose best matches
-pgls_gbotb <- pgls_data
+pgls_gbotb <- spmean_long
 # build column of match ranking for gbotb matches
 pgls_gbotb$gbotb_matchrank <- ifelse(pgls_gbotb$match_level_gbotb %in% c("direct_accepted", 
                                                                "direct_accepted_nosubsp",
@@ -252,17 +257,14 @@ summary(pgls_models$gbotbspecies)
 
 rm(spp, pgls_gbotb)
 
-#* PGLS with subsampling ----
+#* subsampling PGLS ----
 
 # loop to subsample one species per genus for ALLOTB analyses
-# first create column of allotb genus
-pgls_data$allotb_genus <- gsub("_.*", "", pgls_data$allotb)
-
-# loop through to subsample one per genus and run ttest and PGLS for each
+# loop through, subsample and run ttest and PGLS for each
 for (n in 1:50){
   
   # first build data frame, randomly sampling one taxon per genus
-  pgls_onepergenus <- pgls_data %>%
+  pgls_onepergenus <- spmean_long %>%
     dplyr::group_by(allotb_genus) %>%
     dplyr::slice_min(order_by = allotb_matchrank, n = 1) %>% # first choose taxa with best taxonomic matches in tree
     dplyr::slice_sample(n = 1) %>% # then randomly choose one of these
@@ -297,9 +299,11 @@ for (n in 1:50){
 
 rm(n, spp, tree_nomissing, pgls_onepergenus)
 
-# export results from all PGLS models in simple table with subsamples and their mean
+#* export results ----
+ 
+# from all PGLS models in simple table with subsamples and their mean
 
-#create data frame for regression results table
+# create data frame for regression results table
 pglsresults <- data.frame()
 
 # loop through all results and build table of relevant values
@@ -325,7 +329,7 @@ rm(new_row, t, model)
 # export results to csv
 readr::write_csv(pglsresults, "results/PGLS_models_key_results.csv")
 
-#** check model assumptions ####
+#* check assumptions ----
 
 # export qqplots for each model
 pdf("figures/qqplots_PGLS.pdf", width = 10, height = 10)
@@ -357,26 +361,44 @@ dev.off()
 
 rm(pgls_models, model, ttests, pglsresults)
 
+#### plot phylogeny ####
 
-#### model longevity evolution ####
+#* prep data ----
 
-# prep data for modelling
-longevspmean <- pgls_data %>%
-  dplyr::select(allotb, sym_species, spmean_long_days, allotb_matchrank) %>%
+# random subsample of one species per allotb match
+spmean_long_sub <- spmean_long %>%
+  dplyr::select(allotb, family, sym_species, spmean_long_days, allotb_matchrank) %>%
   dplyr::group_by(allotb) %>% # group by allotb species
   dplyr::slice_min(order_by = allotb_matchrank, n = 1) %>% # choose best possible taxonomic match
   dplyr::slice_sample(n = 1) %>% # then randomly choose one of these
   dplyr::ungroup()
 
-# change longevity data into a named vector for phytools
-longevspmeanV <- log(longevspmean$spmean_long_days)
-names(longevspmeanV) <- longevspmean$allotb
-# and prep symmetry data also
-symV <- as.factor(longevspmean$sym_species)
-names(symV) <- longevspmean$allotb
+# add column with species' tip position in tree for plotting
+treetips <- data.frame(allotb = allotb$tip.label, position = c(1:1433))
+spmean_long_sub <- spmean_long_sub %>%
+  dplyr::left_join(treetips, by = "allotb")
+rm(treetips)
+# add orders and clades for labelling in phylogeny
+familyorderclade <- readr::read_csv("data_input/family_order_clade.csv")
+spmean_long_sub <- spmean_long_sub %>%
+  dplyr::left_join(familyorderclade, by = "family")
+rm(familyorderclade)
 
-# visualise longevity evolution across phylogeny
-contmap <- phytools::contMap(allotb, longevspmeanV, plot = FALSE)
+# rename some paraphyletic family labels so they display properly
+spmean_long_sub$family[spmean_long_sub$position %in% 589:592] <- "Lamiaceae (a)"
+spmean_long_sub$family[spmean_long_sub$position %in% 426:469] <- "Lamiaceae (b)"
+spmean_long_sub$family[spmean_long_sub$position == 205] <- "Fabaceae (a)"
+spmean_long_sub$family[spmean_long_sub$position %in% 95:201] <- "Fabaceae (b)"
+
+# change longevity data into a named vector for phytools
+spmean_long_subV <- log(spmean_long_sub$spmean_long_days)
+names(spmean_long_subV) <- spmean_long_sub$allotb
+# and prep symmetry data also
+symV <- as.factor(spmean_long_sub$sym_species)
+names(symV) <- spmean_long_sub$allotb
+
+# simulate longevity evolution across phylogeny to visualise
+contmap <- phytools::contMap(allotb, spmean_long_subV, plot = FALSE)
 # re-colour contmap with custom scale
 contmap <- phytools::setMap(contmap, my_colours$longevity)
 
@@ -385,38 +407,78 @@ symV <- symV[contmap$tree$tip.label]
 # set factor colours
 cols <- setNames(c(my_colours$symmetry[2], my_colours$symmetry[1]), c("0", "1"))
 
+
+#* tall plot ----
+
 # dummy plot to get locations to draw tip labels coloured by symmetry
 plot(contmap, fsize = c(0.5, 0.7))
 lastPP <- get("last_plot.phylo", envir = .PlotPhyloEnv)
 
-# and plot it! v tall plot with tip labels
+# export figure
 pdf(file = "figures/contmap_spmeanlongevity.pdf", width = 20, height = 120)
 plot(contmap, legend = 0.7*max(nodeHeights(allotb)), sig = 1, 
      lwd = 4, outline = FALSE, ftype = "off", #type = "fan",
-     xlim = lastPP$x.lim, #ylim = lastPP$y.lim,
+     xlim = lastPP$x.lim + 20, #ylim = lastPP$y.lim,
      leg.txt = "Floral longevity (log mean # days)")
 for(i in 1:length(symV)) {
-  text(lastPP$xx[i], lastPP$yy[i], contmap$tree$tip.label[i],
+  text(lastPP$xx[i], lastPP$yy[i], 
+       gsub("_", " ", contmap$tree$tip.label[i]),
        pos = 4, cex = 0.6, col = cols[symV[i]], font = 3)
 }
+
+# function to work out highest and lowest tip numbers for each family,
+# then loop through these to draw segment and text labels for each family
+family_labels <- function(xpos = 200){
+  tip_pos <- spmean_long_sub %>%
+    dplyr::group_by(family) %>%
+    dplyr::summarise(y0 = min(position), y1 = max(position))
+  for (i in 1:nrow(tip_pos)){
+    segments(x0 = xpos, y0 = tip_pos$y0[[i]], x1 = xpos, y1 = tip_pos$y1[[i]], lwd = 2)
+    text(x = xpos+3, y = tip_pos$y0[[i]] + ((tip_pos$y1[[i]] - tip_pos$y0[[i]])/2), 
+         paste(tip_pos$family[[i]], sep = ""), adj = 0, srt = 0, cex = 0.4)
+  }
+  rm(tip_pos)
+}
+
+family_labels(xpos = 159)
+
+# function to work out highest and lowest tip numbers for each order,
+# then loop through these to draw segment and text labels for each order
+order_labels <- function(xpos = 200){
+  tip_pos <- spmean_long_sub %>%
+    dplyr::group_by(order) %>%
+    dplyr::summarise(y0 = min(position), y1 = max(position))
+  for (i in 1:nrow(tip_pos)){
+    segments(x0 = xpos, y0 = tip_pos$y0[[i]], x1 = xpos, y1 = tip_pos$y1[[i]], lwd = 2)
+    text(x = xpos + 3, y = tip_pos$y0[[i]] + ((tip_pos$y1[[i]] - tip_pos$y0[[i]])/2), 
+         paste(tip_pos$order[[i]], sep = ""), adj = 0, srt = 0, cex = 0.4)
+  }
+  rm(tip_pos)
+}
+
+order_labels(xpos = 170)
+
+# TO DO - label clades??!!!
+
 # insert legend
 legend(x = "bottomright", legend = c("actinomorphic", "zygomorphic"), bg = "white",
        fill = cols, cex = 3, pt.lwd = 0.001, bty = "n",
        title = "Floral symmetry")
 dev.off()
-rm(lastPP)
 
-#### CIRCULAR PLOT ####
+rm(lastPP, family_labels, order_labels, i)
+
+#* circular plot ----
 
 # build fan style plot for main figure
-#pdf(file = "figures/allotb_longevity_contMap_fan.pdf", width = 20, height = 20)
+#pdf(file = "figures/allotb_longevity_contMap_fan.pdf", width = 15, height = 15)
 
 plot(contmap, type = "fan", legend = FALSE, lwd = 4, outline = FALSE, 
      ftype = "off", xlim = c(-180, 140))
 
 # label Cretaceous period, 139 to 66 mya shown here
 plotrix::draw.circle(0, 0, radius = max(nodeHeights(allotb)) - 66, 
-                     col = "#dadada", lty = 0)
+                     col = "#f8f6f7", lty = 0)
 
 # plot contMap again
 par(new = TRUE) # hack to force below to plot on top of above 
@@ -438,10 +500,10 @@ phytools::add.color.bar(leg = 100,
                         y = -50)
 
 # then add custom tick marks
-lines(x = rep(-175.525, 2), y = c(-50, 52)) # draw vertical line
+lines(x = rep(-176.525, 2), y = c(-50, 52)) # draw vertical line
 Y <- cbind(seq(-50, 52, length.out = 5), # define x pos for ticks
            seq(-50, 52, length.out = 5))
-X <- cbind(rep(-175.525, 5), # define y pos for ticks
+X <- cbind(rep(-176.525, 5), # define y pos for ticks
            rep(-173.925, 5))
 for(i in 1:nrow(Y)) lines(X[i,], Y[i,]) # draw ticks
 ticks <- seq(contmap$lims[1], contmap$lims[2], length.out = 5) # get tick values
@@ -472,12 +534,14 @@ xx_yy <- offset_xx_yy(
 # add flower symmetry points
 points(xx_yy$xx,
        xx_yy$yy,
-       pch = 15, cex = 0.5,
+       pch = 15, cex = 1,
        col = cols[symV[allotb$tip.label]])
-# will need to use trigonometry if want to offset these points at all
 
 legend(x = "topright", legend = c("actinomorphic", "zygomorphic"), col = cols, 
        bty = "n", cex = 0.8, title = "Flower symmetry", pch = 15)
+
+# TO DO - ADD CLADE LABELS!!!
+source("scripts/functions/arclabel.R")
 
 #dev.off()
 
@@ -486,6 +550,6 @@ legend(x = "topright", legend = c("actinomorphic", "zygomorphic"), col = cols,
 # - offset or enlarge tip points?
 
 
-rm(symV, longevspmean, lastPP, contmap, longevspmeanV, i, cols)
+rm(symV, spmean_long_sub, lastPP, contmap, spmean_long_subV, i, cols)
 
 
