@@ -495,9 +495,12 @@ pdf(file = "figures/allotb_longevity_contMap_fan.pdf", width = 15, height = 15)
 plot(contmap, type = "fan", legend = FALSE, lwd = 3, outline = FALSE, 
      ftype = "off", xlim = c(-185, 170))
 
+# fill background in so pale colours in contMap stand out more clearly
+plotrix::draw.circle(0, 0, radius = max(nodeHeights(allotb)), 
+                     col = "#dadada", lty = 0)
 # label Cretaceous period, 139 to 66 mya shown here
 plotrix::draw.circle(0, 0, radius = max(nodeHeights(allotb)) - 66, 
-                     col = "#dadada", lty = 0)
+                     border = "black", lty = 3)
 
 # plot contMap again
 par(new = TRUE) # hack to force below to plot on top of above 
@@ -595,36 +598,36 @@ for(i in 1:length(orders_to_label$order)) {
   arclabel(text = orders_to_label$order[i],
            tips = c(orders_to_label$mintip[i], orders_to_label$maxtip[i]),
            cex = 1,
-           ln.offset = 1.03,
-           lab.offset = 1.049)
+           ln.offset = 1.05,
+           lab.offset = 1.059)
 }
 rm(i, orders_to_label)
 
-# greyscale clade labelling using custom arclabel function for circular (fan) tree
+# clade labelling using custom arclabel function for circular (fan) tree
 
 fan_cladelabels <- function(offset = 1, cex = 1.5){ # use offset argument to move labels closer (<1) or further away (>1) from tree
   source("scripts/functions/arclabel.R") # get arclabel function
   arclabel(text = "ANA", tips = c(1432, 1433),
-           lwd = 20, cex = cex, col = "#bdbdbd",
+           lwd = 10, cex = cex, col = "#dadada",
            ln.offset = offset + .07, lab.offset = offset + .15,
            orientation = "perpendicular")
   arclabel(text = "Magnoliids", tips = c(1388, 1431), 
-           lwd = 20, cex = cex, col = "#636363",
-           ln.offset = offset + .07, lab.offset = offset + .11)
+           lwd = 10, cex = cex-0.5, col = "black",
+           ln.offset = offset + .07, lab.offset = offset + .115)
   arclabel(text = "Monocots", tips = c(1135, 1387), 
-           lwd = 20, cex = cex, col = "#bdbdbd",
+           lwd = 10, cex = cex, col = "#dadada",
            ln.offset = offset + .07, lab.offset = offset + .11)
   arclabel(text = "Commelinids", tips = c(1135, 1229), 
-           lwd = 15, cex = cex, col = "#636363",
+           lwd = 5, cex = cex, col = "black",
            ln.offset = offset + .06, lab.offset = offset + .11)
   arclabel(text = "Eudicots", tips = c(1, 1134),
-           lwd = 20, cex = cex, col = "#636363",
+           lwd = 10, cex = cex, col = "black",
            ln.offset = offset + .07, lab.offset = offset + .11)
   arclabel(text = "Rosids", tips = c(1, 376),
-           lwd = 15, cex = cex, col = "#bdbdbd",
+           lwd = 5, cex = cex, col = "#dadada",
            ln.offset = offset + .06, lab.offset = offset + .11)
   arclabel(text = "Asterids", tips = c(399, 956), 
-           lwd = 15, cex = cex, col = "#bdbdbd",
+           lwd = 5, cex = cex, col = "#dadada",
            ln.offset = offset + .06, lab.offset = offset + .11)
 }
 
@@ -632,6 +635,7 @@ fan_cladelabels(offset = 1.05)
 
 dev.off()
 
+# TO DO - grey labels too grey, choose alternatives (pastels?)
 
 rm(spmean_long_sub, pp, contmap, cols, fan_cladelabels, offset_xx_yy, xx_yy,
    arclabel)
