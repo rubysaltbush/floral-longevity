@@ -413,7 +413,6 @@ symV <- symV[contmap$tree$tip.label]
 # set factor colours
 cols <- setNames(c(my_colours$symmetry[2], my_colours$symmetry[1]), c("0", "1"))
 
-
 #* tall plot ----
 
 # dummy plot to get locations to draw tip labels coloured by symmetry
@@ -423,8 +422,8 @@ lastPP <- get("last_plot.phylo", envir = .PlotPhyloEnv)
 # export figure
 pdf(file = "figures/contmap_spmeanlongevity.pdf", width = 20, height = 120)
 plot(contmap, legend = 0.7*max(nodeHeights(allotb)), sig = 1, 
-     lwd = 4, outline = FALSE, ftype = "off", #type = "fan",
-     xlim = c(lastPP$x.lim[1], lastPP$x.lim[2] + 20), #ylim = lastPP$y.lim,
+     lwd = 6, outline = FALSE, ftype = "off",
+     xlim = c(lastPP$x.lim[1], lastPP$x.lim[2] + 20),
      leg.txt = "Floral longevity (log mean # days)")
 for(i in 1:length(symV)) {
   text(lastPP$xx[i], lastPP$yy[i], 
@@ -440,13 +439,13 @@ family_labels <- function(xpos = 200){
     dplyr::summarise(y0 = min(position), y1 = max(position))
   for (i in 1:nrow(tip_pos)){
     segments(x0 = xpos, y0 = tip_pos$y0[[i]], x1 = xpos, y1 = tip_pos$y1[[i]], lwd = 2)
-    text(x = xpos+3, y = tip_pos$y0[[i]] + ((tip_pos$y1[[i]] - tip_pos$y0[[i]])/2), 
-         paste(tip_pos$family[[i]], sep = ""), adj = 0, srt = 0, cex = 0.4)
+    text(x = xpos+1, y = tip_pos$y0[[i]] + ((tip_pos$y1[[i]] - tip_pos$y0[[i]])/2), 
+         paste(tip_pos$family[[i]], sep = ""), adj = 0, srt = 0, cex = 0.5)
   }
   rm(tip_pos)
 }
 
-family_labels(xpos = 160)
+family_labels(xpos = 163)
 
 # function to work out highest and lowest tip numbers for each order,
 # then loop through these to draw segment and text labels for each order
@@ -456,31 +455,31 @@ order_labels <- function(xpos = 200){
     dplyr::summarise(y0 = min(position), y1 = max(position))
   for (i in 1:nrow(tip_pos)){
     segments(x0 = xpos, y0 = tip_pos$y0[[i]], x1 = xpos, y1 = tip_pos$y1[[i]], lwd = 2)
-    text(x = xpos + 3, y = tip_pos$y0[[i]] + ((tip_pos$y1[[i]] - tip_pos$y0[[i]])/2), 
-         paste(tip_pos$order[[i]], sep = ""), adj = 0, srt = 0, cex = 0.4)
+    text(x = xpos + 1, y = tip_pos$y0[[i]] + ((tip_pos$y1[[i]] - tip_pos$y0[[i]])/2), 
+         paste(tip_pos$order[[i]], sep = ""), adj = 0, srt = 0, cex = 0.5)
   }
   rm(tip_pos)
 }
 
-order_labels(xpos = 170)
+order_labels(xpos = 171.5)
 
-# TO DO - label clades??!!!
-tall_cladelabels <- function(xpos = 190){
-  # clade labelling as per Ramirez-Barahona at al (2020)
+# label clades
+tall_cladelabels <- function(xpos = 185){
+  # clade labelling as per Ramirez-Barahona et al. (2020)
   segments(x0 = xpos, y0 = 1432, x1 = xpos, y1 = 1433, lwd = 3, col = "#BBCDE9")
-  text(x = xpos+3, y = 1433, "ANA", srt = 0, adj = 0, cex = 0.5, col = "#BBCDE9")
+  text(x = xpos+1.5, y = 1432.5, "ANA", srt = 0, adj = 0, cex = 1, col = "#BBCDE9")
   segments(x0 = xpos, y0 = 1388, x1 = xpos, y1 = 1431, lwd = 3, col = "#47A1D1")
-  text(x = xpos+3, y = 1409.5, "Magnoliids", srt = 0, adj = 0, cex = 0.5, col = "#47A1D1")
+  text(x = xpos+2, y = 1409.5, "Magnoliids", srt = 270, cex = 1, col = "#47A1D1")
   segments(x0 = xpos, y0 = 1135, x1 = xpos, y1 = 1387, lwd = 3, col = "#59BE1C")
-  text(x = xpos+3, y = 1261, "Monocots", srt = 270, cex = 0.5, col = "#59BE1C")
-  segments(x0 = xpos-10, y0 = 1135, x1 = xpos-10, y1 = 1229, lwd = 3, col = "#0C9934")
-  text(x = xpos-7, y = 1182, "Commelinids", srt = 270, cex = 0.5, col = "#0C9934")
+  text(x = xpos+2, y = 1261, "Monocots", srt = 270, cex = 1, col = "#59BE1C")
+  segments(x0 = xpos-5.5, y0 = 1135, x1 = xpos-5.5, y1 = 1229, lwd = 3, col = "#0C9934")
+  text(x = xpos-3.5, y = 1182, "Commelinids", srt = 270, cex = 1, col = "#0C9934")
   segments(x0 = xpos, y0 = 1, x1 = xpos, y1 = 1134, lwd = 3, col = "#F0D01B")
-  text(x = xpos+3, y = 567.5, "Eudicots", srt = 270, cex = 0.5, col = "#F0D01B")
-  segments(x0 = xpos-10, y0 = 1, x1 = xpos-10, y1 = 376, lwd = 3, col = "#F2B211")
-  text(x = xpos-7, y = 188, "Rosids", srt = 270, cex = 0.5, col = "#F2B211")
-  segments(x0 = xpos-10, y0 = 399, x1 = xpos-10, y1 = 956, lwd = 3, col = "#FCB98E")
-  text(x = xpos-7, y = 677.5, "Asterids", srt = 270, cex = 0.5, col = "#FCB98E")
+  text(x = xpos+2, y = 567.5, "Eudicots", srt = 270, cex = 1, col = "#F0D01B")
+  segments(x0 = xpos-5.5, y0 = 1, x1 = xpos-5.5, y1 = 376, lwd = 3, col = "#F2B211")
+  text(x = xpos-3.5, y = 188, "Rosids", srt = 270, cex = 1, col = "#F2B211")
+  segments(x0 = xpos-5.5, y0 = 399, x1 = xpos-5.5, y1 = 956, lwd = 3, col = "#FCB98E")
+  text(x = xpos-3.5, y = 677.5, "Asterids", srt = 270, cex = 1, col = "#FCB98E")
 }
 
 tall_cladelabels()
