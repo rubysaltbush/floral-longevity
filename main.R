@@ -6,7 +6,6 @@ library(ggpubr)
 library(rtry)
 library(TNRS)
 library(ape)
-#library(phylolm) # might not need this? only for phylogenetic logistic regression I think
 library(phytools)
 library(nlme)
 
@@ -16,9 +15,6 @@ source("scripts/functions/cache_csv.R")
 # TO DO
 
 # -run tests for floral longevity and symmetry phylogenetic signal and evolutionary rates?
-# -run (phylogenetic?) GLM with site as a fixed effect for the community studies 
-#  that you sent me already, to see how local longevity/symmetry relationships 
-#  compare to the global relationship
 
 #### DATA ####
 

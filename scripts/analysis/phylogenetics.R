@@ -398,20 +398,15 @@ names(spmean_long_subV) <- spmean_long_sub$allotb
 # and prep symmetry data also
 symV <- as.factor(spmean_long_sub$sym_species)
 names(symV) <- spmean_long_sub$allotb
+# make sure discrete character is in the order of tree
+symV <- symV[allotb$tip.label]
+# set factor colours
+cols <- setNames(c(my_colours$symmetry[2], my_colours$symmetry[1]), c("0", "1"))
 
 # simulate longevity evolution across phylogeny to visualise
 contmap <- phytools::contMap(allotb, spmean_long_subV, plot = FALSE, res = 500)
 # re-colour contmap with custom scale
 contmap <- phytools::setMap(contmap, my_colours$longevity)
-
-# have tried reorder.phylo on allotb (has no effect on contmap order), and on 
-# contMap here (doesn't work as class not phylo). How else to reverse phylo
-# order???
-
-# make sure discrete character is in the order of tree
-symV <- symV[contmap$tree$tip.label]
-# set factor colours
-cols <- setNames(c(my_colours$symmetry[2], my_colours$symmetry[1]), c("0", "1"))
 
 #* tall plot ----
 
@@ -638,8 +633,8 @@ fan_cladelabels(offset = 1.05)
 dev.off()
 
 
-rm(symV, spmean_long_sub, pp, contmap, cols, fan_cladelabels, offset_xx_yy, 
-   arclabel, xx_yy)
+rm(spmean_long_sub, pp, contmap, cols, fan_cladelabels, offset_xx_yy, xx_yy,
+   arclabel)
 
 #### PHYLOGENETIC SIGNAL ####
 
