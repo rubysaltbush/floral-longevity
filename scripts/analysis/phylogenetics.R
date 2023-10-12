@@ -498,7 +498,7 @@ plot(contmap, type = "fan", legend = FALSE, lwd = 3, outline = FALSE,
 # fill background in so pale colours in contMap stand out more clearly
 plotrix::draw.circle(0, 0, radius = max(nodeHeights(allotb)), 
                      col = "#dadada", lty = 0)
-# label Cretaceous period, 139 to 66 mya shown here
+# label end Cretaceous period at 66 mya
 plotrix::draw.circle(0, 0, radius = max(nodeHeights(allotb)) - 66, 
                      border = "black", lty = 3)
 
@@ -550,13 +550,13 @@ offset_xx_yy <- function(xx, yy, offset) {
 xx_yy <- offset_xx_yy(
   xx = pp$xx[1:ape::Ntip(allotb)],
   yy = pp$yy[1:ape::Ntip(allotb)],
-  offset = 2
+  offset = 5
 )
 
 # add flower symmetry points
 points(xx_yy$xx,
        xx_yy$yy,
-       pch = 15, cex = 1,
+       pch = 15, cex = 2,
        col = cols[symV[allotb$tip.label]])
 
 legend(x = 130, y = 150, legend = c("actinomorphic", "zygomorphic"), col = cols, 
@@ -599,7 +599,7 @@ for(i in 1:length(orders_to_label$order)) {
            tips = c(orders_to_label$mintip[i], orders_to_label$maxtip[i]),
            cex = 1,
            ln.offset = 1.05,
-           lab.offset = 1.059)
+           lab.offset = 1.065)
 }
 rm(i, orders_to_label)
 
@@ -608,27 +608,27 @@ rm(i, orders_to_label)
 fan_cladelabels <- function(offset = 1, cex = 1.5){ # use offset argument to move labels closer (<1) or further away (>1) from tree
   source("scripts/functions/arclabel.R") # get arclabel function
   arclabel(text = "ANA", tips = c(1432, 1433),
-           lwd = 10, cex = cex, col = "#dadada",
-           ln.offset = offset + .07, lab.offset = offset + .15,
+           lwd = 15, cex = cex, col = "#636363",
+           ln.offset = offset + .065, lab.offset = offset + .13,
            orientation = "perpendicular")
   arclabel(text = "Magnoliids", tips = c(1388, 1431), 
-           lwd = 10, cex = cex-0.5, col = "black",
-           ln.offset = offset + .07, lab.offset = offset + .115)
+           lwd = 10, cex = cex-0.3, col = "#dadada",
+           ln.offset = offset + .065, lab.offset = offset + .10)
   arclabel(text = "Monocots", tips = c(1135, 1387), 
            lwd = 10, cex = cex, col = "#dadada",
-           ln.offset = offset + .07, lab.offset = offset + .11)
+           ln.offset = offset + .065, lab.offset = offset + .10)
   arclabel(text = "Commelinids", tips = c(1135, 1229), 
-           lwd = 5, cex = cex, col = "black",
-           ln.offset = offset + .06, lab.offset = offset + .11)
+           lwd = 2, cex = cex, col = "#636363",
+           ln.offset = offset + .055, lab.offset = offset + .10)
   arclabel(text = "Eudicots", tips = c(1, 1134),
-           lwd = 10, cex = cex, col = "black",
-           ln.offset = offset + .07, lab.offset = offset + .11)
+           lwd = 10, cex = cex, col = "#dadada",
+           ln.offset = offset + .065, lab.offset = offset + .10)
   arclabel(text = "Rosids", tips = c(1, 376),
-           lwd = 5, cex = cex, col = "#dadada",
-           ln.offset = offset + .06, lab.offset = offset + .11)
+           lwd = 2, cex = cex, col = "#636363",
+           ln.offset = offset + .055, lab.offset = offset + .10)
   arclabel(text = "Asterids", tips = c(399, 956), 
-           lwd = 5, cex = cex, col = "#dadada",
-           ln.offset = offset + .06, lab.offset = offset + .11)
+           lwd = 2, cex = cex, col = "#636363",
+           ln.offset = offset + .055, lab.offset = offset + .10)
 }
 
 fan_cladelabels(offset = 1.05)
