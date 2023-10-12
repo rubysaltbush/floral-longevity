@@ -645,6 +645,14 @@ rm(spmean_long_sub, pp, contmap, cols, fan_cladelabels, offset_xx_yy, xx_yy,
 phytools::phylosig(allotb, spmean_long_subV, method = "K", test = TRUE)
 # Phylogenetic signal K : 0.125201 
 # P-value (based on 1000 randomizations) : 0.001 
-phytools::phylosig(allotb, spmean_long_subV, method = "lambda", test = TRUE)
 
-# then symmetry
+# BELOW IS SLOW!
+phytools::phylosig(allotb, spmean_long_subV, method = "lambda", test = TRUE)
+# Phylogenetic signal lambda : 0.803565 
+# logL(lambda) : -1710.22 
+# LR(lambda=0) : 828.309 
+# P-value (based on LR test) : 3.77827e-182 
+
+
+# then symmetry, which is discrete so needs different methods
+# thus results probs not comparable? :(
