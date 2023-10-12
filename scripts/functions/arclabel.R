@@ -8,7 +8,7 @@
 
 arclabel <- function(text, tips, ln.offset = 1.02, lab.offset = 1.035, 
                      orientation = "curved", lwd = 1, col = "black", cex = 1,
-                     lend = "round") {
+                     lend = "butt") {
   # get plot from environment
   obj <- get("last_plot.phylo", envir = .PlotPhyloEnv)
   # calculate distance from centre of circle to tip

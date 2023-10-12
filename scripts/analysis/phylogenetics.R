@@ -400,7 +400,7 @@ symV <- as.factor(spmean_long_sub$sym_species)
 names(symV) <- spmean_long_sub$allotb
 
 # simulate longevity evolution across phylogeny to visualise
-contmap <- phytools::contMap(allotb, spmean_long_subV, plot = FALSE)
+contmap <- phytools::contMap(allotb, spmean_long_subV, plot = FALSE, res = 500)
 # re-colour contmap with custom scale
 contmap <- phytools::setMap(contmap, my_colours$longevity)
 
@@ -420,7 +420,7 @@ plot(contmap, fsize = c(0.5, 0.7))
 lastPP <- get("last_plot.phylo", envir = .PlotPhyloEnv)
 
 # export figure
-pdf(file = "figures/contmap_spmeanlongevity.pdf", width = 20, height = 120)
+pdf(file = "figures/tall_contmap_spmeanlongevity.pdf", width = 20, height = 120)
 plot(contmap, legend = 0.7*max(nodeHeights(allotb)), sig = 1, 
      lwd = 6, outline = FALSE, ftype = "off",
      xlim = c(lastPP$x.lim[1], lastPP$x.lim[2] + 20),
@@ -490,24 +490,24 @@ legend(x = "bottomright", legend = c("actinomorphic", "zygomorphic"), bg = "whit
        title = "Floral symmetry")
 dev.off()
 
-rm(lastPP, family_labels, order_labels, i)
+rm(lastPP, family_labels, order_labels, tall_cladelabels, i)
 
 #* circular plot ----
 
 # build fan style plot for main figure
 pdf(file = "figures/allotb_longevity_contMap_fan.pdf", width = 15, height = 15)
 
-plot(contmap, type = "fan", legend = FALSE, lwd = 4, outline = FALSE, 
-     ftype = "off", xlim = c(-185, 150)) # rotate.tree = 180 DOES NOT WORK :(
+plot(contmap, type = "fan", legend = FALSE, lwd = 3, outline = FALSE, 
+     ftype = "off", xlim = c(-185, 170))
 
 # label Cretaceous period, 139 to 66 mya shown here
 plotrix::draw.circle(0, 0, radius = max(nodeHeights(allotb)) - 66, 
-                     col = "#f8f6f7", lty = 0)
+                     col = "#dadada", lty = 0)
 
 # plot contMap again
 par(new = TRUE) # hack to force below to plot on top of above 
-plot(contmap, type = "fan", legend = FALSE, lwd = 4, outline = FALSE, 
-     ftype = "off", xlim = c(-185, 150), add = TRUE) # rotate.tree = 180
+plot(contmap, type = "fan", legend = FALSE, lwd = 3, outline = FALSE, 
+     ftype = "off", xlim = c(-185, 170), add = TRUE)
 
 # below adapted from http://blog.phytools.org/2016/08/vertical-legend-in-contmap-style-plots.html
 # add bud size legend using phytools function
@@ -564,50 +564,92 @@ points(xx_yy$xx,
 legend(x = 130, y = 150, legend = c("actinomorphic", "zygomorphic"), col = cols, 
        bty = "n", cex = 0.8, title = "Flower symmetry", pch = 15)
 
+#** clade labelling ----
+
+# label larger orders
+# first calculate order tip positions
+orders_to_label <- spmean_long_sub %>%
+  dplyr::select(position, order) %>%
+  dplyr::group_by(order) %>%
+  tidyr::nest() %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(mintip = purrr::map(data, ~{min(.x$position)})) %>%
+  dplyr::mutate(maxtip = purrr::map(data, ~{max(.x$position)})) %>%
+  tidyr::unnest(cols = c(data, mintip, maxtip)) %>%
+  dplyr::select(order, mintip, maxtip) %>%
+  dplyr::distinct() %>%
+  dplyr::mutate(tiprange = maxtip - mintip)
+
+# then filter out smaller orders AND a few that overlap for labelling, 
+# leaves 21 of 43 orders 
+orders_to_label <- orders_to_label %>%
+  dplyr::filter(tiprange > 10 & !(order %in% c("Dipsacales", "Saxifragales", "Sapindales")))
+# and replace overlapping orders with abbreviations
+orders_to_label$order <- gsub("Santalales", "Santal.", orders_to_label$order)
+orders_to_label$order <- gsub("Apiales", "Api.", orders_to_label$order)
+orders_to_label$order <- gsub("Rosales", "Ros.", orders_to_label$order)
+orders_to_label$order <- gsub("Magnoliales", "Magnoli.", orders_to_label$order)
+orders_to_label$order <- gsub("Brassicales", "Brassic.", orders_to_label$order)
+orders_to_label$order <- gsub("Boraginales", "Boragin.", orders_to_label$order)
+
+# source custom arc labelling function
+source("scripts/functions/arclabel.R")
+
+# loop through and draw labels on phylogeny for larger orders
+for(i in 1:length(orders_to_label$order)) {
+  arclabel(text = orders_to_label$order[i],
+           tips = c(orders_to_label$mintip[i], orders_to_label$maxtip[i]),
+           cex = 1,
+           ln.offset = 1.03,
+           lab.offset = 1.049)
+}
+rm(i, orders_to_label)
+
 # greyscale clade labelling using custom arclabel function for circular (fan) tree
 
-cladelabels_fan <- function(offset = 1){ # use offset argument to move labels closer (<1) or further away (>1) from tree
+fan_cladelabels <- function(offset = 1, cex = 1.5){ # use offset argument to move labels closer (<1) or further away (>1) from tree
   source("scripts/functions/arclabel.R") # get arclabel function
   arclabel(text = "ANA", tips = c(1432, 1433),
-           lwd = 20, cex = 1.6, col = "#bdbdbd",
-           ln.offset = offset + .07, lab.offset = offset + .11,
-           orientation = "perpendicular",
-           lend = "butt")
+           lwd = 20, cex = cex, col = "#bdbdbd",
+           ln.offset = offset + .07, lab.offset = offset + .15,
+           orientation = "perpendicular")
   arclabel(text = "Magnoliids", tips = c(1388, 1431), 
-           lwd = 20, cex = 1.6, col = "#636363",
-           ln.offset = offset + .07, lab.offset = offset + .11,
-           lend = "butt")
+           lwd = 20, cex = cex, col = "#636363",
+           ln.offset = offset + .07, lab.offset = offset + .11)
   arclabel(text = "Monocots", tips = c(1135, 1387), 
-           lwd = 20, cex = 1.6, col = "#bdbdbd",
-           ln.offset = offset + .07, lab.offset = offset + .11,
-           lend = "butt")
+           lwd = 20, cex = cex, col = "#bdbdbd",
+           ln.offset = offset + .07, lab.offset = offset + .11)
   arclabel(text = "Commelinids", tips = c(1135, 1229), 
-           lwd = 15, cex = 1.6, col = "#636363",
-           ln.offset = offset + .06, lab.offset = offset + .11,
-           lend = "butt")
+           lwd = 15, cex = cex, col = "#636363",
+           ln.offset = offset + .06, lab.offset = offset + .11)
   arclabel(text = "Eudicots", tips = c(1, 1134),
-           lwd = 20, cex = 1.6, col = "#636363",
-           ln.offset = offset + .07, lab.offset = offset + .11,
-           lend = "butt")
+           lwd = 20, cex = cex, col = "#636363",
+           ln.offset = offset + .07, lab.offset = offset + .11)
   arclabel(text = "Rosids", tips = c(1, 376),
-           lwd = 15, cex = 1.6, col = "#bdbdbd",
-           ln.offset = offset + .06, lab.offset = offset + .11,
-           lend = "butt")
+           lwd = 15, cex = cex, col = "#bdbdbd",
+           ln.offset = offset + .06, lab.offset = offset + .11)
   arclabel(text = "Asterids", tips = c(399, 956), 
-           lwd = 15, cex = 1.6, col = "#bdbdbd",
-           ln.offset = offset + .06, lab.offset = offset + .11,
-           lend = "butt")
+           lwd = 15, cex = cex, col = "#bdbdbd",
+           ln.offset = offset + .06, lab.offset = offset + .11)
 }
 
-cladelabels_fan(offset = 1.05)
+fan_cladelabels(offset = 1.05)
 
 dev.off()
 
-# TO DO
-# - label orders on fan
-# - test for phylogenetic signal of symmetry and longevity
 
+rm(symV, spmean_long_sub, pp, contmap, cols, fan_cladelabels, offset_xx_yy, 
+   arclabel, xx_yy)
 
-rm(symV, spmean_long_sub, lastPP, contmap, spmean_long_subV, i, cols)
+#### PHYLOGENETIC SIGNAL ####
 
+# test for phylogenetic signal in both floral symmetry and floral longevity
+# suspect strong signal for both
 
+# longevity first
+phytools::phylosig(allotb, spmean_long_subV, method = "K", test = TRUE)
+# Phylogenetic signal K : 0.125201 
+# P-value (based on 1000 randomizations) : 0.001 
+phytools::phylosig(allotb, spmean_long_subV, method = "lambda", test = TRUE)
+
+# then symmetry
