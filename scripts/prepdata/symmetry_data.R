@@ -95,7 +95,7 @@ try_sym <- rtry::rtry_import("data_input/27350_06062023071220_TRY20230606.txt")
 try_sym <- try_sym %>%
   dplyr::filter(TraitName == "Flower symmetry type (flower shape)")
 table(try_sym$Dataset)
-# all TRY symmetry data are for African plant species, from two studies - Renske Onstein's Cape Region and Marcos Schmidt's Trait data for African Plants
+# all TRY symmetry data are for African plant species, from two studies - Renske Onstein's Cape Region and Marco Schmidt's Trait data for African Plants
 table(try_sym$OrigValueStr)
 # need to convert "yes" and "no" to corresponding symmetry values
 try_sym <- try_sym %>%
