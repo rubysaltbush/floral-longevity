@@ -20,10 +20,10 @@ hist(sym_long$mean_long_days[sym_long$sym_species == "actinomorphic"])
 t.test(sym_long$mean_long_days[sym_long$sym_species == "zygomorphic"], 
        sym_long$mean_long_days[sym_long$sym_species == "actinomorphic"])
 
-# p = 0.0001, actinomorphic mean 3.85, zygomorphic 4.67
+# p = 0.0001, actinomorphic mean 3.85, zygomorphic 4.66
 # zygomorphic flowers longer lived which makes sense if fewer visitors
 # BUT shall have to see if this difference remains when phylogeny considered
-# and genera subsampled to reduce taxonomic bias
+# and genera subsampled to reduce any taxonomic bias
 
 # what are the longest lived flowers?
 sym_long %>%

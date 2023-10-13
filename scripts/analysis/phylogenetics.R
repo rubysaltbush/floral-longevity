@@ -107,12 +107,12 @@ hist(log(pgls_allotb$spmean_long_days))
 # will log transform longevity to meet assumptions of Brownian motion
 
 # boxplot of longevity by symmetry, allotb species
-ggplot(data = pgls_allotb, aes(x = log(spmean_long_days), y = sym_species, fill = sym_species)) +
-  geom_boxplot() +
+ggplot(data = pgls_allotb, aes(x = spmean_long_days, y = sym_species, fill = sym_species)) +
+  geom_violin() +
+  geom_boxplot(width = 0.15, colour = "grey", alpha = 0.3) +
   scale_fill_discrete(type = setNames(my_colours$symmetry, c(1, 0))) +
-  geom_jitter(color="black", size=0.4, alpha=0.9) +
   ggpubr::theme_pubr(legend = "none") +
-  xlab("Floral longevity (log days)") +
+  xlab("Floral longevity (days)") +
   ylab("") +
   scale_y_discrete(labels = c("0" = "actinomorphic", "1" = "zygomorphic"))
 ggsave("figures/symmetry_longevity_allotbspecies_boxplot.pdf", width = 9, height = 5)
@@ -122,9 +122,9 @@ ttests <- list()
 ttests$allotbspecies <- t.test(log(pgls_allotb$spmean_long_days[pgls_allotb$sym_species == "1"]), 
                                log(pgls_allotb$spmean_long_days[pgls_allotb$sym_species == "0"]))
 ttests$allotbspecies
-# t = 4.4473, df = 864.12, p-value = 9.831e-06
+# t = 4.4936, df = 869.14, p-value = 7.948e-06
 # mean of x   mean of y 
-# 1.0397000 0.7696431 
+# 1.0419991   0.7696246 
 
 # exact results vary with random subsampling
 
@@ -138,7 +138,7 @@ summary(pgls_models$allotbspecies)
 # Model: log(spmean_long_days) ~ sym_species 
 # Data: pgls_allotb 
 # AIC      BIC    logLik
-# 4594.801 4610.604 -2294.401
+# 4595.289 4611.091 -2294.644
 # 
 # Correlation Structure: corBrownian
 # Formula: ~spp 
@@ -147,8 +147,8 @@ summary(pgls_models$allotbspecies)
 # 
 # Coefficients:
 #   Value Std.Error  t-value p-value
-# (Intercept)  0.8684088 0.7575712 1.146307  0.2519
-# sym_species1 0.3132770 0.0894827 3.500979  0.0005
+# (Intercept)  0.8679375 0.7577006 1.145489  0.2522
+# sym_species1 0.3174178 0.0893808 3.551295  0.0004
 # 
 # Correlation: 
 #   (Intr)
@@ -156,9 +156,9 @@ summary(pgls_models$allotbspecies)
 # 
 # Standardized residuals:
 #   Min          Q1         Med          Q3         Max 
-# -1.08700984 -0.28056831 -0.01624582  0.22079506  0.80455117 
+# -1.08667258 -0.28036830 -0.01742838  0.22090974  0.80456650 
 # 
-# Residual standard error: 3.095178 
+# Residual standard error: 3.095705 
 # Degrees of freedom: 1433 total; 1431 residual
 
 rm(spp, pgls_allotb)
@@ -204,12 +204,12 @@ hist(log(pgls_gbotb$spmean_long_days))
 # will log transform longevity to meet assumptions of Brownian motion
 
 # boxplot of longevity by symmetry, allotb species
-ggplot(data = pgls_gbotb, aes(x = log(spmean_long_days), y = sym_species, fill = sym_species)) +
-  geom_boxplot() +
+ggplot(data = pgls_gbotb, aes(x = spmean_long_days, y = sym_species, fill = sym_species)) +
+  geom_violin() +
+  geom_boxplot(width = 0.15, colour = "grey", alpha = 0.3) +
   scale_fill_discrete(type = setNames(my_colours$symmetry, c(1, 0))) +
-  geom_jitter(color="black", size=0.4, alpha=0.9) +
   ggpubr::theme_pubr(legend = "none") +
-  xlab("Floral longevity (log days)") +
+  xlab("Floral longevity (days)") +
   ylab("") +
   scale_y_discrete(labels = c("0" = "actinomorphic", "1" = "zygomorphic"))
 ggsave("figures/symmetry_longevity_gbotbspecies_boxplot.pdf", width = 9, height = 5)
@@ -218,9 +218,9 @@ ggsave("figures/symmetry_longevity_gbotbspecies_boxplot.pdf", width = 9, height 
 ttests$gbotbspecies <- t.test(log(pgls_gbotb$spmean_long_days[pgls_gbotb$sym_species == "1"]), 
                               log(pgls_gbotb$spmean_long_days[pgls_gbotb$sym_species == "0"]))
 ttests$gbotbspecies
-# t = 4.2181, df = 665.12, p-value = 2.806e-05
+# t = 4.2513, df = 671.93, p-value = 2.426e-05
 # mean of x   mean of y 
-# 1.0842894 0.7983383 
+# 1.0861188   0.7983384  
 
 # PGLS of longevity by symmetry with phylogeny considered
 pgls_models$gbotbspecies <- nlme::gls(log(spmean_long_days) ~ sym_species,
@@ -231,8 +231,8 @@ summary(pgls_models$gbotbspecies)
 # Generalized least squares fit by maximum likelihood
 # Model: log(spmean_long_days) ~ sym_species 
 # Data: pgls_gbotb 
-# AIC     BIC    logLik
-# 4060.513 4075.75 -2027.256
+# AIC      BIC    logLik
+# 4040.305 4055.542 -2017.152
 # 
 # Correlation Structure: corBrownian
 # Formula: ~spp 
@@ -241,8 +241,8 @@ summary(pgls_models$gbotbspecies)
 # 
 # Coefficients:
 #   Value Std.Error  t-value p-value
-# (Intercept)  0.8170607 0.8532520 0.957584  0.3385
-# sym_species1 0.3710309 0.1050007 3.533602  0.0004
+# (Intercept)  0.8215206 0.8460269 0.971034  0.3317
+# sym_species1 0.3992846 0.1056012 3.781060  0.0002
 # 
 # Correlation: 
 #   (Intr)
@@ -250,9 +250,9 @@ summary(pgls_models$gbotbspecies)
 # 
 # Standardized residuals:
 #   Min          Q1         Med          Q3         Max 
-# -0.95995534 -0.23673665  0.01692324  0.21957171  0.67612298 
+# -0.96946491 -0.24006369  0.00933865  0.21319559  0.68059965 
 # 
-# Residual standard error: 3.451349 
+# Residual standard error: 3.422095 
 # Degrees of freedom: 1187 total; 1185 residual
 
 rm(spp, pgls_gbotb)
@@ -550,17 +550,17 @@ offset_xx_yy <- function(xx, yy, offset) {
 xx_yy <- offset_xx_yy(
   xx = pp$xx[1:ape::Ntip(allotb)],
   yy = pp$yy[1:ape::Ntip(allotb)],
-  offset = 5
+  offset = 4.5
 )
 
 # add flower symmetry points
 points(xx_yy$xx,
        xx_yy$yy,
-       pch = 15, cex = 2,
+       pch = 16, cex = 2,
        col = cols[symV[allotb$tip.label]])
 
 legend(x = 130, y = 150, legend = c("actinomorphic", "zygomorphic"), col = cols, 
-       bty = "n", cex = 0.8, title = "Flower symmetry", pch = 15)
+       bty = "n", cex = 0.8, title = "Flower symmetry", pch = 19)
 
 #** clade labelling ----
 
@@ -599,7 +599,7 @@ for(i in 1:length(orders_to_label$order)) {
            tips = c(orders_to_label$mintip[i], orders_to_label$maxtip[i]),
            cex = 1,
            ln.offset = 1.05,
-           lab.offset = 1.065)
+           lab.offset = 1.069)
 }
 rm(i, orders_to_label)
 
@@ -615,19 +615,19 @@ fan_cladelabels <- function(offset = 1, cex = 1.5){ # use offset argument to mov
            lwd = 10, cex = cex-0.3, col = "#dadada",
            ln.offset = offset + .065, lab.offset = offset + .10)
   arclabel(text = "Monocots", tips = c(1135, 1387), 
-           lwd = 10, cex = cex, col = "#dadada",
+           lwd = 10, cex = cex, col = "#636363",
            ln.offset = offset + .065, lab.offset = offset + .10)
   arclabel(text = "Commelinids", tips = c(1135, 1229), 
-           lwd = 2, cex = cex, col = "#636363",
+           lwd = 4, cex = cex, col = "#dadada",
            ln.offset = offset + .055, lab.offset = offset + .10)
   arclabel(text = "Eudicots", tips = c(1, 1134),
-           lwd = 10, cex = cex, col = "#dadada",
+           lwd = 10, cex = cex, col = "#636363",
            ln.offset = offset + .065, lab.offset = offset + .10)
   arclabel(text = "Rosids", tips = c(1, 376),
-           lwd = 2, cex = cex, col = "#636363",
+           lwd = 4, cex = cex, col = "#dadada",
            ln.offset = offset + .055, lab.offset = offset + .10)
   arclabel(text = "Asterids", tips = c(399, 956), 
-           lwd = 2, cex = cex, col = "#636363",
+           lwd = 4, cex = cex, col = "#dadada",
            ln.offset = offset + .055, lab.offset = offset + .10)
 }
 
@@ -635,28 +635,5 @@ fan_cladelabels(offset = 1.05)
 
 dev.off()
 
-# TO DO - grey labels too grey, choose alternatives (pastels?)
-
 rm(spmean_long_sub, pp, contmap, cols, fan_cladelabels, offset_xx_yy, xx_yy,
-   arclabel)
-
-#### PHYLOGENETIC SIGNAL ####
-
-# test for phylogenetic signal in both floral symmetry and floral longevity
-# suspect strong signal for both
-
-# longevity first
-phytools::phylosig(allotb, spmean_long_subV, method = "K", test = TRUE)
-# Phylogenetic signal K : 0.125201 
-# P-value (based on 1000 randomizations) : 0.001 
-
-# BELOW IS SLOW!
-phytools::phylosig(allotb, spmean_long_subV, method = "lambda", test = TRUE)
-# Phylogenetic signal lambda : 0.803565 
-# logL(lambda) : -1710.22 
-# LR(lambda=0) : 828.309 
-# P-value (based on LR test) : 3.77827e-182 
-
-
-# then symmetry, which is discrete so needs different methods
-# thus results probs not comparable? :(
+   arclabel, spmean_long, spmean_long_subV, symV, allotb, gbotb)
