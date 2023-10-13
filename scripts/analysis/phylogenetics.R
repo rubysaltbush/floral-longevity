@@ -79,6 +79,22 @@ table(spmean_long$allotb_matchrank)
 # create column of allotb genus for subsampling
 spmean_long$allotb_genus <- gsub("_.*", "", spmean_long$allotb)
 
+#### SPECIES MEAN LONGEVITY DATA DESCRIPTION ####
+
+# what are the longest lived flowers ON AVERAGE?
+spmean_long %>%
+  dplyr::arrange(dplyr::desc(spmean_long_days)) %>%
+  dplyr::select(species, family, sym_species, spmean_long_days) %>%
+  dplyr::distinct() %>%
+  head()
+
+# what are the shortest lived flowers ON AVERAGE?
+spmean_long %>%
+  dplyr::arrange(spmean_long_days) %>%
+  dplyr::select(species, family, sym_species, spmean_long_days) %>%
+  dplyr::distinct() %>%
+  head()
+
 #### PGLS analyses ####
 
 #* ALLOTB PGLS ----
