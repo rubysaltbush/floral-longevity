@@ -1,9 +1,7 @@
-## function to create curved clade labels for a fan tree THAT ACTUALLY WORKS
+## function to create curved clade labels for a fan tree from tip points
 ## adapted from arc.cladelabels by Liam J. Revell 2017, 2022 by Gregory McIntyre
 
-# FUNCTION DOES NOT ORDER TIP NUMBERS FROM MIN TO MAX, SHOULD DO THIS
-
-# TO USE within plotting call e.g. arclabel(text = "Clade1", tips = c(1, 12))
+# to use within plotting call e.g. arclabel(text = "Clade1", tips = c(1, 12))
 # orientation can be curved, perpendicular or horizontal
 
 arclabel <- function(text, tips, ln.offset = 1.02, lab.offset = 1.035, 
@@ -13,6 +11,8 @@ arclabel <- function(text, tips, ln.offset = 1.02, lab.offset = 1.035,
   obj <- get("last_plot.phylo", envir = .PlotPhyloEnv)
   # calculate distance from centre of circle to tip
   h <- max(sqrt(obj$xx^2 + obj$yy^2))
+  # before using tips make sure they're ordered from min to max
+  tips <- order(tips)
   # calculate angle (in degrees) from centre to point to label
   deg <- atan2(obj$yy[tips], obj$xx[tips]) * 180/pi
   # ensure deg2 is bigger than deg1, so when we calculate the midpoint using mean it will work fine
