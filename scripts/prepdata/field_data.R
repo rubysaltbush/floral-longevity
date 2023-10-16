@@ -93,10 +93,13 @@ rm(species_individual, trait_data)
 longevity <- longevity %>%
   dplyr::left_join(species_sym_and_site, by = "individual")
 
+# remove specifics from actinomorphic symmetry category
+longevity$symmetry <- gsub(" \\(incl. rotational and spiral\\)", "", longevity$symmetry)
+
 # boxplot of longevity by symmetry INDIVIDUALS
 ggplot(data = longevity, aes(x = longevity_days, y = symmetry, fill = symmetry)) +
   geom_boxplot() +
-  scale_fill_viridis_d(alpha = 0.6) +
+  scale_fill_discrete(type = my_colours$symmetry) +
   geom_jitter(color="black", size=0.4, alpha=0.9) +
   ggpubr::theme_pubr(legend = "none") +
   xlab("Floral longevity (days)") +
@@ -136,16 +139,28 @@ rm(species_sym_and_site, data)
 # boxplot of longevity by symmetry SPECIES
 ggplot(data = fieldlong, aes(x = mean_long_days, y = symmetry, fill = symmetry)) +
   geom_boxplot() +
-  scale_fill_viridis_d(alpha = 0.6) +
+  scale_y_discrete(labels = c("actinomorphic", "zygomorphic")) +
+  scale_fill_viridis_d(alpha = 0.6, direction = -1) +
   geom_jitter(color="black", size=0.4, alpha=0.9) +
   ggpubr::theme_pubr(legend = "none") +
   xlab("Species mean floral longevity (days)") +
   ylab("")
-ggsave("figures/field_data_speciesmean_symmetry_longevity_boxplot.pdf", width = 9, height = 5)
+ggsave("figures/field_data_speciesmean_symmetry_longevity_boxplot.pdf", width = 7, height = 5)
 
 # t-test of species mean longevity by symmetry
 t.test(fieldlong$mean_long_days[fieldlong$symmetry == "zygomorphic"], 
        fieldlong$mean_long_days[fieldlong$symmetry != "zygomorphic"])
+# Welch Two Sample t-test
+# 
+# data:  fieldlong$mean_long_days[fieldlong$symmetry == "zygomorphic"] and fieldlong$mean_long_days[fieldlong$symmetry != "zygomorphic"]
+# t = -0.51429 days, df = 31.946, p-value = 0.6106 days
+# alternative hypothesis: true difference in means is not equal to 0
+# 95 percent confidence interval:
+#   -3.457111 days  2.063379 days
+# sample estimates:
+#   Time differences in days
+# mean of x mean of y 
+# 5.737704  6.434570 
 # no difference in mean longevity by symmetry for these 34 species
 
 # output species mean longevity with symmetry

@@ -166,3 +166,4 @@ rm(symscored)
 # export final version to csv 
 readr::write_csv(sym_long, "data_output/longevity_symmetry_all.csv")
 })
+
