@@ -12,7 +12,7 @@ arclabel <- function(text, tips, ln.offset = 1.02, lab.offset = 1.035,
   # calculate distance from centre of circle to tip
   h <- max(sqrt(obj$xx^2 + obj$yy^2))
   # before using tips make sure they're ordered from min to max
-  tips <- order(tips)
+  tips <- sort(tips)
   # calculate angle (in degrees) from centre to point to label
   deg <- atan2(obj$yy[tips], obj$xx[tips]) * 180/pi
   # ensure deg2 is bigger than deg1, so when we calculate the midpoint using mean it will work fine
