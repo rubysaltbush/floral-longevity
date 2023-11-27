@@ -7,3 +7,4 @@ install.packages("TNRS") #v0.3.4 resolve plant names via Taxonomic Name Resoluti
 install.packages("ape") #v5.7-1 for basic phylogenetic plotting and functions
 install.packages("phytools") #v1.9-16 evolutionary plotting and analysis
 install.packages("nlme") #v3.1-163 linear and nonlinear mixed effects models, for PGLS
+install.packages("caper") #v1.0.3 test for phylogenetic signal in binary traits

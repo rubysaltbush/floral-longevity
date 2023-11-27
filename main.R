@@ -8,6 +8,7 @@ library(TNRS)
 library(ape)
 library(phytools)
 library(nlme)
+library(caper)
 
 # function to cache pre-prepared R data. If RDS already in cache will read data
 source("scripts/functions/cache_csv.R")

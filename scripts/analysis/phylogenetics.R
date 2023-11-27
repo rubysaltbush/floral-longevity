@@ -79,6 +79,12 @@ table(spmean_long$allotb_matchrank)
 # create column of allotb genus for subsampling
 spmean_long$allotb_genus <- gsub("_.*", "", spmean_long$allotb)
 
+# add orders and clades for labelling in phylogeny and subsampling in clades
+familyorderclade <- readr::read_csv("data_input/family_order_clade.csv")
+spmean_long <- spmean_long %>%
+  dplyr::left_join(familyorderclade, by = "family")
+rm(familyorderclade)
+
 #### SPECIES MEAN LONGEVITY DATA DESCRIPTION ####
 
 # what are the longest lived flowers ON AVERAGE?
@@ -87,6 +93,13 @@ spmean_long %>%
   dplyr::select(species, family, sym_species, spmean_long_days) %>%
   dplyr::distinct() %>%
   head()
+#                 species           family sym_species spmean_long_days
+# 1  Telipogon_peruvianus      Orchidaceae           1            33.00
+# 2     Siparuna_muricata     Siparunaceae           0            28.75
+# 3     Encyclia_mapuerae      Orchidaceae           1            27.74
+# 4 Pinguicula_longifolia Lentibulariaceae           1            27.10
+# 5       Pieris_japonica        Ericaceae           0            23.35
+# 6   Corybas_cheesemanii      Orchidaceae           1            23.14
 
 # what are the shortest lived flowers ON AVERAGE?
 spmean_long %>%
@@ -94,6 +107,13 @@ spmean_long %>%
   dplyr::select(species, family, sym_species, spmean_long_days) %>%
   dplyr::distinct() %>%
   head()
+#                   species        family sym_species spmean_long_days
+# 1     Heteracia_szovitsii    Asteraceae           0       0.08240741
+# 2    Moraea_pseudospicata     Iridaceae           0       0.10416667
+# 3     Talinum_paniculatum    Talinaceae           0       0.16666667
+# 4     Agalinis_auriculata Orobanchaceae           1       0.18750000
+# 5 Tuberaria_bupleurifolia     Cistaceae           0       0.19791667
+# 6       Tuberaria_guttata     Cistaceae           0       0.19791667
 
 #### PGLS analyses ####
 
@@ -133,14 +153,70 @@ ggplot(data = pgls_allotb, aes(x = spmean_long_days, y = sym_species, fill = sym
   scale_y_discrete(labels = c("0" = "actinomorphic", "1" = "zygomorphic"))
 ggsave("figures/symmetry_longevity_allotbspecies_boxplot.pdf", width = 9, height = 5)
 
+# test phylogenetic signal of longevity and symmetry
+# first longevity
+phylosigdata <- log(pgls_allotb$spmean_long_days)
+names(phylosigdata) <- rownames(pgls_allotb)
+
+# Pagel's lambda
+phytools::phylosig(allotb, x = phylosigdata, method = "lambda", test = TRUE)
+# Phylogenetic signal lambda : 0.806212 
+# logL(lambda) : -1709.47 
+# LR(lambda=0) : 829.31 
+# P-value (based on LR test) : 2.28926e-182 
+
+# lambda > 0.8, intermediate to strong phylogenetic signal
+
+# Blomberg et al's K
+phytools::phylosig(allotb, x = phylosigdata, method = "K", test = TRUE)
+# Phylogenetic signal K : 0.125343 
+# P-value (based on 1000 randomizations) : 0.001
+
+# p-value suggests some phylogenetic signal in bud size, though <1 so
+# less phylogenetic signal than expected under Brownian motion evolution
+
+# now symmetry, binary so use Fritz and Purvis' D
+phylosigdata <- as.data.frame(pgls_allotb$sym_species)
+names(phylosigdata) <- "symmetry"
+phylosigdata$treenames <- rownames(pgls_allotb)
+
+# first remove node labels which confuse caper
+allotb2 <- allotb
+allotb2$node.label <- NULL
+
+caper::phylo.d(data = phylosigdata, 
+               phy = allotb2, 
+               names.col = treenames, 
+               binvar = symmetry)
+# Calculation of D statistic for the phylogenetic structure of a binary variable
+
+# Data :  data
+# Binary variable :  symmetry
+# Counts of states:  0 = 976
+#                    1 = 457
+# Phylogeny :  phy
+# Number of permutations :  1000
+# 
+# Estimated D :  -0.304861
+# Probability of E(D) resulting from no (random) phylogenetic structure :  0
+# Probability of E(D) resulting from Brownian phylogenetic structure    :  1
+rm(phylosigdata, allotb2)
+
 # t-test of longevity by symmetry
 ttests <- list()
-ttests$allotbspecies <- t.test(log(pgls_allotb$spmean_long_days[pgls_allotb$sym_species == "1"]), 
-                               log(pgls_allotb$spmean_long_days[pgls_allotb$sym_species == "0"]))
+ttests$allotbspecies <- t.test(pgls_allotb$spmean_long_days[pgls_allotb$sym_species == "1"], 
+                               pgls_allotb$spmean_long_days[pgls_allotb$sym_species == "0"])
 ttests$allotbspecies
-# t = 4.4936, df = 869.14, p-value = 7.948e-06
-# mean of x   mean of y 
-# 1.0419991   0.7696246 
+# Welch Two Sample t-test
+# 
+# data:  pgls_allotb$spmean_long_days[pgls_allotb$sym_species == "1"] and pgls_allotb$spmean_long_days[pgls_allotb$sym_species == "0"]
+# t = 4.3817, df = 720.42, p-value = 1.352e-05
+# alternative hypothesis: true difference in means is not equal to 0
+# 95 percent confidence interval:
+#   0.6162555 1.6167801
+# sample estimates:
+#   mean of x mean of y 
+# 4.679864  3.563347 
 
 # exact results vary with random subsampling
 
@@ -154,7 +230,7 @@ summary(pgls_models$allotbspecies)
 # Model: log(spmean_long_days) ~ sym_species 
 # Data: pgls_allotb 
 # AIC      BIC    logLik
-# 4595.289 4611.091 -2294.644
+# 4595.938 4611.741 -2294.969
 # 
 # Correlation Structure: corBrownian
 # Formula: ~spp 
@@ -163,8 +239,8 @@ summary(pgls_models$allotbspecies)
 # 
 # Coefficients:
 #   Value Std.Error  t-value p-value
-# (Intercept)  0.8679375 0.7577006 1.145489  0.2522
-# sym_species1 0.3174178 0.0893808 3.551295  0.0004
+# (Intercept)  0.8689184 0.7578723 1.146523  0.2518
+# sym_species1 0.3083904 0.0894011 3.449514  0.0006
 # 
 # Correlation: 
 #   (Intr)
@@ -172,9 +248,9 @@ summary(pgls_models$allotbspecies)
 # 
 # Standardized residuals:
 #   Min          Q1         Med          Q3         Max 
-# -1.08667258 -0.28036830 -0.01742838  0.22090974  0.80456650 
+# -1.08674314 -0.28062157 -0.01482579  0.22145390  0.80406738 
 # 
-# Residual standard error: 3.095705 
+# Residual standard error: 3.096406 
 # Degrees of freedom: 1433 total; 1431 residual
 
 rm(spp, pgls_allotb)
@@ -231,12 +307,19 @@ ggplot(data = pgls_gbotb, aes(x = spmean_long_days, y = sym_species, fill = sym_
 ggsave("figures/symmetry_longevity_gbotbspecies_boxplot.pdf", width = 9, height = 5)
 
 # t-test of longevity by symmetry
-ttests$gbotbspecies <- t.test(log(pgls_gbotb$spmean_long_days[pgls_gbotb$sym_species == "1"]), 
-                              log(pgls_gbotb$spmean_long_days[pgls_gbotb$sym_species == "0"]))
+ttests$gbotbspecies <- t.test(pgls_gbotb$spmean_long_days[pgls_gbotb$sym_species == "1"], 
+                              pgls_gbotb$spmean_long_days[pgls_gbotb$sym_species == "0"])
 ttests$gbotbspecies
-# t = 4.2513, df = 671.93, p-value = 2.426e-05
-# mean of x   mean of y 
-# 1.0861188   0.7983384  
+# Welch Two Sample t-test
+# 
+# data:  pgls_gbotb$spmean_long_days[pgls_gbotb$sym_species == "1"] and pgls_gbotb$spmean_long_days[pgls_gbotb$sym_species == "0"]
+# t = 4.4206, df = 544.08, p-value = 1.189e-05
+# alternative hypothesis: true difference in means is not equal to 0
+# 95 percent confidence interval:
+#   0.7318375 1.9023602
+# sample estimates:
+#   mean of x mean of y 
+# 4.942259  3.625160 
 
 # PGLS of longevity by symmetry with phylogeny considered
 pgls_models$gbotbspecies <- nlme::gls(log(spmean_long_days) ~ sym_species,
@@ -248,7 +331,7 @@ summary(pgls_models$gbotbspecies)
 # Model: log(spmean_long_days) ~ sym_species 
 # Data: pgls_gbotb 
 # AIC      BIC    logLik
-# 4040.305 4055.542 -2017.152
+# 4056.306 4071.543 -2025.153
 # 
 # Correlation Structure: corBrownian
 # Formula: ~spp 
@@ -257,18 +340,18 @@ summary(pgls_models$gbotbspecies)
 # 
 # Coefficients:
 #   Value Std.Error  t-value p-value
-# (Intercept)  0.8215206 0.8460269 0.971034  0.3317
-# sym_species1 0.3992846 0.1056012 3.781060  0.0002
+# (Intercept)  0.8261584 0.8517499 0.969954  0.3323
+# sym_species1 0.4121765 0.1072434 3.843373  0.0001
 # 
 # Correlation: 
 #   (Intr)
 # sym_species1 -0.022
 # 
 # Standardized residuals:
-#   Min          Q1         Med          Q3         Max 
-# -0.96946491 -0.24006369  0.00933865  0.21319559  0.68059965 
+#   Min           Q1          Med           Q3          Max 
+# -0.964298653 -0.239797191  0.001959438  0.205377769  0.674681576 
 # 
-# Residual standard error: 3.422095 
+# Residual standard error: 3.445238 
 # Degrees of freedom: 1187 total; 1185 residual
 
 rm(spp, pgls_gbotb)
@@ -288,8 +371,8 @@ for (n in 1:50){
   # this selects 804 taxa, one in each genus
   
   # first run straight t-test to get means and sample sizes in each group
-  ttests[[paste0("subsample", n)]] <- t.test(log(pgls_onepergenus$spmean_long_days[pgls_onepergenus$sym_species == "1"]),
-                                             log(pgls_onepergenus$spmean_long_days[pgls_onepergenus$sym_species == "0"]))
+  ttests[[paste0("subsample", n)]] <- t.test(pgls_onepergenus$spmean_long_days[pgls_onepergenus$sym_species == "1"],
+                                             pgls_onepergenus$spmean_long_days[pgls_onepergenus$sym_species == "0"])
   
   # prune tree to 804 selected taxa
   tree_nomissing <- ape::drop.tip(allotb, allotb$tip.label[-match(pgls_onepergenus$allotb, allotb$tip.label)])
@@ -314,6 +397,8 @@ for (n in 1:50){
 }
 
 rm(n, spp, tree_nomissing, pgls_onepergenus)
+
+#* within clades PGLS ----
 
 #* export results ----
  
@@ -394,11 +479,6 @@ treetips <- data.frame(allotb = allotb$tip.label, position = c(1:1433))
 spmean_long_sub <- spmean_long_sub %>%
   dplyr::left_join(treetips, by = "allotb")
 rm(treetips)
-# add orders and clades for labelling in phylogeny
-familyorderclade <- readr::read_csv("data_input/family_order_clade.csv")
-spmean_long_sub <- spmean_long_sub %>%
-  dplyr::left_join(familyorderclade, by = "family")
-rm(familyorderclade)
 
 # rename some paraphyletic family labels so they display properly
 spmean_long_sub$family[spmean_long_sub$position %in% 589:592] <- "Lamiaceae (a)"
