@@ -119,6 +119,7 @@ spmean_long %>%
 
 #* ALLOTB PGLS ----
 
+#** prep data ----
 # remove allotb duplicate matches from data, randomly choose best matches
 pgls_allotb <- spmean_long
 
@@ -142,6 +143,7 @@ hist(pgls_allotb$spmean_long_days)
 hist(log(pgls_allotb$spmean_long_days))
 # will log transform longevity to meet assumptions of Brownian motion
 
+#** figure ----
 # boxplot of longevity by symmetry, allotb species
 ggplot(data = pgls_allotb, aes(x = spmean_long_days, y = sym_species, fill = sym_species)) +
   geom_violin() +
@@ -153,8 +155,8 @@ ggplot(data = pgls_allotb, aes(x = spmean_long_days, y = sym_species, fill = sym
   scale_y_discrete(labels = c("0" = "actinomorphic", "1" = "zygomorphic"))
 ggsave("figures/symmetry_longevity_allotbspecies_boxplot.pdf", width = 9, height = 5)
 
-# test phylogenetic signal of longevity and symmetry
-# first longevity
+#** phylo-signal ----
+# longevity
 phylosigdata <- log(pgls_allotb$spmean_long_days)
 names(phylosigdata) <- rownames(pgls_allotb)
 
@@ -172,7 +174,7 @@ phytools::phylosig(allotb, x = phylosigdata, method = "K", test = TRUE)
 # Phylogenetic signal K : 0.125343 
 # P-value (based on 1000 randomizations) : 0.001
 
-# p-value suggests some phylogenetic signal in bud size, though <1 so
+# p-value suggests some phylogenetic signal in floral longevity, though <1 so
 # less phylogenetic signal than expected under Brownian motion evolution
 
 # now symmetry, binary so use Fritz and Purvis' D
@@ -202,6 +204,7 @@ caper::phylo.d(data = phylosigdata,
 # Probability of E(D) resulting from Brownian phylogenetic structure    :  1
 rm(phylosigdata, allotb2)
 
+#** ttest & PGLS ----
 # t-test of longevity by symmetry
 ttests <- list()
 ttests$allotbspecies <- t.test(pgls_allotb$spmean_long_days[pgls_allotb$sym_species == "1"], 
@@ -257,6 +260,7 @@ rm(spp, pgls_allotb)
 
 #* GBOTB PGLS ----
 
+#** prep data ----
 # remove gbotb duplicates from data, randomly choose best matches
 pgls_gbotb <- spmean_long
 # build column of match ranking for gbotb matches
@@ -295,6 +299,7 @@ hist(pgls_gbotb$spmean_long_days)
 hist(log(pgls_gbotb$spmean_long_days))
 # will log transform longevity to meet assumptions of Brownian motion
 
+#** figure ----
 # boxplot of longevity by symmetry, allotb species
 ggplot(data = pgls_gbotb, aes(x = spmean_long_days, y = sym_species, fill = sym_species)) +
   geom_violin() +
@@ -306,6 +311,56 @@ ggplot(data = pgls_gbotb, aes(x = spmean_long_days, y = sym_species, fill = sym_
   scale_y_discrete(labels = c("0" = "actinomorphic", "1" = "zygomorphic"))
 ggsave("figures/symmetry_longevity_gbotbspecies_boxplot.pdf", width = 9, height = 5)
 
+#** phylo-signal ----
+# first longevity
+phylosigdata <- log(pgls_gbotb$spmean_long_days)
+names(phylosigdata) <- rownames(pgls_gbotb)
+
+# Pagel's lambda
+phytools::phylosig(gbotb, x = phylosigdata, method = "lambda", test = TRUE)
+# Phylogenetic signal lambda : 0.79123 
+# logL(lambda) : -1445.82 
+# LR(lambda=0) : 623.6 
+# P-value (based on LR test) : 1.23246e-137 
+
+# lambda around 0.8, intermediate phylogenetic signal
+
+# Blomberg et al's K
+phytools::phylosig(gbotb, x = phylosigdata, method = "K", test = TRUE)
+# Phylogenetic signal K : 0.100588 
+# P-value (based on 1000 randomizations) : 0.001 
+
+# p-value suggests some phylogenetic signal in floral longevity, though <1 so
+# less phylogenetic signal than expected under Brownian motion evolution
+
+# now symmetry, binary so use Fritz and Purvis' D
+phylosigdata <- as.data.frame(pgls_gbotb$sym_species)
+names(phylosigdata) <- "symmetry"
+phylosigdata$treenames <- rownames(pgls_gbotb)
+
+# first remove node labels which confuse caper
+gbotb2 <- gbotb
+gbotb2$node.label <- NULL
+
+caper::phylo.d(data = phylosigdata, 
+               phy = gbotb2, 
+               names.col = treenames, 
+               binvar = symmetry)
+# Calculation of D statistic for the phylogenetic structure of a binary variable
+# 
+# Data :  data
+# Binary variable :  symmetry
+# Counts of states:  0 = 822
+# 1 = 365
+# Phylogeny :  phy
+# Number of permutations :  1000
+# 
+# Estimated D :  -0.2934379
+# Probability of E(D) resulting from no (random) phylogenetic structure :  0
+# Probability of E(D) resulting from Brownian phylogenetic structure    :  0.997
+rm(phylosigdata, gbotb2)
+
+#** ttest & PGLS ----
 # t-test of longevity by symmetry
 ttests$gbotbspecies <- t.test(pgls_gbotb$spmean_long_days[pgls_gbotb$sym_species == "1"], 
                               pgls_gbotb$spmean_long_days[pgls_gbotb$sym_species == "0"])
@@ -397,8 +452,6 @@ for (n in 1:50){
 }
 
 rm(n, spp, tree_nomissing, pgls_onepergenus)
-
-#* within clades PGLS ----
 
 #* export results ----
  
