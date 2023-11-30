@@ -60,6 +60,10 @@ colnames(longevity) <- c("individual", "birthtime", "deathtime", "no_flowers")
 rm(deathtime, no_flowers)
 # 4 individuals with only 1 flower monitored, 9 with 2 flowers
 paste("on average", round(mean(longevity$no_flowers), 1), "flowers monitored per plant")
+# "on average 11.3 flowers monitored per plant"
+paste("standard error", 
+      round((sd(longevity$no_flowers)/sqrt(length(longevity$no_flowers))), 1))
+# "standard error 0.7"
 
 # calculate mean longevity per plant in days
 longevity$longevity_days <- difftime(longevity$deathtime, longevity$birthtime, units = "days")
