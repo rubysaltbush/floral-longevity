@@ -13,17 +13,13 @@ library(caper)
 # function to cache pre-prepared R data. If RDS already in cache will read data
 source("scripts/functions/cache_csv.R")
 
-# TO DO
-
-# -run tests for floral longevity and symmetry phylogenetic signal and evolutionary rates?
-
 #### DATA ####
-
-# read in data from different sources
-source("scripts/prepdata/final_data.R")
 
 # custom colour scales
 source("scripts/prepdata/my_colours.R")
+
+# read in data from different sources
+source("scripts/prepdata/final_data.R")
 
 #### ANALYSES ####
 

@@ -110,6 +110,9 @@ ggplot(data = longevity, aes(x = longevity_days, y = symmetry, fill = symmetry))
   ylab("")
 ggsave("figures/field_data_individuals_symmetry_longevity_boxplot.pdf", width = 9, height = 5)
 
+# output full individual level data with trait data
+readr::write_csv(longevity, "data_output/Sydney_fieldwork_longevity_data_individuals.csv")
+
 # calculate mean longevity per species
 fieldlong <- longevity %>%
   dplyr::group_by(species) %>%
@@ -129,7 +132,7 @@ n <- longevity %>%
 fieldlong <- fieldlong %>%
   dplyr::left_join(sd, by = "species") %>%
   dplyr::left_join(n, by = "species")
-rm(sd, n, longevity)
+rm(sd, n)
 
 # add species symmetry to means
 species_sym_and_site <- species_sym_and_site %>%
@@ -166,6 +169,14 @@ t.test(fieldlong$mean_long_days[fieldlong$symmetry == "zygomorphic"],
 # mean of x mean of y 
 # 5.737704  6.434570 
 # no difference in mean longevity by symmetry for these 34 species
+
+# add mean trait value for fieldwork supplementary notes
+# mean no flowers monitored per plant
+meanflowern <- longevity %>%
+  dplyr::group_by(species) %>%
+  dplyr::summarise(meannoflowers = mean(no_flowers))
+fieldlong <- fieldlong %>%
+  dplyr::left_join(meanflowern, by = "species")
 
 # output species mean longevity with symmetry
 readr::write_csv(fieldlong, "data_output/mean_longevity_Sydney_fieldwork.csv")
