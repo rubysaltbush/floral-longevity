@@ -35,8 +35,7 @@ marcoslong <- cache_csv("data_input/marcoslong_speciespatched.csv", function() {
   longevitycomm$Exotic <- as.character(longevitycomm$Exotic)
   
   # bind all Marcos' data into one df
-  # for now will include all quality levels (0-3) and exotics
-  # SHOULD I FILTER OUT ALL GREENHOUSE HABITAT VALUES??? LEAVING IN FOR NOW
+  # include all quality levels (0-3) and exotics
   marcoslong <- longevhighq %>%
     dplyr::bind_rows(longevlowq) %>%
     dplyr::bind_rows(longevitycomm) %>%
@@ -56,7 +55,7 @@ marcoslong <- cache_csv("data_input/marcoslong_speciespatched.csv", function() {
     dplyr::distinct()
   rm(longevhighq, longevlowq, longevitycomm)
   
-  # many rows are duplicates from community and other sheets - remove dupes!
+  # many rows are duplicates from community and other sheets - remove!
   # first paste together og source for each row (high qual, low qual or comm data)
   temp <- marcoslong %>%
     dplyr::group_by(og_species, reference) %>% # group by species and reference
@@ -77,7 +76,7 @@ marcoslong <- cache_csv("data_input/marcoslong_speciespatched.csv", function() {
   marcoslong$mean_long_days <- gsub("< 12 h", "0.5", marcoslong$og_longevity)
   # <24 h -> 1
   marcoslong$mean_long_days <- gsub("< 24 h", "1", marcoslong$mean_long_days)
-  # 1 (12 h) -> 0.5? or 1? 0.5 for now, though for many studies 1 would be the minimum possible value
+  # 1 (12 h) -> 0.5, though for many studies 1 would be the minimum possible value
   marcoslong$mean_long_days <- gsub("1 \\(12 h\\)", "0.5", marcoslong$mean_long_days)
   # dawn to early evening should be roughly 0.5 by current definition
   # all values starting "dawn" roughly half a day, this will do for now
