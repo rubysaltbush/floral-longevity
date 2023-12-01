@@ -177,6 +177,7 @@ meanflowern <- longevity %>%
   dplyr::summarise(meannoflowers = mean(no_flowers))
 fieldlong <- fieldlong %>%
   dplyr::left_join(meanflowern, by = "species")
+rm(meanflowern, longevity)
 
 # output species mean longevity with symmetry
 readr::write_csv(fieldlong, "data_output/mean_longevity_Sydney_fieldwork.csv")
