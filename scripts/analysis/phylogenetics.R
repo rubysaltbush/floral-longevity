@@ -115,6 +115,75 @@ spmean_long %>%
 # 5 Tuberaria_bupleurifolia     Cistaceae           0       0.19791667
 # 6       Tuberaria_guttata     Cistaceae           0       0.19791667
 
+# what are the longest lived FAMILIES on average?
+spmean_long %>%
+  dplyr::group_by(family) %>%
+  dplyr::summarise(meanlong = mean(spmean_long_days), n = n()) %>%
+  dplyr::arrange(dplyr::desc(meanlong)) %>%
+  dplyr::filter(n >= 10) %>%
+  head()
+
+# family           meanlong     n
+# <chr>               <dbl> <int>
+# 1 Lentibulariaceae    11.1     10
+# 2 Orchidaceae         11.0     56
+# 3 Saxifragaceae       10.6     12
+# 4 Ranunculaceae        8.50    45
+# 5 Violaceae            7.55    10
+# 6 Liliaceae            7.53    12
+
+# checked and all Lentibulariaceae in one genus (Pinguicola) so not sure if
+# representative of family as a whole
+
+# what are the shortest lived FAMILIES on average?
+spmean_long %>%
+  dplyr::group_by(family) %>%
+  dplyr::summarise(meanlong = mean(spmean_long_days), n = n()) %>%
+  dplyr::arrange(meanlong) %>%
+  dplyr::filter(n >= 10) %>%
+  head()
+
+# family          meanlong     n
+# <chr>              <dbl> <int>
+# 1 Convolvulaceae     0.700    14
+# 2 Cistaceae          0.822    12
+# 3 Cactaceae          0.913    44
+# 4 Bromeliaceae       1.25     32
+# 5 Melastomataceae    1.37     30
+# 6 Euphorbiaceae      1.57     10
+
+# what are the longest lived ORDERS on average?
+spmean_long %>%
+  dplyr::group_by(order) %>%
+  dplyr::summarise(meanlong = mean(spmean_long_days), n = n()) %>%
+  dplyr::arrange(dplyr::desc(meanlong)) %>%
+  dplyr::filter(n >= 10) %>%
+  head()
+# order        meanlong     n
+# <chr>           <dbl> <int>
+# 1 Liliales         9.34    27
+# 2 Saxifragales     9.31    23
+# 3 Ranunculales     7.69    63
+# 4 Asparagales      7.10   121
+# 5 Laurales         7.06    11
+# 6 Ericales         5.20    91
+
+# what are the shortest lived ORDERS on average?
+spmean_long %>%
+  dplyr::group_by(order) %>%
+  dplyr::summarise(meanlong = mean(spmean_long_days), n = n()) %>%
+  dplyr::arrange(meanlong) %>%
+  dplyr::filter(n >= 10) %>%
+  head()
+# order        meanlong     n
+# <chr>           <dbl> <int>
+# 1 Poales           1.09    39
+# 2 Boraginales      1.91    27
+# 3 Solanales        1.99    43
+# 4 Arecales         2.09    10
+# 5 Fabales          2.26   117
+# 6 Zingiberales     2.35    42
+
 #### PGLS analyses ####
 
 #* ALLOTB PGLS ----
