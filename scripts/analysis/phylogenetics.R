@@ -590,7 +590,7 @@ rm(pgls_models, model, ttests, pglsresults)
 
 # random subsample of one species per allotb match
 spmean_long_sub <- spmean_long %>%
-  dplyr::select(allotb, family, sym_species, spmean_long_days, allotb_matchrank) %>%
+  dplyr::select(allotb, family, order, sym_species, spmean_long_days, allotb_matchrank) %>%
   dplyr::group_by(allotb) %>% # group by allotb species
   dplyr::slice_min(order_by = allotb_matchrank, n = 1) %>% # choose best possible taxonomic match
   dplyr::slice_sample(n = 1) %>% # then randomly choose one of these
@@ -611,7 +611,7 @@ spmean_long_sub$family[spmean_long_sub$position == 886] <- "Primulaceae (a)"
 spmean_long_sub$family[spmean_long_sub$position %in% 864:876] <- "Primulaceae (b)"
 
 # change longevity data into a named vector for phytools
-spmean_long_subV <- log(spmean_long_sub$spmean_long_days)
+spmean_long_subV <- spmean_long_sub$spmean_long_days
 names(spmean_long_subV) <- spmean_long_sub$allotb
 # and prep symmetry data also
 symV <- as.factor(spmean_long_sub$sym_species)
