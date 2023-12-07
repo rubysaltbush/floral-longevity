@@ -613,6 +613,8 @@ spmean_long_sub$family[spmean_long_sub$position %in% 864:876] <- "Primulaceae (b
 # change longevity data into a named vector for phytools
 spmean_long_subV <- spmean_long_sub$spmean_long_days
 names(spmean_long_subV) <- spmean_long_sub$allotb
+# and log version for circular phylogeny
+spmean_long_subVlogged <- log(spmean_long_subV)
 # and prep symmetry data also
 symV <- as.factor(spmean_long_sub$sym_species)
 names(symV) <- spmean_long_sub$allotb
@@ -621,26 +623,31 @@ symV <- symV[allotb$tip.label]
 # set factor colours
 cols <- setNames(c(my_colours$symmetry[2], my_colours$symmetry[1]), c("0", "1"))
 
-# simulate longevity evolution across phylogeny to visualise
-contmap <- phytools::contMap(allotb, spmean_long_subV, plot = FALSE, res = 500)
+# simulate longevity evolution across phylogeny to visualise (plain for tall)
+contmap_plain <- phytools::contMap(allotb, spmean_long_subV, plot = FALSE, res = 500)
 # re-colour contmap with custom scale
-contmap <- phytools::setMap(contmap, my_colours$longevity)
+contmap_plain <- phytools::setMap(contmap_plain, my_colours$longevity)
+
+# simulate longevity evolution across phylogeny to visualise (log for fan)
+contmap_log <- phytools::contMap(allotb, spmean_long_subVlogged, plot = FALSE, res = 500)
+# re-colour contmap with custom scale
+contmap_log <- phytools::setMap(contmap_log, my_colours$longevity)
 
 #* tall plot ----
 
 # dummy plot to get locations to draw tip labels coloured by symmetry
-plot(contmap, fsize = c(0.5, 0.7))
+plot(contmap_plain, fsize = c(0.5, 0.7))
 lastPP <- get("last_plot.phylo", envir = .PlotPhyloEnv)
 
 # export figure
 pdf(file = "figures/tall_contmap_spmeanlongevity.pdf", width = 20, height = 120)
-plot(contmap, legend = 0.7*max(nodeHeights(allotb)), sig = 1, 
+plot(contmap_plain, legend = 0.7*max(nodeHeights(allotb)), sig = 1, 
      lwd = 6, outline = FALSE, ftype = "off",
      xlim = c(lastPP$x.lim[1], lastPP$x.lim[2] + 20),
      leg.txt = "Floral longevity (log mean # days)")
 for(i in 1:length(symV)) {
   text(lastPP$xx[i], lastPP$yy[i], 
-       gsub("_", " ", contmap$tree$tip.label[i]),
+       gsub("_", " ", contmap_plain$tree$tip.label[i]),
        pos = 4, cex = 0.6, col = cols[symV[i]], font = 3)
 }
 
@@ -703,14 +710,15 @@ legend(x = "bottomright", legend = c("actinomorphic", "zygomorphic"), bg = "whit
        title = "Floral symmetry")
 dev.off()
 
-rm(lastPP, family_labels, order_labels, tall_cladelabels, i)
+rm(lastPP, family_labels, order_labels, tall_cladelabels, i, contmap_plain,
+   spmean_long_subV)
 
 #* circular plot ----
 
 # build fan style plot for main figure
 pdf(file = "figures/allotb_longevity_contMap_fan.pdf", width = 15, height = 15)
 
-plot(contmap, type = "fan", legend = FALSE, lwd = 3, outline = FALSE, 
+plot(contmap_log, type = "fan", legend = FALSE, lwd = 3, outline = FALSE, 
      ftype = "off", xlim = c(-185, 170))
 
 # fill background in so pale colours in contMap stand out more clearly
@@ -722,13 +730,13 @@ plotrix::draw.circle(0, 0, radius = max(nodeHeights(allotb)) - 66,
 
 # plot contMap again
 par(new = TRUE) # hack to force below to plot on top of above 
-plot(contmap, type = "fan", legend = FALSE, lwd = 3, outline = FALSE, 
+plot(contmap_log, type = "fan", legend = FALSE, lwd = 3, outline = FALSE, 
      ftype = "off", xlim = c(-185, 170), add = TRUE)
 
 # below adapted from http://blog.phytools.org/2016/08/vertical-legend-in-contmap-style-plots.html
 # add bud size legend using phytools function
 phytools::add.color.bar(leg = 100,
-                        cols = contmap$cols,
+                        cols = contmap_log$cols,
                         title = "Floral longevity (log days)",
                         lims = NULL,
                         digits = 2,
@@ -741,12 +749,12 @@ phytools::add.color.bar(leg = 100,
 
 # then add custom tick marks
 lines(x = rep(-176.525, 2), y = c(45, 147)) # draw vertical line
-Y <- cbind(seq(45, 147, length.out = 5), # define x pos for ticks
-           seq(45, 147, length.out = 5))
-X <- cbind(rep(-176.525, 5), # define y pos for ticks
-           rep(-173.925, 5))
+Y <- cbind(seq(45, 147, length.out = 6), # define x pos for ticks
+           seq(45, 147, length.out = 6))
+X <- cbind(rep(-176.525, 6), # define y pos for ticks
+           rep(-173.925, 6))
 for(i in 1:nrow(Y)) lines(X[i,], Y[i,]) # draw ticks
-ticks <- seq(contmap$lims[1], contmap$lims[2], length.out = 5) # get tick values
+ticks <- seq(contmap_log$lims[1], contmap_log$lims[2], length.out = 6) # get tick values
 text(x = X[,2], y = Y[,2], round(ticks, 1), pos = 4, cex = 0.8) # draw tick values
 rm(X, Y, i, ticks)
 
@@ -853,5 +861,5 @@ fan_cladelabels(offset = 1.05)
 
 dev.off()
 
-rm(spmean_long_sub, pp, contmap, cols, fan_cladelabels, offset_xx_yy, xx_yy,
-   arclabel, spmean_long, spmean_long_subV, symV, allotb, gbotb)
+rm(spmean_long_sub, pp, contmap_log, cols, fan_cladelabels, offset_xx_yy, xx_yy,
+   arclabel, spmean_long, spmean_long_subVlogged, symV, allotb, gbotb)
