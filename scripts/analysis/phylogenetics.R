@@ -184,6 +184,58 @@ spmean_long %>%
 # 5 Fabales          2.26   117
 # 6 Zingiberales     2.35    42
 
+# what is the longevity of all CLADES on average?
+spmean_long %>%
+  dplyr::group_by(clade) %>%
+  dplyr::summarise(meanlong = mean(spmean_long_days), n = n()) %>%
+  dplyr::arrange(meanlong)
+# clade            meanlong     n
+# <chr>               <dbl> <int>
+#  1 Commelinidae         1.73    95
+#  2 Pentapetalae         2.03     3
+#  3 Rosidae              2.36    68
+#  4 Fabidae              2.53   214
+#  5 Angiospermae         2.6      2
+#  6 Superasteridae       2.61   105
+#  7 Malvidae             3.11   105
+#  8 Lamiidae             3.24   344
+#  9 Campanulidae         4.26   126
+# 10 Magnoliidae          4.39    45
+# 11 Asteridae            5.19    95
+# 12 Monocotyledoneae     7.08   159
+# 13 Eudicotyledoneae     7.52    71
+# 14 Superrosidae         9.31    23
+
+# what is the mean floral longevity of basal angiosperms?
+spmean_long %>%
+  dplyr::filter(clade %in% c("Angiospermae", "Magnoliidae")) %>%
+  dplyr::summarise(meanlong = mean(spmean_long_days), n = n())
+# meanlong  n
+# 4.309084 47
+
+# what is the mean floral longevity of monocots?
+spmean_long %>%
+  dplyr::filter(clade %in% c("Monocotyledoneae", "Commelinidae")) %>%
+  dplyr::summarise(meanlong = mean(spmean_long_days), n = n())
+# meanlong   n
+# 5.077778 254
+
+# what is the mean floral longevity of eudicots?
+spmean_long %>%
+  dplyr::filter(clade %in% c("Eudicotyledoneae", "Superrosidae",
+                             "Pentapetalae", "Rosidae", "Asteridae",
+                             "Malvidae", "Campanulidae", "Lamiidae",
+                             "Superasteridae", "Fabidae")) %>%
+  dplyr::summarise(meanlong = mean(spmean_long_days), n = n())
+# meanlong    n
+# 3.638512 1154
+
+# what is the mean of all angiosperms in our sampling?
+spmean_long %>%
+  dplyr::summarise(meanlong = mean(spmean_long_days), n = n())
+# meanlong    n
+# 3.911427 1455
+
 #### PGLS analyses ####
 
 #* ALLOTB PGLS ----
