@@ -152,7 +152,7 @@ sym_data <- sym_data %>%
   dplyr::left_join(sym_data_sources, by = "og_species")
 rm(sym_data_sources)
 
-# export csv of assembled symmetry data for now
+# export csv of assembled symmetry data
 readr::write_csv(sym_data, "data_output/sym_data.csv")
 })
 

@@ -279,6 +279,17 @@ ggplot(data = pgls_allotb, aes(x = spmean_long_days, y = sym_species, fill = sym
   scale_y_discrete(labels = c("0" = "actinomorphic", "1" = "zygomorphic"))
 ggsave("figures/symmetry_longevity_allotbspecies_boxplot.pdf", width = 9, height = 5)
 
+# jitterplot of longevity by symmetry, allotb species
+ggplot(data = pgls_allotb, aes(x = spmean_long_days, y = sym_species)) +
+  geom_jitter(aes(colour = sym_species)) +
+  geom_boxplot(alpha = 0.4) +
+  scale_colour_discrete(type = setNames(my_colours$symmetry, c(1, 0))) +
+  ggpubr::theme_pubr(legend = "none") +
+  xlab("Floral longevity (days)") +
+  ylab("") +
+  scale_y_discrete(labels = c("0" = "actinomorphic", "1" = "zygomorphic"))
+ggsave("figures/symmetry_longevity_allotbspecies_jitterplot.pdf", width = 9, height = 5)
+
 #** phylo-signal ----
 # longevity
 phylosigdata <- log(pgls_allotb$spmean_long_days)
@@ -424,7 +435,7 @@ hist(log(pgls_gbotb$spmean_long_days))
 # will log transform longevity to meet assumptions of Brownian motion
 
 #** figure ----
-# boxplot of longevity by symmetry, allotb species
+# boxplot of longevity by symmetry, gbotb species
 ggplot(data = pgls_gbotb, aes(x = spmean_long_days, y = sym_species, fill = sym_species)) +
   geom_violin() +
   geom_boxplot(width = 0.15, colour = "grey", alpha = 0.3) +
