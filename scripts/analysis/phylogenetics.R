@@ -271,6 +271,7 @@ hist(log(pgls_allotb$spmean_long_days))
 # boxplot of longevity by symmetry, allotb species
 ggplot(data = pgls_allotb, aes(x = spmean_long_days, y = sym_species, fill = sym_species)) +
   geom_violin() +
+  geom_vline(xintercept = 1, linetype = 3, alpha = 0.6) +
   geom_boxplot(width = 0.15, colour = "grey", alpha = 0.3) +
   scale_fill_discrete(type = setNames(my_colours$symmetry, c(1, 0))) +
   ggpubr::theme_pubr(legend = "none") +
