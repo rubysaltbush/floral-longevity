@@ -212,16 +212,18 @@ spmean_long %>%
 # what is the mean floral longevity of basal angiosperms?
 spmean_long %>%
   dplyr::filter(clade %in% c("Angiospermae", "Magnoliidae")) %>%
+  dplyr::filter(!duplicated(species)) %>%
   dplyr::summarise(meanlong = mean(spmean_long_days), n = n())
 # meanlong  n
-# 4.309084 47
+# 4.381021 46
 
 # what is the mean floral longevity of monocots?
 spmean_long %>%
   dplyr::filter(clade %in% c("Monocotyledoneae", "Commelinidae")) %>%
+  dplyr::filter(!duplicated(species)) %>%
   dplyr::summarise(meanlong = mean(spmean_long_days), n = n())
 # meanlong   n
-# 5.077778 254
+# 5.074963 253
 
 # what is the mean floral longevity of eudicots?
 spmean_long %>%
@@ -229,15 +231,17 @@ spmean_long %>%
                              "Pentapetalae", "Rosidae", "Asteridae",
                              "Malvidae", "Campanulidae", "Lamiidae",
                              "Superasteridae", "Fabidae")) %>%
+  dplyr::filter(!duplicated(species)) %>%
   dplyr::summarise(meanlong = mean(spmean_long_days), n = n())
 # meanlong    n
-# 3.638512 1154
+# 3.640801 1153
 
 # what is the mean of all angiosperms in our sampling?
 spmean_long %>%
+  dplyr::filter(!duplicated(species)) %>%
   dplyr::summarise(meanlong = mean(spmean_long_days), n = n())
 # meanlong    n
-# 3.911427 1455
+# 3.914143 1452
 
 #### PGLS analyses ####
 
@@ -872,9 +876,9 @@ orders_to_label <- spmean_long_sub %>%
   dplyr::mutate(tiprange = maxtip - mintip)
 
 # then filter out smaller orders AND a few that overlap for labelling, 
-# leaves 21 of 43 orders 
+# leaves 22 of 43 orders 
 orders_to_label <- orders_to_label %>%
-  dplyr::filter(tiprange > 10 & !(order %in% c("Dipsacales", "Saxifragales", "Sapindales")))
+  dplyr::filter(tiprange > 10 & !(order %in% c("Dipsacales", "Sapindales")))
 # and replace overlapping orders with abbreviations
 orders_to_label$order <- gsub("Santalales", "Santal.", orders_to_label$order)
 orders_to_label$order <- gsub("Apiales", "Api.", orders_to_label$order)
@@ -882,6 +886,7 @@ orders_to_label$order <- gsub("Rosales", "Ros.", orders_to_label$order)
 orders_to_label$order <- gsub("Magnoliales", "Magnoli.", orders_to_label$order)
 orders_to_label$order <- gsub("Brassicales", "Brassic.", orders_to_label$order)
 orders_to_label$order <- gsub("Boraginales", "Boragin.", orders_to_label$order)
+orders_to_label$order <- gsub("Saxifragales", "Sax.", orders_to_label$order)
 
 # source custom arc labelling function
 source("scripts/functions/arclabel.R")
