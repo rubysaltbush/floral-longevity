@@ -57,8 +57,11 @@ rm(phylo_names_match)
 # redefine symmetry as 0 and 1
 spmean_long$sym_species <- gsub("zygomorphic", "1", spmean_long$sym_species)
 spmean_long$sym_species <- gsub("actinomorphic", "0", spmean_long$sym_species)
-table(spmean_long$sym_species)
-# 986 actinomorphic to 469 zygomorphic taxa (will change with subsampling)
+spmean_long %>%
+  dplyr::filter(!duplicated(species)) %>%
+  dplyr::select(sym_species) %>%
+  table()
+# 984 actinomorphic to 468 zygomorphic taxa (will change with subsampling)
 
 # define heirarchy of taxonomic matches so can sample best matches first
 spmean_long$allotb_matchrank <- ifelse(spmean_long$match_level_allotb %in% c("direct_accepted", 
