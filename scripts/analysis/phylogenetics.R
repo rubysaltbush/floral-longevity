@@ -122,25 +122,26 @@ spmean_long %>%
 spmean_long %>%
   dplyr::filter(!duplicated(species)) %>%
   dplyr::group_by(family) %>%
-  dplyr::summarise(meanlong = mean(spmean_long_days), 
-                   SElong = sd(spmean_long_days)/sqrt(length(spmean_long_days)), 
+  dplyr::summarise(meanlong = round(mean(spmean_long_days), 1), 
+                   SElong = round(sd(spmean_long_days)/sqrt(length(spmean_long_days)), 1),
                    ngen = length(unique(genus)),
                    n = n()) %>%
   dplyr::arrange(dplyr::desc(meanlong)) %>%
   dplyr::filter(n >= 10) %>%
   dplyr::filter(meanlong >= 6)
 
-#   family           meanlong SElong  ngen     n
-# 1 Lentibulariaceae    11.1   2.37      2    10
-# 2 Orchidaceae         11.0   1.04     40    56
-# 3 Saxifragaceae       10.6   1.10      4    12
-# 4 Ranunculaceae        8.50  0.501    18    45
-# 5 Violaceae            7.55  1.31      4    10
-# 6 Liliaceae            7.53  0.816     6    12
-# 7 Amaryllidaceae       7.48  1.68      7    13
-# 8 Papaveraceae         7.42  1.47      8    10
-# 9 Primulaceae          7.33  1.62      7    14
-# 10 Ericaceae            6.12  0.634    19    46
+# family           meanlong SElong  ngen     n
+# <chr>               <dbl>  <dbl> <int> <int>
+# 1 Lentibulariaceae     11.1    2.4     2    10
+# 2 Orchidaceae          11      1      40    56
+# 3 Saxifragaceae        10.6    1.1     4    12
+# 4 Ranunculaceae         8.5    0.5    18    45
+# 5 Violaceae             7.6    1.3     4    10
+# 6 Amaryllidaceae        7.5    1.7     7    13
+# 7 Liliaceae             7.5    0.8     6    12
+# 8 Papaveraceae          7.4    1.5     8    10
+# 9 Primulaceae           7.3    1.6     7    14
+# 10 Ericaceae             6.1    0.6    19    46
 
 # checked and most Lentibulariaceae in one genus (Pinguicola) so not sure if
 # representative of family as a whole
@@ -149,28 +150,25 @@ spmean_long %>%
 spmean_long %>%
   dplyr::filter(!duplicated(species)) %>%
   dplyr::group_by(family) %>%
-  dplyr::summarise(meanlong = mean(spmean_long_days), 
-                   SElong = sd(spmean_long_days)/sqrt(length(spmean_long_days)), 
+  dplyr::summarise(meanlong = round(mean(spmean_long_days), 1),
+                   SElong = round(sd(spmean_long_days)/sqrt(length(spmean_long_days)), 1),
                    ngen = length(unique(genus)),
                    n = n()) %>%
   dplyr::arrange(meanlong) %>%
   dplyr::filter(n >= 10) %>%
   dplyr::filter(meanlong <= 2)
-
 # family          meanlong SElong  ngen     n
 # <chr>              <dbl>  <dbl> <int> <int>
-# 1 Convolvulaceae     0.700 0.0586     5    14
-# 2 Cistaceae          0.822 0.229      3    12
-# 3 Cactaceae          0.913 0.105     24    44
-# 4 Bromeliaceae       1.25  0.182     16    32
-# 5 Melastomataceae    1.37  0.234     16    30
-# 6 Euphorbiaceae      1.57  0.319      7    10
-# 7 Acanthaceae        1.74  0.351     10    15
-# 8 Malvaceae          1.83  0.216     16    28
-# 9 Rubiaceae          1.87  0.314     34    58
-# 10 Boraginaceae       1.91  0.238     15    27
-
-# build tables of floral longevity by family for SI (Table S5-S6)
+# 1 Convolvulaceae       0.7    0.1     5    14
+# 2 Cistaceae            0.8    0.2     3    12
+# 3 Cactaceae            0.9    0.1    24    44
+# 4 Bromeliaceae         1.2    0.2    16    32
+# 5 Melastomataceae      1.4    0.2    16    30
+# 6 Euphorbiaceae        1.6    0.3     7    10
+# 7 Acanthaceae          1.7    0.4    10    15
+# 8 Malvaceae            1.8    0.2    16    28
+# 9 Boraginaceae         1.9    0.2    15    27
+# 10 Rubiaceae            1.9    0.3    34    58
 
 # what are the longest lived ORDERS on average?
 spmean_long %>%
@@ -210,26 +208,28 @@ spmean_long %>%
 spmean_long %>%
   dplyr::filter(!duplicated(species)) %>%
   dplyr::group_by(clade) %>%
-  dplyr::summarise(meanlong = mean(spmean_long_days), 
-                   SElong = sd(spmean_long_days)/sqrt(length(spmean_long_days)), 
-                   n = n()) %>%
+  dplyr::summarise(meanlong = round(mean(spmean_long_days), 1), 
+                   SElong = round(sd(spmean_long_days)/sqrt(length(spmean_long_days)), 1), 
+                   nfam = length(unique(family)),
+                   ngen = length(unique(genus)),
+                   nspec = n()) %>%
   dplyr::arrange(meanlong)
-# clade            meanlong SElong     n
-# <chr>               <dbl>  <dbl> <int>
-#   1 Commelinidae         1.73  0.228    95
-# 2 Pentapetalae         2.03  1.45      3
-# 3 Rosidae              2.36  0.334    68
-# 4 Fabidae              2.53  0.182   214
-# 5 Angiospermae         2.6   0.6       2
-# 6 Superasteridae       2.61  0.253   105
-# 7 Malvidae             3.11  0.281   105
-# 8 Lamiidae             3.24  0.170   343
-# 9 Campanulidae         4.26  0.265   126
-# 10 Magnoliidae          4.46  0.729    44
-# 11 Asteridae            5.19  0.445    95
-# 12 Monocotyledoneae     7.09  0.533   158
-# 13 Eudicotyledoneae     7.52  0.463    71
-# 14 Superrosidae         9.31  0.895    23
+# clade            meanlong SElong  nfam  ngen nspec
+# <chr>               <dbl>  <dbl> <int> <int> <int>
+# 1 Commelinidae          1.7    0.2    13    46    95
+# 2 Pentapetalae          2      1.4     1     2     3
+# 3 Rosidae               2.4    0.3     7    37    68
+# 4 Fabidae               2.5    0.2    27   122   214
+# 5 Angiospermae          2.6    0.6     2     2     2
+# 6 Superasteridae        2.6    0.3    20    63   105
+# 7 Malvidae              3.1    0.3    18    71   105
+# 8 Lamiidae              3.2    0.2    19   176   343
+# 9 Campanulidae          4.3    0.3    11    77   126
+# 10 Magnoliidae           4.5    0.7     7    18    44
+# 11 Asteridae             5.2    0.4    16    47    95
+# 12 Monocotyledoneae      7.1    0.5    17    96   158
+# 13 Eudicotyledoneae      7.5    0.5     6    35    71
+# 14 Superrosidae          9.3    0.9     4    10    23
 
 # what is the mean floral longevity of basal angiosperms?
 spmean_long %>%
