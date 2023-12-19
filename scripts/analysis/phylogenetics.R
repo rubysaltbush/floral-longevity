@@ -174,35 +174,42 @@ spmean_long %>%
 spmean_long %>%
   dplyr::filter(!duplicated(species)) %>%
   dplyr::group_by(order) %>%
-  dplyr::summarise(meanlong = mean(spmean_long_days), n = n()) %>%
+  dplyr::summarise(meanlong = round(mean(spmean_long_days), 1), 
+                   SElong = round(sd(spmean_long_days)/sqrt(length(spmean_long_days)), 1), 
+                   nfam = length(unique(family)),
+                   ngen = length(unique(genus)),
+                   nspec = n()) %>%
   dplyr::arrange(dplyr::desc(meanlong)) %>%
-  dplyr::filter(n >= 10) %>%
   head()
-# order        meanlong     n
-# <chr>           <dbl> <int>
-# 1 Liliales         9.34    27
-# 2 Saxifragales     9.31    23
-# 3 Ranunculales     7.69    63
-# 4 Laurales         7.66    10
-# 5 Asparagales      7.11   120
-# 6 Ericales         5.20    91
+#   order        meanlong SElong  nfam  ngen nspec
+# <chr>           <dbl>  <dbl> <int> <int> <int>
+# 1 Liliales          9.3    0.9     6    16    27
+# 2 Saxifragales      9.3    0.9     4    10    23
+# 3 Laurales          7.7    2.5     2     4    10
+# 4 Ranunculales      7.7    0.5     4    29    63
+# 5 Asparagales       7.1    0.6     6    71   120
+# 6 Proteales         6.1    1.5     2     6     8
 
 # what are the shortest lived ORDERS on average?
 spmean_long %>%
   dplyr::filter(!duplicated(species)) %>%
   dplyr::group_by(order) %>%
-  dplyr::summarise(meanlong = mean(spmean_long_days), n = n()) %>%
+  dplyr::summarise(meanlong = round(mean(spmean_long_days), 1), 
+                   SElong = round(sd(spmean_long_days)/sqrt(length(spmean_long_days)), 1), 
+                   nfam = length(unique(family)),
+                   ngen = length(unique(genus)),
+                   nspec = n()) %>%
   dplyr::arrange(meanlong) %>%
-  dplyr::filter(n >= 10) %>%
+  dplyr::filter(nspec >= 10) %>%
   head()
-# order        meanlong     n
-# <chr>           <dbl> <int>
-# 1 Poales           1.09    39
-# 2 Boraginales      1.91    27
-# 3 Solanales        1.99    43
-# 4 Arecales         2.09    10
-# 5 Fabales          2.26   117
-# 6 Zingiberales     2.35    42
+#    order          meanlong SElong  nfam  ngen nspec
+# <chr>             <dbl>  <dbl> <int> <int> <int>
+# 1 Poales              1.1    0.2     4    20    39
+# 2 Boraginales         1.9    0.2     1    15    27
+# 3 Solanales           2      0.3     2    17    43
+# 4 Arecales            2.1    0.4     1     6    10
+# 5 Fabales             2.3    0.2     2    68   117
+# 6 Caryophyllales      2.4    0.3    16    54    93
 
 # what is the longevity of all CLADES on average?
 spmean_long %>%
