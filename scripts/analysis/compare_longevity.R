@@ -42,3 +42,20 @@ sym_long %>%
 # a real mix of families, some with pseudanthia - Asteraceae, Araceae
 # and some with solo flowers - an iris, Talinaceae, Orobanchaceae, Cistaceae
 
+# checking influence of latitude
+
+# plot individuals longevity by latitude, coloured by symmetry
+sym_long %>%
+  dplyr::select(Lat, mean_long_days, sym_species) %>% # select columns of interest
+  dplyr::filter(complete.cases(.)) %>% # filter out 354 obs missing latitude
+  dplyr::filter(Lat < 90) %>% # filter out incorrect latitude
+  ggplot(aes(x = Lat, y = mean_long_days, colour = sym_species)) +
+  geom_point() +
+  scale_colour_discrete(type = my_colours$symmetry) +
+  ggpubr::theme_pubr(legend = "none") +
+  xlab("Latitude") +
+  ylab("Floral longevity (days)")
+ggsave("figures/symmetry_longevity_latitude.pdf", width = 9, height = 5)
+# longevity seems generally shorter at lower latitudes, though some extreme
+# exceptions largely in zygomorphic taxa
+# more observations in northern hemisphere but still decent spread in south

@@ -26,7 +26,11 @@ source("scripts/prepdata/final_data.R")
 # first just compare mean longevity by symmetry and describe raw data
 source("scripts/analysis/compare_longevity.R")
 
-# would be interesting to see how phylogeny changes this - does the relationship
-# get weaker or stronger when evolutionary history is considered?
+# main analysis script, considering phylogenetic relatedness, also with 
+# figures to show longevity and symmetry on phylogeny
 source("scripts/analysis/phylogenetics.R")
+
+# analysis script to examine whether latitude influences relationship between
+# floral symmetry and floral longevity
+source("scripts/analysis/PGLS_with_latitude.R")
 

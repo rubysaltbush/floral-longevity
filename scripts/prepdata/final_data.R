@@ -163,6 +163,33 @@ sym_long <- sym_long %>%
   dplyr::filter(sym_species != "actinomorphic zygomorphic") # filter out ambiguous symmetry (1 taxon, 2 rows)
 rm(symscored)
 
+# update latitude data ----
+
+# first, export obs missing latitude to score manually, excluding those with 
+# latitude entered from Song et al data
+missing <- sym_long %>%
+  dplyr::filter(is.na(Lat))
+havelat <- sym_long %>%
+  dplyr::filter(!is.na(Lat))
+missing <- missing %>%
+  dplyr::filter(!(Accepted_name %in% havelat$Accepted_name))
+readr::write_csv(missing, "data_output/missing_latitude_fordataentry.csv")
+rm(missing, havelat)
+
+# having manually updated latitude for multiple species, read this back in
+latupdate <- readr::read_csv("data_input/latitude_dataentry.csv") %>%
+  dplyr::select(og_species, Accepted_name, mean_long_days, Lat) %>%
+  dplyr::filter(!is.na(Lat))
+
+# patch these latitude values in
+sym_long <- sym_long %>%
+  dplyr::rows_patch(latupdate, by = c("og_species", "Accepted_name", "mean_long_days"))
+rm(latupdate)
+
+# manually update one erroneous latitude value checked original paper, 
+# longitude accidentally entered as latitude
+sym_long$Lat[sym_long$og_species == "Nyssa.yunnanensis"] <- 22.41667
+
 # export final version to csv 
 readr::write_csv(sym_long, "data_output/longevity_symmetry_all.csv")
 })
