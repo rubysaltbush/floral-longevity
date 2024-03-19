@@ -179,7 +179,8 @@ rm(missing, havelat)
 # having manually updated latitude for multiple species, read this back in
 latupdate <- readr::read_csv("data_input/latitude_dataentry.csv") %>%
   dplyr::select(og_species, Accepted_name, mean_long_days, Lat) %>%
-  dplyr::filter(!is.na(Lat))
+  dplyr::filter(!is.na(Lat)) %>%
+  dplyr::distinct()
 
 # patch these latitude values in
 sym_long <- sym_long %>%

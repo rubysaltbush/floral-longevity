@@ -9,8 +9,7 @@
 # and remove duplicates
 sym_long_lat <- sym_long %>%
   dplyr::select(species = Accepted_name, sym_species, mean_long_days, Lat, og_species_patch) %>%
-  dplyr::filter(complete.cases(.)) %>% # filter out 354 obs without latitude (all from Marcos' data, some duplicated but with latitude in Song et al data)
-  # actually not happy with this many missing obs, will see if possible to score latitude quickly for these??
+  dplyr::filter(complete.cases(.)) %>% # filter out obs without latitude 
   dplyr::distinct() %>% # remove 134 duplicated observations (same species, longevity and latitude)
   as.data.frame()
 
@@ -59,18 +58,14 @@ sym_long_lat %>%
   dplyr::filter(!duplicated(species)) %>%
   dplyr::select(sym_species) %>%
   table()
-# 890 actinomorphic to 420 zygomorphic taxa
+# 942 actinomorphic to 430 zygomorphic taxa
 
 #* prep and prune trees ----
 
-# might remove gbotb???
-
-# read in short Smith and Brown tree (GBOTB.tre with 79,881 tips)
-gbotb <- ape::read.tree("data_input/GBOTB.tre")
 # read in long Smith and Brown tree (ALLOTB.tre with 353,185 tips)
 allotb <- ape::read.tree("data_input/ALLOTB.tre")
 
-# prune allotb tree to 1295 matched taxa
+# prune allotb tree to 1355 matched taxa
 allotbnames <- sym_long_lat %>%
   dplyr::select(allotb) %>%
   dplyr::distinct()
@@ -78,17 +73,6 @@ allotb <- ape::drop.tip(allotb, allotb$tip.label[-match(allotbnames$allotb, allo
 length(allotb$tip.label)
 plot(allotb, type = "fan", show.tip.label = FALSE)
 rm(allotbnames)
-
-# prune gbotb tree to 1083 matched taxa
-# first filter out NAs
-gbotbnames <- sym_long_lat %>%
-  dplyr::select(gbotb) %>%
-  dplyr::filter(!is.na(gbotb)) %>%
-  dplyr::distinct()
-gbotb <- ape::drop.tip(gbotb, gbotb$tip.label[-match(gbotbnames$gbotb, gbotb$tip.label)])
-length(gbotb$tip.label)
-plot(gbotb, type = "fan", show.tip.label = FALSE)
-rm(gbotbnames)
 
 #### PGLS analyses ####
 
@@ -135,13 +119,13 @@ ttests$allotbspecies
 # Welch Two Sample t-test
 # 
 # data:  pgls_allotb$mean_long_days[pgls_allotb$sym_species == "1"] and pgls_allotb$mean_long_days[pgls_allotb$sym_species == "0"]
-# t = 3.5043, df = 735.41, p-value = 0.0004855
+# t = 3.5502, df = 750.62, p-value = 0.000409
 # alternative hypothesis: true difference in means is not equal to 0
 # 95 percent confidence interval:
-#   0.3822576 1.3561641
+#   0.3876191 1.3465763
 # sample estimates:
 #   mean of x mean of y 
-# 4.686797  3.817586 
+# 4.669118  3.802021 
 
 # run PGLS without latitude as random factor first, to check statistical power
 pgls_models <- list()
@@ -163,8 +147,8 @@ summary(pgls_models$allotbsymlong)
 # 
 # Coefficients:
 #   Value  Std.Error  t-value p-value
-# (Intercept)  0.4611582 0.30838511 1.495397  0.1350
-# sym_species1 0.1934898 0.08447752 2.290429  0.0221
+# (Intercept)  0.4207858 0.31173584 1.349815  0.1773
+# sym_species1 0.2032319 0.08542481 2.379074  0.0175
 # 
 # Correlation: 
 #   (Intr)
@@ -172,12 +156,12 @@ summary(pgls_models$allotbsymlong)
 # 
 # Standardized residuals:
 #   Min         Q1        Med         Q3        Max 
-# -3.4566537 -0.5390382  0.5778391  1.3861755  3.3217901 
+# -3.3715442 -0.4863775  0.5877173  1.4006003  3.3202511 
 # 
-# Residual standard error: 0.8555205 
-# Degrees of freedom: 1552 total; 1550 residual
+# Residual standard error: 0.8651424 
+# Degrees of freedom: 1617 total; 1615 residual
 
-# seems to have lower power from excluded taxa, any effect of latitude on longevity?
+# seems to have somewhat lower power from excluded taxa, any effect of latitude on longevity?
 pgls_models$allotblonglat <- nlme::gls(log(mean_long_days) ~ abs(Lat),
                                        correlation = ape::corBrownian(phy = allotb, 
                                                                       form = ~spp),
@@ -196,19 +180,19 @@ summary(pgls_models$allotblonglat)
 # 
 # Coefficients:
 #   Value  Std.Error   t-value p-value
-# (Intercept) 0.1156316 0.30021909  0.385157  0.7002
-# abs(Lat)    0.0217685 0.00206119 10.561134  0.0000
+# (Intercept) 0.04277403 0.30307242  0.141135  0.8878
+# abs(Lat)    0.02260859 0.00204178 11.072994  0.0000
 # 
 # Correlation: 
 #   (Intr)
-# abs(Lat) -0.118
+# abs(Lat) -0.121
 # 
 # Standardized residuals:
 #   Min         Q1        Med         Q3        Max 
-# -4.3077093 -0.6109077  0.3753145  1.1044921  3.8093974 
+# -4.2242617 -0.5360066  0.4167334  1.1339150  3.8584543 
 # 
-# Residual standard error: 0.8277037 
-# Degrees of freedom: 1552 total; 1550 residual
+# Residual standard error: 0.8355207 
+# Degrees of freedom: 1617 total; 1615 residual
 
 # yes looks like latitude has stronger effect on longevity than symmetry
 # can't do effect of latitude on symmetry bc binary variable
@@ -231,8 +215,8 @@ summary(pgls_models$allotbsymlat)
 # 
 # Coefficients:
 #   Value Std.Error  t-value p-value
-# (Intercept)  17.04801  3.676386 4.637165  0.0000
-# sym_species1  0.48822  1.007091 0.484782  0.6279
+# (Intercept)  17.906151  3.668860 4.880577  0.0000
+# sym_species1  0.479564  1.005376 0.477000  0.6334
 # 
 # Correlation: 
 #   (Intr)
@@ -240,10 +224,10 @@ summary(pgls_models$allotbsymlat)
 # 
 # Standardized residuals:
 #   Min         Q1        Med         Q3        Max 
-# -1.6437546 -0.1158289  0.9950606  2.0543159  5.1189232 
+# -1.7307861 -0.2003034  0.9345609  1.9734730  5.0432088 
 # 
-# Residual standard error: 10.19901 
-# Degrees of freedom: 1552 total; 1550 residual
+# Residual standard error: 10.18197 
+# Degrees of freedom: 1617 total; 1615 residual
 
 # latitude does not vary by symmetry, which agrees with the scatter plot
 
@@ -266,26 +250,26 @@ summary(pgls_models$allotbsymlatlong)
 # 
 # Coefficients:
 #   Value  Std.Error   t-value p-value
-# (Intercept)            0.06591911 0.30088045  0.219087  0.8266
-# sym_species1           0.29822614 0.13298971  2.242475  0.0251
-# abs(Lat)               0.02323757 0.00248334  9.357401  0.0000
-# sym_species1:abs(Lat) -0.00435313 0.00396274 -1.098517  0.2721
+# (Intercept)           -0.0132142 0.30373608 -0.043506  0.9653
+# sym_species1           0.3251669 0.13329484  2.439456  0.0148
+# abs(Lat)               0.0242840 0.00245470  9.892842  0.0000
+# sym_species1:abs(Lat) -0.0050052 0.00395113 -1.266784  0.2054
 # 
 # Correlation: 
 #   (Intr) sym_s1 abs(L)
-# sym_species1          -0.082              
-# abs(Lat)              -0.139  0.435       
-# sym_species1:abs(Lat)  0.076 -0.789 -0.559
+# sym_species1          -0.084              
+# abs(Lat)              -0.144  0.432       
+# sym_species1:abs(Lat)  0.078 -0.786 -0.557
 # 
 # Standardized residuals:
 #   Min         Q1        Med         Q3        Max 
-# -4.3341063 -0.5838175  0.3145016  1.0374136  3.5248952 
+# -4.2543913 -0.5350903  0.3678572  1.0810704  3.5539600 
 # 
-# Residual standard error: 0.826044 
-# Degrees of freedom: 1552 total; 1548 residual
+# Residual standard error: 0.833698 
+# Degrees of freedom: 1617 total; 1613 residual
 
 # looks like the effect of symmetry on floral longevity is independent of the 
 # effect of latitude on floral longevity, at least in these data
 
-rm(spp, pgls_allotb)
+rm(spp, pgls_allotb, allotb, sym_long_lat, ttests, pgls_models)
 
