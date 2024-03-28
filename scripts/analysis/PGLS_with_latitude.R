@@ -115,15 +115,15 @@ hist(log(pgls_allotb$spmean_long_days))
 # plot species mean longevity by species mean latitude, coloured by symmetry
 pgls_allotb %>%
   dplyr::select(spmeanlatabs, spmean_long_days, sym_species) %>% # select columns of interest
-  ggplot(aes(x = spmeanlatabs, y = spmean_long_days, colour = sym_species)) +
+  ggplot(aes(x = spmeanlatabs, y = log(spmean_long_days), colour = sym_species)) +
   geom_point() +
   scale_colour_discrete(type = setNames(my_colours$symmetry, c(1, 0)),
                         labels = c("0" = "actinomorphic", "1" = "zygomorphic"),
                         name = "Symmetry") +
   ggpubr::theme_pubr(legend = "right") +
   xlab("Latitude (absolute)") +
-  ylab("Floral longevity (days)")
-ggsave("figures/symmetry_longevity_abs_latitude_allotb.pdf", width = 9, height = 5)
+  ylab("Floral longevity (log # days)")
+ggsave("figures/symmetry_loglongevity_abs_latitude_allotb.pdf", width = 9, height = 5)
 
 #** ttest & PGLS ----
 # t-test of longevity by symmetry
@@ -306,4 +306,214 @@ summary(pgls_models$allotbsymlatlong)
 # closely followed by interaction (-ve) and then latitude (-ve)
 
 rm(spp, pgls_allotb, allotb, sym_long_lat, ttests, pgls_models)
+
+#### BAYESIAN MIXED MODEL APPROACH ####
+
+# going to try using exact same model approach as Song et al. (2022) paper
+# to be sure results are comparable, given odd difference in effect
+# of latitude on longevity (positive in Song et al paper, negative here)
+
+library(brms) # Bayesian mixed models package
+
+# reduce longevity data to accepted species, symmetry, latitude
+# and remove duplicates
+sym_long_lat <- sym_long %>%
+  dplyr::select(species = Accepted_name, sym_species, mean_long_days, Lat, og_species_patch) %>%
+  dplyr::filter(complete.cases(.)) %>% # filter out ~125 obs without latitude 
+  dplyr::distinct() %>% # remove ~121 duplicated observations (same species, longevity and latitude)
+  as.data.frame()
+
+# add underscore to match tip labels
+sym_long_lat$species <- gsub(" ", "_", sym_long_lat$species)
+sym_long_lat$og_species_patch <- gsub(" ", "_", sym_long_lat$og_species_patch)
+
+# match allotb and gbotb names to this data
+# read in taxonomic name matching key
+source("scripts/prepdata/phylo_names_match.R")
+# phylo_names_match has 3 duplicated species because different og names give
+# different match levels, will remove worse matching ones
+sym_long_lat <- sym_long_lat %>%
+  dplyr::left_join(phylo_names_match, by = c("species", "og_species_patch"))
+rm(phylo_names_match)
+
+# define heirarchy of taxonomic matches so can sample best matches first
+sym_long_lat$allotb_matchrank <- ifelse(sym_long_lat$match_level_allotb %in% c("direct_accepted", 
+                                                                               "direct_accepted_nosubsp",
+                                                                               "manual_misspelling"), 
+                                        "1", 
+                                        ifelse(sym_long_lat$match_level_allotb %in% c("direct_original",
+                                                                                      "manual_synonym"), 
+                                               "2",
+                                               ifelse(sym_long_lat$match_level_allotb == "direct_genus_accepted", 
+                                                      "3",
+                                                      ifelse(sym_long_lat$match_level_allotb %in% c("direct_genus_original",
+                                                                                                    "closest_genus",
+                                                                                                    "genus_synonym"), 
+                                                             "4", "5"))))
+table(sym_long_lat$allotb_matchrank)
+
+# remove 15 duplicate observations, choosing best allotb matchrank
+sym_long_lat <- sym_long_lat %>%
+  dplyr::group_by(species, sym_species, mean_long_days, Lat, genus, family, 
+                  allotb, gbotb) %>% # first group by all columns that should be identical if obs identical
+  dplyr::slice_min(order_by = allotb_matchrank, n = 1) %>% # choose best possible taxonomic match
+  dplyr::slice_sample(n = 1) %>% # then randomly choose one of these
+  dplyr::select(-og_species_patch) %>% # don't need this column anymore
+  dplyr::ungroup()
+
+# redefine symmetry as 0 and 1
+sym_long_lat$sym_species <- gsub("zygomorphic", "1", sym_long_lat$sym_species)
+sym_long_lat$sym_species <- gsub("actinomorphic", "0", sym_long_lat$sym_species)
+
+sym_long_lat %>%
+  dplyr::filter(!duplicated(species)) %>%
+  dplyr::select(sym_species) %>%
+  table()
+# sym_species
+# 0   1 
+# 980 462 
+
+#* prep and prune trees ----
+
+# read in long Smith and Brown tree (ALLOTB.tre with 353,185 tips)
+allotb <- ape::read.tree("data_input/ALLOTB.tre")
+
+# prune allotb tree to 1423 matched taxa
+allotbnames <- sym_long_lat %>%
+  dplyr::select(allotb) %>%
+  dplyr::distinct()
+allotb <- ape::drop.tip(allotb, allotb$tip.label[-match(allotbnames$allotb, allotb$tip.label)])
+length(allotb$tip.label)
+plot(allotb, type = "fan", show.tip.label = FALSE)
+rm(allotbnames)
+
+# reorder data so species order matches order of tips in tree
+brm_allotb <- as.data.frame(allotb$tip.label) %>%
+  dplyr::left_join(sym_long_lat, by = c("allotb$tip.label" = "allotb")) %>%
+  dplyr::rename(allotb = `allotb$tip.label`)
+
+# for Bayesian modelling, want a few extra columns of variables/cofactors
+brm_allotb <- brm_allotb %>%
+  dplyr::mutate(abs_lat = abs(Lat))
+speciesmeans <- brm_allotb %>%
+  dplyr::group_by(allotb) %>%
+  dplyr::summarise(spmeanlongdays = mean(mean_long_days),
+                   spmeanabslat = mean(abs_lat))
+brm_allotb <- brm_allotb %>%
+  dplyr::left_join(speciesmeans, by = "allotb")
+rm(speciesmeans)
+
+# set up model ----
+
+# get variance-covariance matrix for phylogeny
+allotb_vcv <- ape::vcv.phylo(phy = allotb, model = "Brownian")
+
+# try running Bayesian mixed model as per Song et al. (2022), with 
+# latitude as fixed effect and phylo and species as random effects
+brm_model_longlat <- brms::brm(log(mean_long_days) ~ 
+                                 scale(spmeanabslat) +
+                                 (1|gr(allotb, cov = allotb_vcv)) +
+                                 (1|species),
+          data = brm_allotb,
+          family = gaussian(),
+          data2 = list(allotb_vcv = allotb_vcv),
+          iter = 4000,
+          cores = 2)
+
+summary(brm_model_longlat)
+# Family: gaussian 
+# Links: mu = identity; sigma = identity 
+# Formula: log(mean_long_days) ~ scale(spmeanabslat) + (1 | gr(allotb, cov = allotb_vcv)) + (1 | species) 
+# Data: brm_allotb (Number of observations: 1705) 
+# Draws: 4 chains, each with iter = 4000; warmup = 2000; thin = 1;
+# total post-warmup draws = 8000
+# 
+# Multilevel Hyperparameters:
+#   ~allotb (Number of levels: 1423) 
+# Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+# sd(Intercept)     0.08      0.00     0.07     0.09 1.00     1125     2236
+# 
+# ~species (Number of levels: 1442) 
+# Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+# sd(Intercept)     0.42      0.03     0.37     0.48 1.01      771     1597
+# 
+# Regression Coefficients:
+#   Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+# Intercept             0.99      0.24     0.52     1.45 1.00     2056     3485
+# scalespmeanabslat     0.32      0.03     0.27     0.38 1.00     3939     5233
+# 
+# Further Distributional Parameters:
+#   Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+# sigma     0.37      0.02     0.34     0.41 1.01      909     1610
+# 
+# Draws were sampled using sampling(NUTS). For each parameter, Bulk_ESS
+# and Tail_ESS are effective sample size measures, and Rhat is the potential
+# scale reduction factor on split chains (at convergence, Rhat = 1).
+
+plot(brm_model_longlat, nvariables = 2, ask = FALSE)
+
+plot(brms::conditional_effects(brm_model_longlat), points = TRUE)
+
+# compute phylogenetic signal, following method in vignette
+# which gives estimate of intra-class correlation
+hyp <- "sd_allotb__Intercept^2 / (sd_allotb__Intercept^2 + sigma^2) = 0"
+(hyp <- hypothesis(brm_model_longlat, hyp, class = NULL))
+# Hypothesis Tests for class :
+#                   Hypothesis Estimate Est.Error CI.Lower CI.Upper Evid.Ratio Post.Prob Star
+# 1 (sd_allotb__Inter... = 0     0.05      0.01     0.04     0.06         NA        NA    *
+#      ---
+#      'CI': 90%-CI for one-sided and 95%-CI for two-sided hypotheses.
+#    '*': For one-sided hypotheses, the posterior probability exceeds 95%;
+#    for two-sided hypotheses, the value tested against lies outside the 95%-CI.
+#    Posterior probabilities of point hypotheses assume equal prior probabilities.
+rm(hyp)
+
+# okay I think this works! TO DO - make exportable plot
+#                                - run with symmetry as well e.g. below
+#                                - then run with symmetry and latitude combined
+brm_allotb$sym_species <- as.numeric(brm_allotb$sym_species)
+
+brm_model_longsym <- brms::brm(log(mean_long_days) ~ 
+                                 scale(sym_species) +
+                                 (1|gr(allotb, cov = allotb_vcv)) +
+                                 (1|species),
+                               data = brm_allotb,
+                               family = gaussian(),
+                               data2 = list(allotb_vcv = allotb_vcv),
+                               iter = 4000,
+                               cores = 2)
+
+summary(brm_model_longsym)
+# Family: gaussian 
+# Links: mu = identity; sigma = identity 
+# Formula: log(mean_long_days) ~ scale(sym_species) + (1 | gr(allotb, cov = allotb_vcv)) + (1 | species) 
+# Data: brm_allotb (Number of observations: 1705) 
+# Draws: 4 chains, each with iter = 4000; warmup = 2000; thin = 1;
+# total post-warmup draws = 8000
+# 
+# Multilevel Hyperparameters:
+#   ~allotb (Number of levels: 1423) 
+# Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+# sd(Intercept)     0.10      0.00     0.09     0.11 1.00     1071     2649
+# 
+# ~species (Number of levels: 1442) 
+# Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+# sd(Intercept)     0.39      0.03     0.33     0.45 1.01      621      746
+# 
+# Regression Coefficients:
+#   Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+# Intercept            0.92      0.29     0.37     1.49 1.00     1825     2469
+# scalesym_species     0.09      0.04     0.01     0.17 1.00     5188     5372
+# 
+# Further Distributional Parameters:
+#   Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+# sigma     0.38      0.02     0.35     0.41 1.01      644     1493
+# 
+# Draws were sampled using sampling(NUTS). For each parameter, Bulk_ESS
+# and Tail_ESS are effective sample size measures, and Rhat is the potential
+# scale reduction factor on split chains (at convergence, Rhat = 1).
+
+plot(brms::conditional_effects(brm_model_longsym), points = TRUE)
+
+# question to answer for myself - is it possible for estimates in this analysis to be negative? should be?
 
