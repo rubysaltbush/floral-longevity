@@ -408,6 +408,8 @@ rm(speciesmeans)
 # get variance-covariance matrix for phylogeny
 allotb_vcv <- ape::vcv.phylo(phy = allotb, model = "Brownian")
 
+# longevity by latitude ----
+
 # try running Bayesian mixed model as per Song et al. (2022), with 
 # latitude as fixed effect and phylo and species as random effects
 brm_model_longlat <- brms::brm(log(mean_long_days) ~ 
@@ -450,9 +452,14 @@ summary(brm_model_longlat)
 # and Tail_ESS are effective sample size measures, and Rhat is the potential
 # scale reduction factor on split chains (at convergence, Rhat = 1).
 
+# standardised effect size of 0.32 for latitude, 95% CI of 0.27-0.38
+
 plot(brm_model_longlat, nvariables = 2, ask = FALSE)
+# at this stage don't actually know what to interpret from these plots -
+# estimates all have normal distribution, that seems good?
 
 plot(brms::conditional_effects(brm_model_longlat), points = TRUE)
+# need to develop export-worthy version of above plot
 
 # compute phylogenetic signal, following method in vignette
 # which gives estimate of intra-class correlation
@@ -466,13 +473,75 @@ hyp <- "sd_allotb__Intercept^2 / (sd_allotb__Intercept^2 + sigma^2) = 0"
 #    '*': For one-sided hypotheses, the posterior probability exceeds 95%;
 #    for two-sided hypotheses, the value tested against lies outside the 95%-CI.
 #    Posterior probabilities of point hypotheses assume equal prior probabilities.
+plot(hyp)
 rm(hyp)
 
-# okay I think this works! TO DO - make exportable plot
-#                                - run with symmetry as well e.g. below
-#                                - then run with symmetry and latitude combined
+# but! need to add intraspecific variability of latitude in
+# make new column of latitude variability
+brm_allotb$within_spec_lat <- brm_allotb$abs_lat - brm_allotb$spmeanabslat
+
+# and then fit model again using within_spec_lat as an additional predictor.
+
+brm_model_longlat2 <- update(
+  brm_model_longlat, formula = ~ . + within_spec_lat,
+  newdata = brm_allotb, cores = 2,
+  iter = 4000
+)
+
+summary(brm_model_longlat2)
+# Family: gaussian 
+# Links: mu = identity; sigma = identity 
+# Formula: log(mean_long_days) ~ scale(spmeanabslat) + (1 | gr(allotb, cov = allotb_vcv)) + (1 | species) + within_spec_lat 
+# Data: brm_allotb (Number of observations: 1705) 
+# Draws: 4 chains, each with iter = 4000; warmup = 2000; thin = 1;
+# total post-warmup draws = 8000
+# 
+# Multilevel Hyperparameters:
+#   ~allotb (Number of levels: 1423) 
+# Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+# sd(Intercept)     0.08      0.00     0.07     0.09 1.00     1018     2311
+# 
+# ~species (Number of levels: 1442) 
+# Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+# sd(Intercept)     0.42      0.03     0.37     0.48 1.01      645     1648
+# 
+# Regression Coefficients:
+#   Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+# Intercept             0.99      0.23     0.53     1.45 1.00     2147     3304
+# scalespmeanabslat     0.32      0.03     0.27     0.38 1.00     3396     4728
+# within_spec_lat      -0.02      0.01    -0.04     0.00 1.00    13306     6582
+# 
+# Further Distributional Parameters:
+#   Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+# sigma     0.37      0.02     0.34     0.41 1.00      776     1976
+# 
+# Draws were sampled using sampling(NUTS). For each parameter, Bulk_ESS
+# and Tail_ESS are effective sample size measures, and Rhat is the potential
+# scale reduction factor on split chains (at convergence, Rhat = 1).
+
+# looks like within species latitude variation has no impact on longevity
+# given within spec estimate 95% CI includes 0 (no slope)
+
+# check no change to phylogenetic signal
+hyp <- "sd_allotb__Intercept^2 / (sd_allotb__Intercept^2 + sigma^2) = 0"
+(hyp <- hypothesis(brm_model_longlat2, hyp, class = NULL))
+# Hypothesis Tests for class :
+#   Hypothesis Estimate Est.Error CI.Lower CI.Upper Evid.Ratio Post.Prob Star
+# 1 (sd_allotb__Inter... = 0     0.05      0.01     0.04     0.06         NA        NA    *
+#      ---
+#      'CI': 90%-CI for one-sided and 95%-CI for two-sided hypotheses.
+#    '*': For one-sided hypotheses, the posterior probability exceeds 95%;
+#    for two-sided hypotheses, the value tested against lies outside the 95%-CI.
+#    Posterior probabilities of point hypotheses assume equal prior probabilities.
+rm(hyp)
+# yep, phylogenetic signal unchanged
+
+# longevity by symmetry ----
+
+# symmetry has to be numeric to scale
 brm_allotb$sym_species <- as.numeric(brm_allotb$sym_species)
 
+# run model with phylogenetic covariance and species as random factors
 brm_model_longsym <- brms::brm(log(mean_long_days) ~ 
                                  scale(sym_species) +
                                  (1|gr(allotb, cov = allotb_vcv)) +
@@ -513,7 +582,121 @@ summary(brm_model_longsym)
 # and Tail_ESS are effective sample size measures, and Rhat is the potential
 # scale reduction factor on split chains (at convergence, Rhat = 1).
 
+# symmetry still has effect on longevity, standardised effect estimate of 0.09
+# so weaker than latitude but 95% CI of 0.01-0.17 so non-zero positive effect
+
+
+plot(brm_model_longsym, nvariables = 2, ask = FALSE)
+# at this stage don't actually know what to interpret from these plots -
+# estimates all have normal distribution, that seems good?
+
 plot(brms::conditional_effects(brm_model_longsym), points = TRUE)
+# TO DO - make above plot export worthy
+
+# compute phylogenetic signal, following method in vignette
+# which gives estimate of intra-class correlation
+hyp <- "sd_allotb__Intercept^2 / (sd_allotb__Intercept^2 + sigma^2) = 0"
+(hyp <- hypothesis(brm_model_longsym, hyp, class = NULL))
+# Hypothesis Tests for class :
+#   Hypothesis Estimate Est.Error CI.Lower CI.Upper Evid.Ratio Post.Prob Star
+# 1 (sd_allotb__Inter... = 0     0.06      0.01     0.05     0.08         NA        NA    *
+#      ---
+#      'CI': 90%-CI for one-sided and 95%-CI for two-sided hypotheses.
+#    '*': For one-sided hypotheses, the posterior probability exceeds 95%;
+#    for two-sided hypotheses, the value tested against lies outside the 95%-CI.
+#    Posterior probabilities of point hypotheses assume equal prior probabilities.
+plot(hyp)
+rm(hyp)
+
+
+#  symmetry and latitude combined ----
+
+# try adding symmetry and latitude together!
+brm_model_longsymlat <- brms::brm(log(mean_long_days) ~ 
+                                 scale(sym_species) +
+                                 scale(spmeanabslat) +
+                                 (1|gr(allotb, cov = allotb_vcv)) +
+                                 (1|species),
+                               data = brm_allotb,
+                               family = gaussian(),
+                               data2 = list(allotb_vcv = allotb_vcv),
+                               iter = 4000,
+                               cores = 2)
+
+summary(brm_model_longsymlat)
+# Family: gaussian 
+# Links: mu = identity; sigma = identity 
+# Formula: log(mean_long_days) ~ scale(sym_species) + scale(spmeanabslat) + (1 | gr(allotb, cov = allotb_vcv)) + (1 | species) 
+# Data: brm_allotb (Number of observations: 1705) 
+# Draws: 4 chains, each with iter = 4000; warmup = 2000; thin = 1;
+# total post-warmup draws = 8000
+# 
+# Multilevel Hyperparameters:
+#   ~allotb (Number of levels: 1423) 
+# Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+# sd(Intercept)     0.08      0.00     0.07     0.09 1.00      950     2091
+# 
+# ~species (Number of levels: 1442) 
+# Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+# sd(Intercept)     0.42      0.03     0.37     0.48 1.00      702     1239
+# 
+# Regression Coefficients:
+#   Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+# Intercept             1.03      0.24     0.57     1.51 1.00     1691     2905
+# scalesym_species      0.09      0.04     0.01     0.16 1.00     3675     5178
+# scalespmeanabslat     0.33      0.03     0.27     0.38 1.00     3537     4897
+# 
+# Further Distributional Parameters:
+#   Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+# sigma     0.37      0.02     0.34     0.41 1.00      897     2209
+# 
+# Draws were sampled using sampling(NUTS). For each parameter, Bulk_ESS
+# and Tail_ESS are effective sample size measures, and Rhat is the potential
+# scale reduction factor on split chains (at convergence, Rhat = 1).
+
+brm_model_longsymlatint <- brms::brm(log(mean_long_days) ~ 
+                                       scale(sym_species) +
+                                       scale(spmeanabslat) +
+                                      scale(sym_species):scale(spmeanabslat) +
+                                    (1|gr(allotb, cov = allotb_vcv)) +
+                                    (1|species),
+                                  data = brm_allotb,
+                                  family = gaussian(),
+                                  data2 = list(allotb_vcv = allotb_vcv),
+                                  iter = 4000,
+                                  cores = 2)
+
+summary(brm_model_longsymlatint)
+# Family: gaussian 
+# Links: mu = identity; sigma = identity 
+# Formula: log(mean_long_days) ~ scale(sym_species) + scale(spmeanabslat) + scale(sym_species):scale(spmeanabslat) + (1 | gr(allotb, cov = allotb_vcv)) + (1 | species) 
+# Data: brm_allotb (Number of observations: 1705) 
+# Draws: 4 chains, each with iter = 4000; warmup = 2000; thin = 1;
+# total post-warmup draws = 8000
+# 
+# Multilevel Hyperparameters:
+#   ~allotb (Number of levels: 1423) 
+# Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+# sd(Intercept)     0.08      0.00     0.07     0.09 1.00     1299     2565
+# 
+# ~species (Number of levels: 1442) 
+# Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+# sd(Intercept)     0.42      0.03     0.37     0.48 1.01      680     1404
+# 
+# Regression Coefficients:
+#   Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+# Intercept                              1.02      0.24     0.53     1.48 1.00     1669     2881
+# scalesym_species                       0.09      0.04     0.01     0.16 1.00     4383     5435
+# scalespmeanabslat                      0.33      0.03     0.27     0.38 1.00     3560     5103
+# scalesym_species:scalespmeanabslat     0.00      0.03    -0.05     0.05 1.00     4586     5586
+# 
+# Further Distributional Parameters:
+#   Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+# sigma     0.37      0.02     0.34     0.41 1.00      731     1725
+# 
+# Draws were sampled using sampling(NUTS). For each parameter, Bulk_ESS
+# and Tail_ESS are effective sample size measures, and Rhat is the potential
+# scale reduction factor on split chains (at convergence, Rhat = 1).
 
 # question to answer for myself - is it possible for estimates in this analysis to be negative? should be?
 
