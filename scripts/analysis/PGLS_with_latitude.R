@@ -70,10 +70,9 @@ sym_long_lat <- sym_long_lat %>%
   dplyr::ungroup()
 
 sym_long_lat %>%
-  dplyr::filter(!duplicated(species)) %>%
   dplyr::select(sym_species) %>%
   table()
-# 972 actinomorphic to 451 zygomorphic taxa
+# 971 actinomorphic to 452 zygomorphic taxa
 
 #* prep and prune trees ----
 
