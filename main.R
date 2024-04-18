@@ -30,3 +30,8 @@ source("scripts/analysis/compare_longevity.R")
 # figures to show longevity and symmetry on phylogeny
 source("scripts/analysis/phylogenetics.R")
 
+# analysis script to examine whether latitude influences relationship between
+# floral symmetry and floral longevity
+source("scripts/analysis/PGLS_with_latitude.R")
+
+
