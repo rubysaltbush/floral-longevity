@@ -306,10 +306,15 @@ summary(pgls_models$allotbsymlatlong)
 
 rm(spp, pgls_allotb, allotb, sym_long_lat, ttests, pgls_models)
 
-# I have run this analysis using the same Bayesian mixed model approach as 
-# Song et al. (2022)'s floral longevity paper, for which the effect of latitude
-# on longevity appears to line up better with their findings, and the effect 
-# of symmetry on longevity is similar. Not going to delve too deeply into
-# replicating their study here though - that is for another study in future.
-
+# tried Bayesian models as per Song et al. (2022) paper, using brms package
+# and running full interaction model symmetry still has significant +ve effect,
+# this different analysis method gives a +ve effect of latitude on 
+# longevity as reported in the Song et al and no interaction between symmetry
+# and longevity. Using a different analysis method and getting a different
+# result for latitude is slightly concerning but given symmetry comes out as
+# having a significant +ve effect in both analyses I will focus on this for
+# now, as I was not aiming to replicate Song et al's latitude result.
+# I suspect the different effects of latitude on longevity with different 
+# analysis methods are due to the different ways phylogeny is handled by 
+# these analyses.
 
